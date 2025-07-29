@@ -637,8 +637,7 @@
                         musicLoops.test.start(0);
                         break;
                     case 'section-3':
-                        Tone.Transport.bpm.value = 60;
-                        musicLoops.briefing.start(0);
+                        shouldStartTransport = false;
                         break;
                     case 'section-4':
                     case 'section-4b':
