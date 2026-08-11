@@ -1,1306 +1,1183 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Tense</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Custom Styles for the Spy Theme */
-        html, body {
-            height: 100%;
-        }
-        body {
-            font-family: 'Rajdhani', sans-serif;
-            color: #E0E0E0;
-            background-color: #0a0f1f;
-            overflow-y: auto; /* Allow vertical scrolling */
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Tense: Wordkeepers — Open World Chronicles</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --realm-color:#22d3ee;
+    --realm-rgb:34,211,238;
+    --realm-dark:#0e7490;
+  }
+  html,body{height:100%;}
+  body{font-family:'Rajdhani',sans-serif;color:#e0e0e0;background-color:#0a0f1f;overflow-y:auto;overflow-x:hidden;}
+  .font-orbitron{font-family:'Orbitron',sans-serif;}
+  .hidden{display:none !important;}
 
-        .font-orbitron {
-            font-family: 'Orbitron', sans-serif;
-        }
+  .background-animation{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;background:#0a0f1f;overflow:hidden;}
+  .background-animation::before,.background-animation::after{content:'';position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+  .background-animation::before{background:linear-gradient(to bottom,rgba(10,15,31,.85),rgba(10,15,31,1));}
+  .background-animation::after{background:linear-gradient(to bottom,rgba(18,16,16,0) 50%,rgba(0,0,0,.25) 50%);background-size:100% 4px;animation:scanlines 5s linear infinite;}
+  @keyframes scanlines{from{background-position:0 0;}to{background-position:0 100px;}}
+  .rune-text{position:absolute;font-family:'Courier New',monospace;color:#00ffcc;font-size:13px;white-space:nowrap;opacity:0;animation:rune-fall linear infinite;text-shadow:0 0 5px #00ffcc;}
+  @keyframes rune-fall{0%{transform:translateY(-60px);opacity:0;}10%{opacity:.5;}90%{opacity:.5;}100%{transform:translateY(100vh);opacity:0;}}
 
-        /* Animated background */
-        .background-animation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: #0a0f1f;
-            overflow: hidden;
-        }
-        .background-animation::before, .background-animation::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-        }
-        .background-animation::before {
-             background: linear-gradient(to bottom, rgba(10, 15, 31, 0.8), rgba(10, 15, 31, 1));
-        }
-        /* Scanlines Effect */
-        .background-animation::after {
-            background: linear-gradient(to bottom, rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-            background-size: 100% 4px;
-            animation: scanlines 5s linear infinite;
-        }
-        @keyframes scanlines {
-            from { background-position: 0 0; }
-            to { background-position: 0 100px; }
-        }
+  .blinking-cursor{animation:blink 1s step-end infinite;}
+  @keyframes blink{from,to{color:transparent;}50%{color:inherit;}}
 
-        .matrix-text {
-            position: absolute;
-            font-family: 'Courier New', Courier, monospace;
-            color: #00ffcc;
-            font-size: 14px;
-            white-space: nowrap;
-            opacity: 0;
-            animation: matrix-fall 15s linear infinite;
-            text-shadow: 0 0 5px #00ffcc;
-        }
+  .text-glitch{animation:glitch-text 3s linear infinite;}
+  @keyframes glitch-text{0%{text-shadow:1px 0 0 red,-1px 0 0 cyan;}2%{text-shadow:none;}4%{text-shadow:1px 0 0 red,-1px 0 0 cyan;}6%{text-shadow:none;}98%{text-shadow:1px 0 0 red,-1px 0 0 cyan;}100%{text-shadow:none;}}
 
-        @keyframes matrix-fall {
-            0% { transform: translateY(-100px); opacity: 0; }
-            10% { opacity: 0.7; }
-            90% { opacity: 0.7; }
-            100% { transform: translateY(100vh); opacity: 0; }
-        }
+  .btn-primary{font-family:'Orbitron',sans-serif;background-color:var(--realm-color);color:#0a0f1f;font-weight:700;padding:.85rem 1.6rem;border-radius:.6rem;text-transform:uppercase;letter-spacing:.05em;transition:all .25s;border:2px solid var(--realm-color);box-shadow:0 0 10px var(--realm-color),inset 0 0 5px rgba(var(--realm-rgb),.5);cursor:pointer;}
+  .btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 0 22px var(--realm-color),inset 0 0 10px rgba(var(--realm-rgb),.7);}
+  .btn-primary:active:not(:disabled){transform:translateY(0);}
+  .btn-primary:disabled{background:#4b5563;border-color:#6b7280;color:#9ca3af;cursor:not-allowed;box-shadow:none;}
+  .btn-ghost{font-family:'Orbitron',sans-serif;background:transparent;color:var(--realm-color);font-weight:700;padding:.5rem 1rem;border-radius:.5rem;border:2px solid var(--realm-color);cursor:pointer;transition:all .2s;}
+  .btn-ghost:hover{background:rgba(var(--realm-rgb),.15);}
 
-        /* Blinking cursor effect */
-        .blinking-cursor {
-            animation: blink 1s step-end infinite;
-        }
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:60;transition:opacity .3s;}
+  .modal-content{background:#0f172a;border:2px solid var(--realm-color);border-radius:.75rem;box-shadow:0 0 25px rgba(var(--realm-rgb),.4);padding:2rem;max-width:32rem;width:92%;}
 
-        @keyframes blink {
-            from, to { color: transparent; }
-            50% { color: inherit; }
-        }
+  .glass-panel{background:rgba(15,23,42,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(var(--realm-rgb),.25);border-radius:.6rem;position:relative;}
+  .glass-panel::before,.glass-panel::after{content:'';position:absolute;width:18px;height:18px;border-color:var(--realm-color);border-style:solid;pointer-events:none;}
+  .glass-panel::before{top:-4px;left:-4px;border-width:2px 0 0 2px;}
+  .glass-panel::after{top:-4px;right:-4px;border-width:2px 2px 0 0;}
+  .glass-panel .corner-b{position:absolute;top:0;left:0;width:0;height:0;pointer-events:none;}
+  .glass-panel .corner-b::before,.glass-panel .corner-b::after{content:'';position:absolute;width:18px;height:18px;border-color:var(--realm-color);border-style:solid;pointer-events:none;}
+  .glass-panel .corner-b::before{bottom:-4px;left:-4px;border-width:0 0 2px 2px;}
+  .glass-panel .corner-b::after{bottom:-4px;right:-4px;border-width:0 2px 2px 0;}
 
-        /* Glitch effect on hover */
-        .btn-glitch:hover {
-            animation: glitch-button 0.3s linear;
-        }
+  .progress-bar-container{width:100%;background:#374151;border-radius:9999px;height:1rem;border:2px solid var(--realm-dark);overflow:hidden;}
+  .progress-bar{background:var(--realm-color);height:100%;border-radius:9999px;transition:width .5s;box-shadow:0 0 8px var(--realm-color);}
 
-        @keyframes glitch-button {
-            0%, 100% { transform: none; }
-            25% { transform: skew(-0.5deg, -0.5deg); }
-            50% { transform: none; }
-            75% { transform: skew(0.5deg, 0.5deg); }
-        }
+  .xp-bar-container{width:100%;background:#1f2937;border-radius:9999px;height:.6rem;overflow:hidden;border:1px solid rgba(var(--realm-rgb),.4);}
+  .xp-bar{background:linear-gradient(90deg,#facc15,#f59e0b);height:100%;transition:width .4s;}
 
-        /* Text Glitch Effect */
-        .text-glitch {
-            animation: glitch-text 3s linear infinite;
-        }
-        @keyframes glitch-text {
-            0% { text-shadow: 1px 0 0 red, -1px 0 0 cyan; }
-            2% { text-shadow: none; }
-            4% { text-shadow: 1px 0 0 red, -1px 0 0 cyan; }
-            6% { text-shadow: none; }
-            8% { text-shadow: 1px 0 0 red, -1px 0 0 cyan; }
-            98% { text-shadow: 1px 0 0 red, -1px 0 0 cyan; }
-            100% { text-shadow: none; }
-        }
+  .countdown-timer{font-family:'Orbitron',sans-serif;font-size:2.4rem;color:#ef4444;text-shadow:0 0 10px red;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
 
+  .screen-flash-red{animation:flash-red .5s ease-out;}
+  @keyframes flash-red{0%,100%{background-color:transparent;}50%{background-color:rgba(255,0,0,.3);}}
+  .screen-flash-green{animation:flash-green .5s ease-out;}
+  @keyframes flash-green{0%,100%{background-color:transparent;}50%{background-color:rgba(74,222,128,.25);}}
 
-        /* Custom button style */
-        .btn-primary {
-            @apply font-orbitron bg-cyan-500 text-gray-900 font-bold py-3 px-6 rounded-md uppercase tracking-widest transition-all duration-300;
-            border: 2px solid #00ffcc;
-            box-shadow: 0 0 10px #00ffcc, inset 0 0 5px rgba(0, 255, 204, 0.5);
-        }
-        .btn-primary:hover {
-            @apply bg-cyan-400;
-            box-shadow: 0 0 20px #00ffcc, inset 0 0 10px rgba(0, 255, 204, 0.7);
-        }
-        .btn-primary:disabled {
-            @apply bg-gray-600 border-gray-500 text-gray-400 cursor-not-allowed;
-            box-shadow: none;
-        }
-        
-        /* Modal Style */
-        .modal {
-            @apply fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300;
-        }
-        .modal-content {
-            @apply bg-gray-900 border-2 border-cyan-500 rounded-lg shadow-2xl p-8 max-w-lg w-full;
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.4);
-        }
-        
-        /* Glassmorphism effect for panels */
-        .glass-panel {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 255, 204, 0.2);
-            border-radius: 0.5rem;
-            position: relative;
-        }
-        /* Corner Brackets Decoration */
-        .glass-panel::before, .glass-panel::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-color: #00ffcc;
-            border-style: solid;
-        }
-        .glass-panel::before { top: -5px; left: -5px; border-width: 2px 0 0 2px; }
-        .glass-panel::after { top: -5px; right: -5px; border-width: 2px 2px 0 0; }
-        .glass-panel > div::before, .glass-panel > div::after {
-             content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border-color: #00ffcc;
-            border-style: solid;
-        }
-        .glass-panel > div::before { bottom: -5px; left: -5px; border-width: 0 0 2px 2px; }
-        .glass-panel > div::after { bottom: -5px; right: -5px; border-width: 0 2px 2px 0; }
-        
-        
-        /* Progress Bar */
-        .progress-bar-container {
-            @apply w-full bg-gray-700 rounded-full h-4 border-2 border-cyan-800;
-        }
-        .progress-bar {
-            @apply bg-cyan-400 h-full rounded-full transition-all duration-500;
-            box-shadow: 0 0 8px #00ffcc;
-        }
-        
-        /* Retina Scan Animation */
-        .retina-scan {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 15, 31, 0.9);
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .scan-line {
-            position: absolute;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: #00ffcc;
-            box-shadow: 0 0 15px #00ffcc;
-            animation: scan 2s ease-in-out;
-        }
-        @keyframes scan {
-            from { top: 0; }
-            to { top: 100%; }
-        }
-        
-        /* Countdown Timer Style */
-        .countdown-timer {
-            @apply font-orbitron text-5xl text-red-500;
-            text-shadow: 0 0 10px red;
-            animation: pulse 1s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        /* Screen Flash on Error */
-        .screen-flash-red {
-            animation: flash-red 0.5s ease-out;
-        }
-        @keyframes flash-red {
-            0%, 100% { background-color: transparent; }
-            50% { background-color: rgba(255, 0, 0, 0.3); }
-        }
+  .explosion-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:200;background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,200,0,1) 20%,rgba(255,100,0,0) 70%);animation:explosion .5s ease-out forwards;transform:scale(0);}
+  @keyframes explosion{from{transform:scale(0);opacity:1;}to{transform:scale(2);opacity:0;}}
 
-        /* Explosion Effect */
-        .explosion-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 200;
-            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,200,0,1) 20%, rgba(255,100,0,0) 70%);
-            animation: explosion 0.5s ease-out forwards;
-            transform: scale(0);
-        }
-        @keyframes explosion {
-            from { transform: scale(0); opacity: 1; }
-            to { transform: scale(2); opacity: 0; }
-        }
+  /* World / node map path */
+  .path-track{position:relative;padding-left:2.5rem;}
+  .path-track::before{content:'';position:absolute;left:1.1rem;top:1.5rem;bottom:1.5rem;width:4px;background:repeating-linear-gradient(to bottom,rgba(var(--realm-rgb),.5) 0 8px,transparent 8px 16px);}
+  .path-node{position:relative;display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;}
+  .path-node .node-dot{flex-shrink:0;width:2.6rem;height:2.6rem;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;border:3px solid #4b5563;background:#1f2937;color:#6b7280;position:relative;z-index:2;}
+  .path-node.unlocked .node-dot{border-color:var(--realm-color);color:var(--realm-color);box-shadow:0 0 12px rgba(var(--realm-rgb),.6);cursor:pointer;}
+  .path-node.completed .node-dot{background:var(--realm-color);color:#0a0f1f;border-color:var(--realm-color);}
+  .path-node.boss .node-dot{width:3.2rem;height:3.2rem;font-size:1.6rem;}
+  .node-card{flex:1;background:rgba(15,23,42,.6);border:1px solid rgba(var(--realm-rgb),.25);border-radius:.5rem;padding:.75rem 1rem;}
+  .node-card.locked{opacity:.5;}
+  .star-rating{letter-spacing:2px;color:#facc15;font-size:1.1rem;}
 
-        /* Hacked Effect */
-        .hacked-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 200;
-            overflow: hidden;
-            background: rgba(0,0,0,0.8);
-        }
-        .hacked-text {
-            position: absolute;
-            font-family: 'Courier New', monospace;
-            color: red;
-            font-size: 16px;
-            animation: matrix-fall 2s linear;
-        }
+  .realm-bubble{border:2px solid var(--realm-color);border-radius:1rem;padding:1.25rem;background:rgba(15,23,42,.6);transition:all .2s;position:relative;}
+  .realm-bubble.locked{opacity:.45;filter:grayscale(.6);}
+  .realm-bubble.unlocked{cursor:pointer;}
+  .realm-bubble.unlocked:hover{transform:translateY(-3px);box-shadow:0 0 20px rgba(var(--realm-rgb),.4);}
 
-    </style>
+  .match-card{background:#1f2937;border:2px solid var(--realm-dark);border-radius:.5rem;padding:.9rem .6rem;text-align:center;cursor:pointer;font-weight:700;transition:all .15s;user-select:none;min-height:3.2rem;display:flex;align-items:center;justify-content:center;}
+  .match-card:hover{border-color:var(--realm-color);}
+  .match-card.selected{border-color:#facc15;background:#374151;}
+  .match-card.matched{background:rgba(74,222,128,.25);border-color:#4ade80;color:#4ade80;cursor:default;}
+  .match-card.wrong{animation:shake .3s;border-color:#ef4444;}
+  @keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+  .hp-bar-container{width:100%;background:#1f2937;border-radius:9999px;height:1.2rem;overflow:hidden;border:2px solid #7f1d1d;}
+  .hp-bar{background:linear-gradient(90deg,#ef4444,#f87171);height:100%;transition:width .4s;}
+  .lives-hearts span{font-size:1.4rem;margin-right:.25rem;}
+
+  #topbar{position:sticky;top:0;z-index:40;}
+</style>
 </head>
-<body class="flex items-center justify-center py-8">
-    <div class="background-animation" id="background-animation"></div>
-    <div id="screen-flash-overlay" class="fixed inset-0 z-50 pointer-events-none"></div>
-    <div id="explosion-effect" class="explosion-overlay hidden"></div>
-    <div id="hacked-effect" class="hacked-overlay hidden"></div>
+<body class="min-h-screen">
+<div class="background-animation" id="background-animation"></div>
+<div id="screen-flash-overlay" class="fixed inset-0 z-50 pointer-events-none"></div>
+<div id="explosion-effect" class="explosion-overlay hidden"></div>
 
+<!-- TOP BAR -->
+<div id="topbar" class="hidden w-full glass-panel rounded-none border-x-0 border-t-0 px-4 py-2 mb-4">
+  <div class="corner-b"></div>
+  <div class="max-w-5xl mx-auto flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex items-center gap-3">
+      <div id="topbar-avatar" class="text-3xl">🧙</div>
+      <div>
+        <p id="topbar-name" class="font-orbitron text-sm text-cyan-300 leading-tight"></p>
+        <p class="text-xs text-gray-400 leading-tight">Lv. <span id="topbar-level">1</span></p>
+      </div>
+    </div>
+    <div class="flex-1 min-w-[140px] max-w-xs">
+      <div class="xp-bar-container"><div id="topbar-xp-bar" class="xp-bar" style="width:0%"></div></div>
+      <p class="text-[11px] text-gray-400 mt-0.5"><span id="topbar-xp-text">0/150 XP</span></p>
+    </div>
+    <div class="flex items-center gap-4 text-sm">
+      <span title="Streak">🔥 <span id="topbar-streak">0</span></span>
+      <span title="Stars">⭐ <span id="topbar-coins">0</span></span>
+      <button id="topbar-leaderboard-btn" class="btn-ghost text-xs">🏆 อันดับ</button>
+      <button id="topbar-logout-btn" class="btn-ghost text-xs">ออกจากระบบ</button>
+    </div>
+  </div>
+</div>
 
-    <main class="relative z-10 w-full max-w-5xl mx-auto p-4">
+<main class="relative z-10 w-full max-w-5xl mx-auto p-4 pb-16">
 
-        <!-- Section 1: Agent Registration -->
-        <div id="section-1" class="text-center glass-panel p-8">
-            <div>
-                <div class="w-40 h-40 mx-auto mb-4">
-                    <img src="https://img5.pic.in.th/file/secure-sv1/3a9e7a7733684abeb7baa751b20a4a63.png" alt="The Tense Logo" class="w-full h-full object-contain">
-                </div>
-                <h1 class="text-4xl md:text-5xl font-orbitron text-cyan-400 mb-2 tracking-widest text-glitch">The Tense</h1>
-                <p class="text-xl md:text-2xl font-bold text-gray-300 mb-8">The Wordkeepers: AGENT RECRUITMENT PROTOCOL</p>
-                <button id="initiate-assessment-btn" class="btn-primary btn-glitch text-2xl">
-                    INITIATE ASSESSMENT <span class="blinking-cursor">█</span>
-                </button>
-            </div>
+  <!-- LANDING -->
+  <div id="view-landing" class="view text-center glass-panel p-8">
+    <div class="corner-b"></div>
+    <div class="w-40 h-40 mx-auto mb-4">
+      <img src="https://img5.pic.in.th/file/secure-sv1/3a9e7a7733684abeb7baa751b20a4a63.png" alt="logo" class="w-full h-full object-contain">
+    </div>
+    <h1 class="text-4xl md:text-5xl font-orbitron text-cyan-400 mb-2 tracking-widest text-glitch">The Tense</h1>
+    <p class="text-xl md:text-2xl font-bold text-gray-300 mb-2">Wordkeepers: Open World Chronicles</p>
+    <p class="text-gray-400 mb-8">ผจญภัยข้ามอาณาจักร ปลดล็อกคำสาปแห่งไวยากรณ์ กอบกู้โลก Lexicora</p>
+    <button id="btn-start" class="btn-primary text-xl">เริ่มการผจญภัย <span class="blinking-cursor">█</span></button>
+  </div>
+
+  <!-- REGISTRATION MODAL -->
+  <div id="registration-modal" class="modal hidden opacity-0">
+    <div class="modal-content glass-panel">
+      <div class="corner-b"></div>
+      <h2 class="text-2xl font-orbitron text-cyan-400 mb-6 text-center">สร้างตัวละครนักผจญภัย 📝</h2>
+      <form id="registration-form">
+        <div class="mb-4">
+          <label class="block mb-1 text-cyan-300">ชื่อ</label>
+          <input type="text" id="student-name" class="w-full bg-gray-800 border-2 border-cyan-700 rounded-md p-2 text-white" required>
         </div>
-
-        <!-- Registration Modal -->
-        <div id="registration-modal" class="modal hidden opacity-0">
-            <div class="modal-content glass-panel">
-                <div>
-                    <h2 class="text-2xl font-orbitron text-cyan-400 mb-6 text-center">CREATE YOUR PROFILE 📝</h2>
-                    <form id="registration-form">
-                        <div class="mb-4">
-                            <label for="student-name" class="block mb-1 text-cyan-300">ชื่อ</label>
-                            <input type="text" id="student-name" class="w-full bg-gray-800 border-2 border-cyan-700 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white" required>
-                        </div>
-                        <div class="mb-4">
-                            <label for="student-class" class="block mb-1 text-cyan-300">ชั้น</label>
-                            <input type="text" id="student-class" class="w-full bg-gray-800 border-2 border-cyan-700 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white" required>
-                        </div>
-                        <div class="mb-6">
-                            <label for="student-number" class="block mb-1 text-cyan-300">เลขที่</label>
-                            <input type="text" id="student-number" class="w-full bg-gray-800 border-2 border-cyan-700 rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-white" required>
-                        </div>
-                        <button id="go-operational-btn" type="submit" class="w-full btn-primary" disabled>
-                            GO OPERATIONAL
-                        </button>
-                    </form>
-                </div>
-            </div>
+        <div class="mb-4">
+          <label class="block mb-1 text-cyan-300">ชั้น</label>
+          <input type="text" id="student-class" class="w-full bg-gray-800 border-2 border-cyan-700 rounded-md p-2 text-white" required>
         </div>
-        
-        <!-- Retina Scan Animation -->
-        <div id="retina-scan-animation" class="retina-scan hidden">
-            <div class="scan-line"></div>
-            <p class="text-2xl font-orbitron text-cyan-400 z-10">IDENTITY CONFIRMED... ACCESS GRANTED</p>
+        <div class="mb-6">
+          <label class="block mb-1 text-cyan-300">เลขที่</label>
+          <input type="text" id="student-number" class="w-full bg-gray-800 border-2 border-cyan-700 rounded-md p-2 text-white" required>
         </div>
-
-
-        <!-- Section 2: Aptitude Assessment (Pre-Test) -->
-        <div id="section-2" class="hidden glass-panel p-8">
-            <div>
-                <h2 class="text-3xl font-orbitron text-cyan-400 mb-2 text-center text-glitch">AGENT APTITUDE ASSESSMENT</h2>
-                <p class="text-lg text-gray-300 mb-6 text-center">PROTOCOL-01</p>
-                <div class="mb-4">
-                    <div id="progress-text" class="text-center text-cyan-300 mb-2">Analyzing Cognitive Response... (1/10)</div>
-                    <div class="progress-bar-container">
-                        <div id="progress-bar-2" class="progress-bar" style="width: 10%;"></div>
-                    </div>
-                </div>
-                <div id="pre-test-question-container">
-                    <p id="pre-test-question" class="text-xl mb-6 text-center"></p>
-                    <div id="pre-test-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                </div>
-                <div id="pre-test-feedback" class="hidden text-center mt-6">
-                    <p class="text-2xl font-bold text-cyan-400">Assessment Complete.</p>
-                    <p class="text-lg text-gray-300">You show potential, Recruit. Stand by for your first briefing. 司令官</p>
-                    <button id="awaiting-briefing-btn" class="btn-primary mt-6">AWAITING BRIEFING...</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 3: Commander's Briefing (Lesson) -->
-        <div id="section-3" class="hidden glass-panel p-8 text-center">
-            <div>
-                <h2 class="text-3xl font-orbitron text-cyan-400 mb-2 text-glitch">INCOMING PRESENT SIMPLE</h2>
-                <p class="text-lg text-red-500 font-bold mb-4">COMMANDER SMART</p>
-                <div class="w-full max-w-4xl mx-auto aspect-video bg-black border-2 border-cyan-600 rounded-md mb-4">
-                     <div id="player"></div>
-                </div>
-                <p class="text-lg text-cyan-300 mb-6">ตั้งใจดูวิดีโอการรับคำสั่งให้จบ เพื่อปลดล็อกไปยังภารกิจ! 💡</p>
-                <button id="accept-mission-btn" class="btn-primary text-xl" disabled>ปลดล็อกใน <span id="mission-timer">15</span>s</button>
-            </div>
-        </div>
-
-        <!-- Section 4 Instructions (Game 1) -->
-        <div id="section-4-instructions" class="hidden glass-panel p-8 text-center">
-            <div>
-                <h2 class="text-3xl font-orbitron text-red-600 mb-2 text-glitch">MISSION BRIEFING</h2>
-                <h3 class="text-xl font-bold text-gray-300 mb-6">OPERATION: BOMB DEFUSAL</h3>
-                <div class="text-left max-w-md mx-auto space-y-4 text-lg">
-                    <p><span class="text-cyan-400 font-bold">OBJECTIVE:</span> กู้ระเบิดให้ได้ 10 ลูก</p>
-                    <p><span class="text-cyan-400 font-bold">TIME LIMIT:</span> 2 นาที (120 วินาที)</p>
-                    <p><span class="text-red-500 font-bold">WARNING:</span> การตอบผิดจะทำให้เวลาลดลงอย่างรวดเร็ว!</p>
-                </div>
-                <button id="start-game1-btn" class="btn-primary mt-8">START MISSION</button>
-            </div>
-        </div>
-
-        <!-- Section 4: Bomb Defusal Game -->
-        <div id="section-4" class="hidden glass-panel p-8">
-            <div>
-                <h2 class="text-3xl font-orbitron text-red-600 mb-2 text-center text-glitch">! ! ! WARNING: LOGIC BOMB DETECTED ! ! !</h2>
-                <div class="flex justify-between items-center mb-4">
-                    <p id="game-score-text" class="text-xl font-bold text-cyan-400">Components Defused: 0/10</p>
-                    <div id="countdown-timer" class="countdown-timer">02:00</div>
-                </div>
-                <div id="game-container" class="bg-gray-800 border-2 border-red-500 p-6 rounded-md text-center">
-                    <p class="text-lg text-gray-400 mb-2">DEFUSAL TERMINAL</p>
-                    <p id="game-question" class="text-xl text-white mb-6 min-h-[56px] flex items-center justify-center"></p>
-                    <div id="game-options" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Game options will be inserted here -->
-                    </div>
-                </div>
-                <div id="game-result-container" class="hidden text-center mt-6">
-                    <p id="game-result-message" class="text-4xl font-orbitron mb-4"></p>
-                    <button id="game-next-step-btn" class="btn-primary text-xl"></button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 4b Instructions (Game 2) -->
-        <div id="section-4b-instructions" class="hidden glass-panel p-8 text-center">
-            <div>
-                 <h2 class="text-3xl font-orbitron text-yellow-400 mb-2 text-glitch">NEW OBJECTIVE</h2>
-                 <h3 class="text-xl font-bold text-gray-300 mb-6">OPERATION: DATA EXTRACTION</h3>
-                 <div class="text-left max-w-md mx-auto space-y-4 text-lg">
-                     <p><span class="text-cyan-400 font-bold">OBJECTIVE:</span> จงเติม s หรือ es ในคำในวงเล็บให้ถูกต้อง เพื่อขโมยข้อมูล 5 ชุด</p>
-                     <p><span class="text-cyan-400 font-bold">TIME LIMIT:</span> 1 นาที 30 วินาที (90 วินาที)</p>
-                     <p><span class="text-yellow-500 font-bold">SYSTEM ALERT:</span> การตอบผิดจะทำให้เสียเวลา! แต่การตอบถูกจะช่วยเพิ่มเวลาให้เล็กน้อย</p>
-                 </div>
-                 <button id="start-game2-btn" class="btn-primary bg-yellow-500 border-yellow-400 hover:bg-yellow-400 mt-8">BEGIN INFILTRATION</button>
-            </div>
-        </div>
-
-        <!-- Section 4b: Data Extraction Game -->
-        <div id="section-4b" class="hidden glass-panel p-8">
-            <div>
-                <h2 class="text-3xl font-orbitron text-yellow-400 mb-2 text-center text-glitch">! ! ! INFILTRATION IN PROGRESS ! ! !</h2>
-                <div class="flex justify-between items-center mb-4">
-                     <p id="game2-score-text" class="text-xl font-bold text-cyan-400">Data Extracted: 0/5</p>
-                     <div id="game2-countdown-timer" class="countdown-timer text-yellow-400">01:30</div>
-                </div>
-                <div id="game2-container" class="bg-gray-800 border-2 border-yellow-500 p-6 rounded-md text-center">
-                    <p class="text-lg text-gray-400 mb-2 font-mono">> DECRYPTING DATA STREAM...</p>
-                    <p id="game2-question" class="text-xl text-white mb-4 font-mono"></p>
-                    <div class="flex items-center justify-center gap-2">
-                        <span id="game2-prompt-start" class="text-xl text-white font-mono"></span>
-                        <input type="text" id="game2-answer-input" class="bg-gray-900 border-b-2 border-yellow-400 p-2 text-xl text-center text-yellow-300 w-48 focus:outline-none font-mono">
-                        <span id="game2-prompt-end" class="text-xl text-white font-mono"></span>
-                    </div>
-                    <button id="submit-data-btn" class="btn-primary bg-yellow-500 border-yellow-400 hover:bg-yellow-400 mt-6">EXTRACT DATA</button>
-                    <p id="game2-feedback-text" class="mt-4 h-6 text-lg font-mono"></p>
-                </div>
-                <div id="game2-result-container" class="hidden text-center mt-6">
-                    <p id="game2-result-message" class="text-4xl font-orbitron mb-4"></p>
-                    <button id="game2-next-step-btn" class="btn-primary text-xl"></button>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- Section 5: Final Debriefing (Post-Test) -->
-        <div id="section-5" class="hidden glass-panel p-8">
-            <div>
-                <h2 class="text-3xl font-orbitron text-cyan-400 mb-2 text-center text-glitch">FINAL DEBRIEFING</h2>
-                <p class="text-lg text-gray-300 mb-6 text-center">SUBMIT YOUR REPORT ✨</p>
-                <div class="mb-4">
-                    <div id="post-test-progress-text" class="text-center text-cyan-300 mb-2">Compiling Report... (1/10)</div>
-                    <div class="progress-bar-container">
-                        <div id="progress-bar-5" class="progress-bar" style="width: 10%;"></div>
-                    </div>
-                </div>
-                <div id="post-test-question-container">
-                    <p id="post-test-question" class="text-xl mb-6 text-center"></p>
-                    <div id="post-test-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                </div>
-                <div id="post-test-feedback" class="hidden text-center mt-6">
-                     <p class="text-2xl font-bold text-cyan-400">Report submitted. Calculating mission success rate...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Section 6: Leaderboard & Conclusion -->
-        <div id="section-6" class="hidden glass-panel p-8">
-            <div>
-                <h2 class="text-4xl font-orbitron text-cyan-400 mb-6 text-center text-glitch">LEADERBOARD 👑</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="border-b-2 border-cyan-700">
-                                <th class="p-3 text-lg text-cyan-300">Rank 🏆</th>
-                                <th class="p-3 text-lg text-cyan-300">ชื่อ</th>
-                                <th class="p-3 text-lg text-cyan-300">ชั้น</th>
-                                <th class="p-3 text-lg text-cyan-300">เลขที่</th>
-                                <th class="p-3 text-lg text-cyan-300">Mission Score</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body">
-                            <!-- Leaderboard rows will be inserted here -->
-                        </tbody>
-                    </table>
-                </div>
-                <p class="text-center text-lg text-gray-300 mt-8">Congratulations, Agent. Your performance has been noted. Keep honing your skills. The world is always watching. 👍</p>
-                <div class="flex justify-center gap-4 mt-8">
-                    <button id="restart-protocol-btn" class="btn-primary">RESTART PROTOCOL</button>
-                    <button id="go-dark-btn" class="btn-primary bg-red-600 border-red-500 hover:bg-red-500">GO DARK</button>
-                </div>
-            </div>
-        </div>
-        
-        <footer class="absolute -bottom-12 left-0 right-0 text-center text-gray-500 text-sm">
-            พัฒนาโดยครูตรึงตระกานต์ ทองมา โรงเรียนบ้านหัวถนน ปีการศึกษา 2568
-        </footer>
-    </main>
-    
-    <script src="https://www.youtube.com/iframe_api"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- STATE MANAGEMENT ---
-            let currentSection = 'section-1';
-            let userData = { name: '', class: '', number: '' };
-            let preTestScore = 0;
-            let game1Score = 0;
-            let game2Score = 0;
-            let postTestScore = 0;
-            let currentQuestionIndex = 0;
-            let game1CountdownInterval;
-            let game1TimeLeft = 120; // 2 minutes for the bomb
-            let game2CountdownInterval;
-            let game2TimeLeft = 90; // 1.5 minutes for data extraction
-            let currentShuffledGame1Questions = [];
-            let currentShuffledGame2Questions = [];
-            let player; // YouTube Player
-
-
-            // --- DOM ELEMENTS ---
-            const sections = document.querySelectorAll('main > div[id^="section-"]');
-            const background = document.getElementById('background-animation');
-            const screenFlashOverlay = document.getElementById('screen-flash-overlay');
-            const explosionEffect = document.getElementById('explosion-effect');
-            const hackedEffect = document.getElementById('hacked-effect');
-            
-            // Section 1
-            const initiateBtn = document.getElementById('initiate-assessment-btn');
-            const regModal = document.getElementById('registration-modal');
-            const regForm = document.getElementById('registration-form');
-            const goOperationalBtn = document.getElementById('go-operational-btn');
-            const regInputs = regForm.querySelectorAll('input');
-            const retinaScan = document.getElementById('retina-scan-animation');
-
-            // Section 2
-            const preTestContainer = document.getElementById('section-2');
-            const preTestQuestionEl = document.getElementById('pre-test-question');
-            const preTestOptionsEl = document.getElementById('pre-test-options');
-            const preTestFeedbackEl = document.getElementById('pre-test-feedback');
-            const progressText2 = document.getElementById('progress-text');
-            const progressBar2 = document.getElementById('progress-bar-2');
-            const awaitingBriefingBtn = document.getElementById('awaiting-briefing-btn');
-
-            // Section 3
-            const acceptMissionBtn = document.getElementById('accept-mission-btn');
-            const missionTimerEl = document.getElementById('mission-timer');
-
-            // Section 4 (Game 1)
-            const startGame1Btn = document.getElementById('start-game1-btn');
-            const gameContainer = document.getElementById('game-container');
-            const gameScoreText = document.getElementById('game-score-text');
-            const countdownTimerEl = document.getElementById('countdown-timer');
-            const gameQuestionEl = document.getElementById('game-question');
-            const gameOptionsEl = document.getElementById('game-options');
-            const gameResultContainer = document.getElementById('game-result-container');
-            const gameResultMessage = document.getElementById('game-result-message');
-            const gameNextStepBtn = document.getElementById('game-next-step-btn');
-
-            // Section 4b (Game 2)
-            const startGame2Btn = document.getElementById('start-game2-btn');
-            const game2ScoreText = document.getElementById('game2-score-text');
-            const game2CountdownTimerEl = document.getElementById('game2-countdown-timer');
-            const game2Container = document.getElementById('game2-container');
-            const game2QuestionEl = document.getElementById('game2-question');
-            const game2AnswerInput = document.getElementById('game2-answer-input');
-            const submitDataBtn = document.getElementById('submit-data-btn');
-            const game2FeedbackText = document.getElementById('game2-feedback-text');
-            const game2ResultContainer = document.getElementById('game2-result-container');
-            const game2ResultMessage = document.getElementById('game2-result-message');
-            const game2NextStepBtn = document.getElementById('game2-next-step-btn');
-
-
-            // Section 5
-            const postTestContainer = document.getElementById('section-5');
-            const postTestQuestionEl = document.getElementById('post-test-question');
-            const postTestOptionsEl = document.getElementById('post-test-options');
-            const postTestFeedbackEl = document.getElementById('post-test-feedback');
-            const progressText5 = document.getElementById('post-test-progress-text');
-            const progressBar5 = document.getElementById('progress-bar-5');
-
-            // Section 6
-            const leaderboardBody = document.getElementById('leaderboard-body');
-            const restartProtocolBtn = document.getElementById('restart-protocol-btn');
-            const goDarkBtn = document.getElementById('go-dark-btn');
-
-
-            // --- SOUND EFFECTS ---
-            const sounds = {
-                click: new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 0.1 } }).toDestination(),
-                correct: new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.005, decay: 0.2, sustain: 0.1, release: 0.2 } }).toDestination(),
-                incorrect: new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0.1 } }).toDestination(),
-                missionStart: new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sawtooth' } }).toDestination(),
-                explosion: new Tone.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.005, decay: 0.5, sustain: 0.1, release: 0.5 } }).toDestination(),
-                hacked: new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0, release: 0.1 } }).toDestination(),
-                victory: new Tone.PolySynth(Tone.Synth).toDestination()
-            };
-            
-            const musicLoops = {
-                menu: new Tone.Loop(time => {
-                    sounds.click.triggerAttackRelease("C3", "8n", time);
-                }, "4n"),
-                test: new Tone.Loop(time => {
-                    sounds.click.triggerAttackRelease("E4", "8n", time);
-                }, "2n"),
-                briefing: new Tone.Loop(time => {
-                    sounds.click.triggerAttackRelease("G2", "1n", time);
-                }, "1n"),
-                action: new Tone.Pattern((time, note) => {
-                    sounds.click.triggerAttackRelease(note, 0.1, time);
-                }, ["C4", "E4", "G4", "B4"], "up")
-            };
-            
-            function playClick() { sounds.click.triggerAttackRelease("C5", "8n"); }
-            function playCorrect() { sounds.correct.triggerAttackRelease("G5", "8n"); }
-            function playIncorrect() { sounds.incorrect.triggerAttackRelease("C3", "4n"); }
-            function playMissionStart() { sounds.missionStart.triggerAttackRelease(["C4", "E4", "G4"], "1n"); }
-            function playExplosion() { sounds.explosion.triggerAttackRelease("1n"); }
-            function playHacked() {
-                const now = Tone.now();
-                sounds.hacked.triggerAttackRelease("C2", "16n", now);
-                sounds.hacked.triggerAttackRelease("G4", "16n", now + 0.05);
-                sounds.hacked.triggerAttackRelease("E3", "16n", now + 0.1);
-            }
-            
-            function stopAllMusic() {
-                Object.values(musicLoops).forEach(loop => {
-                    if (loop.state === 'started') loop.stop(0);
-                });
-                if (Tone.Transport.state === 'started') {
-                    Tone.Transport.cancel(0);
-                    Tone.Transport.stop();
-                }
-            }
-
-            function playBackgroundMusic(section) {
-                stopAllMusic();
-                let shouldStartTransport = true;
-                Tone.Transport.bpm.value = 120;
-                switch(section) {
-                    case 'section-1':
-                        Tone.Transport.bpm.value = 80;
-                        musicLoops.menu.start(0);
-                        break;
-                    case 'section-2':
-                    case 'section-5':
-                        Tone.Transport.bpm.value = 100;
-                        musicLoops.test.start(0);
-                        break;
-                    case 'section-3':
-                        shouldStartTransport = false;
-                        break;
-                    case 'section-4':
-                    case 'section-4b':
-                        Tone.Transport.bpm.value = 140;
-                        musicLoops.action.start(0);
-                        break;
-                    case 'section-6':
-                        sounds.victory.triggerAttackRelease(["C4", "E4", "G4", "C5"], "1n");
-                        shouldStartTransport = false;
-                        break;
-                }
-                if (shouldStartTransport && Tone.Transport.state !== 'started') {
-                    Tone.Transport.start();
-                }
-            }
-
-
-            // --- DATA ---
-            const preTestQuestions = [
-                { q: "I normally ___ to school by bus.", o: ["go", "goes", "am going", "goed"], a: 0 },
-                { q: "She ___ like coffee.", o: ["don't", "doesn't", "isn't", "not"], a: 1 },
-                { q: "They ___ football every weekend.", o: ["plays", "are playing", "play", "played"], a: 2 },
-                { q: "The sun ___ in the east.", o: ["rise", "is rising", "rises", "rose"], a: 2 },
-                { q: "My cat ___ on my bed every night.", o: ["sleep", "sleeps", "is sleeping", "slept"], a: 1 },
-                { q: "___ you speak English?", o: ["Do", "Does", "Are", "Is"], a: 0 },
-                { q: "He ___ a doctor.", o: ["am", "are", "is", "be"], a: 2 },
-                { q: "We ___ watch TV in the morning.", o: ["doesn't", "aren't", "don't", "not"], a: 2 },
-                { q: "What time ___ the train leave?", o: ["do", "is", "does", "are"], a: 2 },
-                { q: "Water ___ at 100 degrees Celsius.", o: ["boil", "boils", "is boiling", "boiled"], a: 1 }
-            ];
-
-            const game1Questions = [
-                { q: "My brother ___ hard for his exams.", o: ["study", "studies", "is studying", "studying"], a: 1 },
-                { q: "A cat ___ mice.", o: ["catch", "catches", "is catching", "caught"], a: 1 },
-                { q: "She never ___ breakfast.", o: ["eat", "is eating", "eats", "ate"], a: 2 },
-                { q: "He ___ to the gym after work.", o: ["goes", "go", "is going", "went"], a: 0 },
-                { q: "My friend ___ cars.", o: ["fix", "is fixing", "fixes", "fixed"], a: 2 },
-                { q: "The baby ___ when it is hungry.", o: ["cry", "cries", "is crying", "cried"], a: 1 },
-                { q: "She always ___ her hands before meals.", o: ["wash", "washes", "is washing", "washed"], a: 1 },
-                { q: "My teacher ___ a lot of questions.", o: ["ask", "is asking", "asks", "asked"], a: 2 },
-                { q: "He ___ the piano.", o: ["not play", "don't play", "doesn't play", "isn't playing"], a: 2 },
-                { q: "What time ___ you finish work?", o: ["do", "does", "are", "is"], a: 0 },
-                { q: "Water ___ at 0 degrees Celsius.", o: ["freeze", "freezes", "is freezing", "froze"], a: 1 },
-                { q: "My parents ___ in a big city.", o: ["live", "lives", "are living", "lived"], a: 0 },
-                { q: "The train ___ at 7 AM every morning.", o: ["leave", "is leaving", "leaves", "left"], a: 2 },
-                { q: "He ___ his teeth twice a day.", o: ["brush", "is brushing", "brushes", "brushed"], a: 2 },
-                { q: "She ___ to music in her free time.", o: ["listen", "listens", "is listening", "listened"], a: 1 },
-                { q: "We ___ our grandparents every month.", o: ["visit", "visits", "are visiting", "visited"], a: 0 },
-                { q: "The moon ___ at night.", o: ["appear", "appears", "is appearing", "appeared"], a: 1 },
-                { q: "A baker ___ bread.", o: ["bake", "bakes", "is baking", "baked"], a: 1 },
-                { q: "___ your sister play the guitar?", o: ["Do", "Does", "Is", "Are"], a: 1 },
-                { q: "They ___ speak French.", o: ["not", "doesn't", "don't", "aren't"], a: 2 },
-                { q: "It often ___ here in winter.", o: ["snow", "is snowing", "snows", "snowed"], a: 2 },
-                { q: "A pilot ___ airplanes.", o: ["fly", "flies", "is flying", "flown"], a: 1 },
-                { q: "My dog ___ at strangers.", o: ["bark", "barks", "is barking", "barked"], a: 1 },
-                { q: "We ___ to the cinema on Fridays.", o: ["go", "goes", "are going", "went"], a: 0 },
-                { q: "___ he have any siblings?", o: ["Do", "Does", "Is", "Has"], a: 1 },
-                { q: "The museum ___ at 6 PM.", o: ["close", "is closing", "closes", "closed"], a: 2 },
-                { q: "She ___ her homework after school.", o: ["do", "does", "is doing", "did"], a: 1 },
-                { q: "I ___ like spicy food.", o: ["not", "doesn't", "don't", "am not"], a: 2 },
-                { q: "You ___ very happy today.", o: ["look", "looks", "are looking", "looked"], a: 0 },
-                { q: "The sun ___ us light and heat.", o: ["give", "gives", "is giving", "gave"], a: 1 },
-                { q: "A nurse ___ after patients.", o: ["look", "looks", "is looking", "looked"], a: 1 },
-                { q: "They ___ in a small apartment.", o: ["live", "lives", "are living", "lived"], a: 0 },
-                { q: "He ___ to be a famous actor.", o: ["want", "wants", "is wanting", "wanted"], a: 1 },
-                { q: "The coffee shop ___ at 7 AM.", o: ["open", "is opening", "opens", "opened"], a: 2 },
-                { q: "She ___ her emails every morning.", o: ["check", "checks", "is checking", "checked"], a: 1 },
-                { q: "We ___ a lot of books.", o: ["read", "reads", "are reading", "red"], a: 0 },
-                { q: "It ___ a lot in the rainy season.", o: ["rain", "is raining", "rains", "rained"], a: 2 },
-                { q: "My father ___ in a bank.", o: ["work", "works", "is working", "worked"], a: 1 },
-                { q: "___ they live near the park?", o: ["Are", "Is", "Do", "Does"], a: 2 },
-                { q: "The children ___ in the garden.", o: ["play", "plays", "are playing", "played"], a: 0 }
-            ];
-            
-            const game2Questions = [
-                { q: "A bee (fly) from flower to flower.", a: "flies" },
-                { q: "Sarah (mix) the ingredients for the cake.", a: "mixes" },
-                { q: "The Queen of England (live) in Buckingham Palace.", a: "lives" },
-                { q: "A postman (deliver) letters.", a: "delivers" },
-                { q: "My mom (worry) about me when I'm late.", a: "worries" },
-                { q: "The earth (revolve) around the sun.", a: "revolves" },
-                { q: "He often (watch) movies.", a: "watches" },
-                { q: "She (teach) English at our school.", a: "teaches" },
-                { q: "The bus (arrive) at 10 AM.", a: "arrives" },
-                { q: "An artist (paint) pictures.", a: "paints" },
-                { q: "She (kiss) her son goodnight.", a: "kisses" },
-                { q: "The machine (wash) clothes.", a: "washes" },
-                { q: "He (pass) the ball.", a: "passes" },
-                { q: "A dog (chase) a cat.", a: "chases" },
-                { q: "My dad (watch) the news.", a: "watches" },
-                { q: "The student (guess) the answer.", a: "guesses" },
-                { q: "She (wish) for a new bike.", a: "wishes" },
-                { q: "The magician (vanish) in a puff of smoke.", a: "vanishes" },
-                { q: "He (push) the door open.", a: "pushes" },
-                { q: "The teacher (explain) the lesson.", a: "explains" },
-                { q: "A bird (sing) in the morning.", a: "sings" },
-                { q: "My sister (play) the violin.", a: "plays" },
-                { q: "The sun (shine) brightly.", a: "shines" },
-                { q: "He (run) every day.", a: "runs" },
-                { q: "She (write) a letter.", a: "writes" },
-                { q: "The chef (cook) delicious food.", a: "cooks" },
-                { q: "A baby (sleep) a lot.", a: "sleeps" },
-                { q: "The cat (drink) milk.", a: "drinks" },
-                { q: "My friend (read) many books.", a: "reads" },
-                { q: "The car (need) gas.", a: "needs" },
-                { q: "She (help) her mother.", a: "helps" },
-                { q: "He (know) the answer.", a: "knows" },
-                { q: "The flower (smell) nice.", a: "smells" },
-                { q: "The boy (throw) the ball.", a: "throws" },
-                { q: "The girl (dance) beautifully.", a: "dances" },
-                { q: "The phone (ring) loudly.", a: "rings" },
-                { q: "The student (listen) to the teacher.", a: "listens" },
-                { q: "The man (drive) a car.", a: "drives" },
-                { q: "The woman (wear) a red dress.", a: "wears" },
-                { q: "The wind (blow) strongly.", a: "blows" }
-            ];
-
-            const postTestQuestions = [
-                { q: "My dad ___ the dishes every evening.", o: ["wash", "washing", "washes", "is washing"], a: 2 },
-                { q: "It rarely ___ in this part of the country.", o: ["rain", "rains", "is raining", "don't rain"], a: 1 },
-                { q: "___ your parents know you are here?", o: ["Is", "Are", "Does", "Do"], a: 3 },
-                { q: "A chef is a person who ___ food.", o: ["cook", "cooks", "is cooking", "to cook"], a: 1 },
-                { q: "I ___ understand what you are saying.", o: ["doesn't", "not", "am not", "don't"], a: 3 },
-                { q: "She always ___ her keys.", o: ["lose", "loses", "is losing", "looses"], a: 1 },
-                { q: "Why ___ he always complain?", o: ["do", "is", "does", "are"], a: 2 },
-                { q: "The flight from London ___ at 6:00 AM.", o: ["arrive", "is arriving", "arrives", "arrived"], a: 2 },
-                { q: "My sister is a teacher. She ___ young children.", o: ["teach", "teaches", "taught", "is teaching"], a: 1 },
-                { q: "People in Japan ___ a lot of rice.", o: ["eats", "eat", "are eating", "is eating"], a: 1 }
-            ];
-
-            // --- YOUTUBE API ---
-            window.onYouTubeIframeAPIReady = function() {
-                player = new YT.Player('player', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: 'bYO88ag2T2o',
-                    playerVars: {
-                        'playsinline': 1
-                    }
-                });
-            }
-
-
-            // --- FUNCTIONS ---
-
-            function shuffleArray(array) {
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-                return array;
-            }
-
-            function showSection(sectionId) {
-                currentSection = sectionId;
-                sections.forEach(section => {
-                    if (section.id === sectionId) {
-                        section.classList.remove('hidden');
-                    } else {
-                        section.classList.add('hidden');
-                    }
-                });
-                playBackgroundMusic(sectionId);
-            }
-
-            // --- Section 1: Registration Logic ---
-            initiateBtn.addEventListener('click', async () => {
-                await Tone.start();
-                playClick();
-                playBackgroundMusic('section-1');
-                regModal.classList.remove('hidden', 'opacity-0');
-            });
-
-            regForm.addEventListener('input', () => {
-                const allFilled = [...regInputs].every(input => input.value.trim() !== '');
-                goOperationalBtn.disabled = !allFilled;
-            });
-
-            regForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                playClick();
-                userData.name = document.getElementById('student-name').value;
-                userData.class = document.getElementById('student-class').value;
-                userData.number = document.getElementById('student-number').value;
-                
-                regModal.classList.add('opacity-0');
-                setTimeout(() => regModal.classList.add('hidden'), 300);
-
-                retinaScan.classList.remove('hidden');
-                setTimeout(() => {
-                    retinaScan.classList.add('hidden');
-                    startPreTest();
-                }, 2000);
-            });
-
-            // --- Section 2: Pre-Test Logic ---
-            function startPreTest() {
-                currentQuestionIndex = 0;
-                preTestScore = 0;
-                preTestFeedbackEl.classList.add('hidden');
-                preTestContainer.querySelector('#pre-test-question-container').classList.remove('hidden');
-                showSection('section-2');
-                renderPreTestQuestion();
-            }
-
-            function renderPreTestQuestion() {
-                const questions = preTestQuestions;
-                if (currentQuestionIndex >= questions.length) {
-                    endPreTest();
-                    return;
-                }
-                const q = questions[currentQuestionIndex];
-                preTestQuestionEl.textContent = q.q;
-                preTestOptionsEl.innerHTML = '';
-                q.o.forEach((option, index) => {
-                    const button = document.createElement('button');
-                    button.textContent = option;
-                    button.classList.add('w-full', 'p-4', 'rounded-md', 'transition-all', 'duration-200', 'bg-gray-800', 'border-2', 'border-cyan-800', 'hover:bg-cyan-700', 'hover:border-cyan-500');
-                    button.onclick = () => handlePreTestAnswer(index);
-                    preTestOptionsEl.appendChild(button);
-                });
-                const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-                progressText2.textContent = `Analyzing Cognitive Response... (${currentQuestionIndex + 1}/${questions.length})`;
-                progressBar2.style.width = `${progress}%`;
-            }
-
-            function handlePreTestAnswer(selectedIndex) {
-                if (selectedIndex === preTestQuestions[currentQuestionIndex].a) {
-                    playCorrect();
-                    preTestScore++;
-                } else {
-                    playIncorrect();
-                }
-                currentQuestionIndex++;
-                renderPreTestQuestion();
-            }
-
-            function endPreTest() {
-                preTestContainer.querySelector('#pre-test-question-container').classList.add('hidden');
-                preTestFeedbackEl.classList.remove('hidden');
-            }
-            
-            awaitingBriefingBtn.addEventListener('click', () => {
-                playClick();
-                showSection('section-3');
-                startLessonTimer();
-            });
-
-            // --- Section 3: Lesson Logic ---
-            function startLessonTimer() {
-                let timeLeft = 15;
-                acceptMissionBtn.disabled = true;
-                acceptMissionBtn.innerHTML = `ปลดล็อกใน <span id="mission-timer">${timeLeft}</span>s`;
-
-                const timerInterval = setInterval(() => {
-                    timeLeft--;
-                    const timerEl = document.getElementById('mission-timer');
-                    if (timerEl) timerEl.textContent = timeLeft;
-                    if (timeLeft <= 0) {
-                        clearInterval(timerInterval);
-                        acceptMissionBtn.disabled = false;
-                        acceptMissionBtn.innerHTML = "ACCEPT MISSION PROTOCOL 🎲";
-                        acceptMissionBtn.classList.add('btn-glitch');
-                    }
-                }, 1000);
-            }
-
-            acceptMissionBtn.addEventListener('click', () => {
-                playClick();
-                if (player && typeof player.stopVideo === 'function') {
-                    player.stopVideo();
-                }
-                showSection('section-4-instructions');
-            });
-
-            // --- Section 4: Game 1 Logic (Bomb Defusal) ---
-            startGame1Btn.addEventListener('click', () => {
-                playMissionStart();
-                startGame1();
-            });
-
-            function startGame1() {
-                currentShuffledGame1Questions = shuffleArray([...game1Questions]);
-                currentQuestionIndex = 0;
-                game1Score = 0;
-                game1TimeLeft = 120; // 2 minutes
-                gameResultContainer.classList.add('hidden');
-                gameContainer.classList.remove('hidden');
-                updateGame1Score();
-                showSection('section-4');
-                renderGame1Question();
-                startCountdown();
-            }
-
-            function startCountdown() {
-                clearInterval(game1CountdownInterval);
-                game1CountdownInterval = setInterval(() => {
-                    if (game1TimeLeft > 0) {
-                        game1TimeLeft--;
-                        const minutes = Math.floor(game1TimeLeft / 60).toString().padStart(2, '0');
-                        const seconds = (game1TimeLeft % 60).toString().padStart(2, '0');
-                        countdownTimerEl.textContent = `${minutes}:${seconds}`;
-                    } else {
-                        bombDetonated();
-                    }
-                }, 1000);
-            }
-
-            function renderGame1Question() {
-                if (currentQuestionIndex >= currentShuffledGame1Questions.length) {
-                    defuseSuccess();
-                    return;
-                }
-                const q = currentShuffledGame1Questions[currentQuestionIndex];
-                gameQuestionEl.textContent = q.q;
-                gameOptionsEl.innerHTML = '';
-                q.o.forEach((option, index) => {
-                    const button = document.createElement('button');
-                    button.textContent = option;
-                    button.classList.add('w-full', 'p-4', 'rounded-md', 'transition-all', 'duration-200', 'bg-gray-700', 'border-2', 'border-cyan-800', 'hover:bg-cyan-600', 'hover:border-cyan-400');
-                    button.onclick = () => handleGame1Answer(index);
-                    gameOptionsEl.appendChild(button);
-                });
-            }
-
-            function handleGame1Answer(selectedIndex) {
-                const isCorrect = selectedIndex === currentShuffledGame1Questions[currentQuestionIndex].a;
-                
-                gameOptionsEl.querySelectorAll('button').forEach(btn => btn.disabled = true);
-
-                if (isCorrect) {
-                    playCorrect();
-                    game1Score++;
-                    gameOptionsEl.children[selectedIndex].classList.add('bg-green-500', 'border-green-400');
-                    if (game1Score >= 10) {
-                        defuseSuccess();
-                        return;
-                    }
-                } else {
-                    playIncorrect();
-                    game1TimeLeft -= 10;
-                    screenFlashOverlay.classList.add('screen-flash-red');
-                    setTimeout(() => screenFlashOverlay.classList.remove('screen-flash-red'), 500);
-                    gameOptionsEl.children[selectedIndex].classList.add('bg-red-500', 'border-red-400');
-                    gameOptionsEl.children[currentShuffledGame1Questions[currentQuestionIndex].a].classList.add('bg-green-500', 'border-green-400');
-                }
-                
-                updateGame1Score();
-                currentQuestionIndex++;
-                
-                setTimeout(() => {
-                    renderGame1Question();
-                }, 1200);
-            }
-
-            function updateGame1Score() {
-                gameScoreText.textContent = `Components Defused: ${game1Score}/10`;
-            }
-
-            function endGame1Cleanup() {
-                clearInterval(game1CountdownInterval);
-                gameContainer.classList.add('hidden');
-                gameResultContainer.classList.remove('hidden');
-            }
-
-            function bombDetonated() {
-                endGame1Cleanup();
-                playExplosion();
-                explosionEffect.classList.remove('hidden');
-                setTimeout(() => {
-                    explosionEffect.classList.add('hidden');
-                    gameResultMessage.textContent = "BOMB DETONATED";
-                    gameResultMessage.classList.add('text-red-500');
-                    gameResultMessage.classList.remove('text-green-400');
-                    gameNextStepBtn.textContent = "REVIEW PROTOCOL";
-                    gameNextStepBtn.onclick = () => {
-                        playClick();
-                        showSection('section-3');
-                        startLessonTimer();
-                    };
-                }, 500);
-            }
-
-            function defuseSuccess() {
-                endGame1Cleanup();
-                playMissionStart();
-                gameResultMessage.innerHTML = `
-                    <p class="text-green-400">LOGIC BOMB DEFUSED!</p>
-                    <p class="text-lg text-gray-300 mt-2">The bomb was a distraction! Infiltrate their server now!</p>
-                `;
-                gameNextStepBtn.textContent = "PROCEED TO NEXT MISSION";
-                gameNextStepBtn.onclick = () => {
-                    playClick();
-                    showSection('section-4b-instructions');
-                }
-            }
-            
-            // --- Section 4b: Game 2 Logic (Data Extraction) ---
-            startGame2Btn.addEventListener('click', () => {
-                playMissionStart();
-                startGame2();
-            });
-
-            function startGame2() {
-                currentShuffledGame2Questions = shuffleArray([...game2Questions]);
-                currentQuestionIndex = 0;
-                game2Score = 0;
-                game2TimeLeft = 90; // 1.5 minutes
-                game2ResultContainer.classList.add('hidden');
-                game2Container.classList.remove('hidden');
-                updateGame2Score();
-                showSection('section-4b');
-                renderGame2Question();
-                startGame2Countdown();
-            }
-
-            function startGame2Countdown() {
-                clearInterval(game2CountdownInterval);
-                game2CountdownInterval = setInterval(() => {
-                    if (game2TimeLeft > 0) {
-                        game2TimeLeft--;
-                        const minutes = Math.floor(game2TimeLeft / 60).toString().padStart(2, '0');
-                        const seconds = (game2TimeLeft % 60).toString().padStart(2, '0');
-                        game2CountdownTimerEl.textContent = `${minutes}:${seconds}`;
-                    } else {
-                        game2TimeUp();
-                    }
-                }, 1000);
-            }
-            
-            function renderGame2Question() {
-                 if (currentQuestionIndex >= currentShuffledGame2Questions.length) {
-                    game2TimeUp(); // Not enough correct answers even if all questions are answered
-                    return;
-                }
-                const q = currentShuffledGame2Questions[currentQuestionIndex];
-                game2QuestionEl.textContent = q.q;
-                game2AnswerInput.value = '';
-                game2FeedbackText.textContent = '';
-                game2AnswerInput.focus();
-            }
-            
-            function handleGame2Answer() {
-                const userAnswer = game2AnswerInput.value.trim().toLowerCase();
-                const correctAnswer = currentShuffledGame2Questions[currentQuestionIndex].a.toLowerCase();
-                
-                if (userAnswer === correctAnswer) {
-                    playCorrect();
-                    game2Score++;
-                    game2TimeLeft += 5; // Bonus time
-                    game2FeedbackText.textContent = ">> DATA PACKET EXTRACTED";
-                    game2FeedbackText.classList.add('text-green-400');
-                    game2FeedbackText.classList.remove('text-red-400');
-                    if (game2Score >= 5) {
-                        extractionSuccess();
-                        return;
-                    }
-                } else {
-                    playIncorrect();
-                    game2TimeLeft -= 10; // Penalty
-                    screenFlashOverlay.classList.add('screen-flash-red');
-                    setTimeout(() => screenFlashOverlay.classList.remove('screen-flash-red'), 500);
-                    game2FeedbackText.textContent = ">> FIREWALL ALERT! DATA CORRUPTED";
-                    game2FeedbackText.classList.add('text-red-400');
-                    game2FeedbackText.classList.remove('text-green-400');
-                }
-                
-                updateGame2Score();
-                currentQuestionIndex++;
-                
-                submitDataBtn.disabled = true;
-                setTimeout(() => {
-                    renderGame2Question();
-                    submitDataBtn.disabled = false;
-                }, 1200);
-            }
-
-            function updateGame2Score() {
-                game2ScoreText.textContent = `Data Extracted: ${game2Score}/5`;
-            }
-
-            submitDataBtn.addEventListener('click', () => {
-                playClick();
-                handleGame2Answer();
-            });
-            game2AnswerInput.addEventListener('keyup', (e) => {
-                if (e.key === 'Enter') {
-                    playClick();
-                    handleGame2Answer();
-                }
-            });
-
-            function endGame2Cleanup() {
-                clearInterval(game2CountdownInterval);
-                game2Container.classList.add('hidden');
-                game2ResultContainer.classList.remove('hidden');
-            }
-
-            function game2TimeUp() {
-                endGame2Cleanup();
-                playHacked();
-                hackedEffect.classList.remove('hidden');
-                let drops = 0;
-                const interval = setInterval(() => {
-                    const el = document.createElement('div');
-                    el.classList.add('hacked-text');
-                    el.textContent = "SYSTEM BREACH // ACCESS DENIED //";
-                    el.style.left = `${Math.random() * 100}vw`;
-                    hackedEffect.appendChild(el);
-                    drops++;
-                    if (drops > 100) {
-                        clearInterval(interval);
-                        setTimeout(() => {
-                            hackedEffect.classList.add('hidden');
-                            hackedEffect.innerHTML = '';
-                             game2ResultMessage.textContent = "SYSTEM BREACHED";
-                            game2ResultMessage.classList.add('text-red-500');
-                            game2ResultMessage.classList.remove('text-green-400');
-                            game2NextStepBtn.textContent = "REVIEW PROTOCOL";
-                            game2NextStepBtn.onclick = () => {
-                                playClick();
-                                showSection('section-3');
-                                startLessonTimer();
-                            };
-                        }, 1000);
-                    }
-                }, 50);
-            }
-
-            function extractionSuccess() {
-                endGame2Cleanup();
-                playMissionStart();
-                game2ResultMessage.textContent = "DATA EXTRACTION COMPLETE!";
-                game2ResultMessage.classList.add('text-green-400');
-                game2ResultMessage.classList.remove('text-red-500');
-                game2NextStepBtn.textContent = "FILE MISSION REPORT";
-                game2NextStepBtn.onclick = () => {
-                    playClick();
-                    startPostTest();
-                }
-            }
-
-            // --- Section 5: Post-Test Logic ---
-            function startPostTest() {
-                currentQuestionIndex = 0;
-                postTestScore = 0;
-                postTestFeedbackEl.classList.add('hidden');
-                postTestContainer.querySelector('#post-test-question-container').classList.remove('hidden');
-                showSection('section-5');
-                renderPostTestQuestion();
-            }
-
-            function renderPostTestQuestion() {
-                const questions = postTestQuestions;
-                if (currentQuestionIndex >= questions.length) {
-                    endPostTest();
-                    return;
-                }
-                const q = questions[currentQuestionIndex];
-                postTestQuestionEl.textContent = q.q;
-                postTestOptionsEl.innerHTML = '';
-                q.o.forEach((option, index) => {
-                    const button = document.createElement('button');
-                    button.textContent = option;
-                    button.classList.add('w-full', 'p-4', 'rounded-md', 'transition-all', 'duration-200', 'bg-gray-800', 'border-2', 'border-cyan-800', 'hover:bg-cyan-700', 'hover:border-cyan-500');
-                    button.onclick = () => handlePostTestAnswer(index);
-                    postTestOptionsEl.appendChild(button);
-                });
-                const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-                progressText5.textContent = `Compiling Report... (${currentQuestionIndex + 1}/${questions.length})`;
-                progressBar5.style.width = `${progress}%`;
-            }
-
-            function handlePostTestAnswer(selectedIndex) {
-                if (selectedIndex === postTestQuestions[currentQuestionIndex].a) {
-                    playCorrect();
-                    postTestScore++;
-                } else {
-                    playIncorrect();
-                }
-                currentQuestionIndex++;
-                renderPostTestQuestion();
-            }
-
-            function endPostTest() {
-                postTestContainer.querySelector('#post-test-question-container').classList.add('hidden');
-                postTestFeedbackEl.classList.remove('hidden');
-                
-                setTimeout(() => {
-                    showLeaderboard();
-                }, 2000);
-            }
-
-            // --- Section 6: Leaderboard Logic ---
-            function showLeaderboard() {
-                const leaderboard = JSON.parse(localStorage.getItem('wordkeepersLeaderboard')) || [];
-                const finalScore = postTestScore;
-                
-                const existingUserIndex = leaderboard.findIndex(entry => entry.number === userData.number && entry.class === userData.class);
-                if (existingUserIndex > -1) {
-                    if (finalScore > leaderboard[existingUserIndex].score) {
-                        leaderboard[existingUserIndex].score = finalScore;
-                    }
-                } else {
-                    leaderboard.push({ ...userData, score: finalScore });
-                }
-
-                leaderboard.sort((a, b) => b.score - a.score);
-                localStorage.setItem('wordkeepersLeaderboard', JSON.stringify(leaderboard));
-
-                leaderboardBody.innerHTML = '';
-                leaderboard.forEach((entry, index) => {
-                    const row = document.createElement('tr');
-                    row.classList.add('border-b', 'border-gray-700');
-                    if (entry.number === userData.number && entry.class === userData.class) {
-                        row.classList.add('bg-cyan-900', 'bg-opacity-50');
-                    }
-                    row.innerHTML = `
-                        <td class="p-3">${index + 1}</td>
-                        <td class="p-3">${entry.name} ${entry.number === userData.number && entry.class === userData.class ? '🌟' : ''}</td>
-                        <td class="p-3">${entry.class}</td>
-                        <td class="p-3">${entry.number}</td>
-                        <td class="p-3 font-bold text-cyan-400">${entry.score}/${postTestQuestions.length}</td>
-                    `;
-                    leaderboardBody.appendChild(row);
-                });
-
-                showSection('section-6');
-            }
-            
-            restartProtocolBtn.addEventListener('click', () => {
-                playClick();
-                userData = { name: '', class: '', number: '' };
-                preTestScore = 0; game1Score = 0; game2Score = 0; postTestScore = 0;
-                currentQuestionIndex = 0;
-                document.getElementById('registration-form').reset();
-                goOperationalBtn.disabled = true;
-                showSection('section-1');
-            });
-            
-            goDarkBtn.addEventListener('click', () => {
-                playClick();
-                document.body.innerHTML = `<div class="flex items-center justify-center min-h-screen w-full">
-                    <h1 class="text-4xl font-orbitron text-red-500">CONNECTION TERMINATED</h1>
-                </div>`;
-                background.style.display = 'none';
-            });
-
-            function createMatrixText() {
-                const el = document.createElement('div');
-                el.classList.add('matrix-text');
-                el.textContent = '0110100101101110011101000110010101101100';
-                el.style.left = `${Math.random() * 100}vw`;
-                el.style.animationDuration = `${Math.random() * 10 + 5}s`;
-                el.style.animationDelay = `${Math.random() * 5}s`;
-                background.appendChild(el);
-                
-                setTimeout(() => el.remove(), 15000);
-            }
-            setInterval(createMatrixText, 200);
-
-            showSection('section-1');
-        });
-    </script>
+        <button id="go-operational-btn" type="submit" class="w-full btn-primary" disabled>ออกเดินทาง</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- WORLD MAP -->
+  <div id="view-map" class="view hidden">
+    <div class="glass-panel p-6 mb-6 text-center">
+      <div class="corner-b"></div>
+      <h2 class="text-3xl font-orbitron text-cyan-400 text-glitch">แผนที่โลก LEXICORA</h2>
+      <p class="text-gray-400 mt-1">เลือกอาณาจักรที่ปลดล็อกแล้วเพื่อเริ่มภารกิจ</p>
+    </div>
+    <div id="realm-list" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
+  </div>
+
+  <!-- REALM BRIEF -->
+  <div id="view-realm-brief" class="view hidden glass-panel p-8">
+    <div class="corner-b"></div>
+    <h2 id="brief-title" class="text-3xl font-orbitron text-center mb-1"></h2>
+    <p id="brief-sub" class="text-center text-gray-400 mb-6"></p>
+    <div class="max-w-xl mx-auto text-left space-y-3">
+      <ul id="brief-rules" class="list-disc list-inside space-y-2 text-lg"></ul>
+      <div class="bg-gray-900/60 rounded-md p-4 mt-4">
+        <p class="text-sm text-gray-400 mb-1">ตัวอย่าง</p>
+        <ul id="brief-examples" class="space-y-1 text-cyan-200 font-mono text-sm"></ul>
+      </div>
+    </div>
+    <div class="text-center mt-8">
+      <button id="brief-continue-btn" class="btn-primary text-xl">เข้าสู่อาณาจักร</button>
+      <div><button id="brief-back-btn" class="btn-ghost mt-4 text-sm">‹ กลับแผนที่โลก</button></div>
+    </div>
+  </div>
+
+  <!-- NODE MAP -->
+  <div id="view-node-map" class="view hidden">
+    <div class="glass-panel p-6 mb-6 text-center">
+      <div class="corner-b"></div>
+      <h2 id="nodemap-title" class="text-3xl font-orbitron text-glitch"></h2>
+      <p id="nodemap-sub" class="text-gray-400 mt-1"></p>
+      <button id="nodemap-back-btn" class="btn-ghost mt-3 text-sm">‹ กลับแผนที่โลก</button>
+    </div>
+    <div id="node-path" class="path-track"></div>
+  </div>
+
+  <!-- NODE INTRO -->
+  <div id="view-node-intro" class="view hidden glass-panel p-8 text-center">
+    <div class="corner-b"></div>
+    <h2 id="intro-title" class="text-2xl font-orbitron mb-2 text-glitch"></h2>
+    <p id="intro-desc" class="text-lg text-gray-300 mb-6"></p>
+    <div id="intro-details" class="text-left max-w-md mx-auto space-y-2 text-lg"></div>
+    <button id="intro-start-btn" class="btn-primary mt-8 text-xl">เริ่มด่าน</button>
+  </div>
+
+  <!-- PLAY: CHOICE -->
+  <div id="view-play-choice" class="view hidden glass-panel p-8">
+    <div class="corner-b"></div>
+    <div class="flex justify-between items-center mb-4">
+      <p id="choice-score-text" class="text-xl font-bold text-cyan-300"></p>
+      <div id="choice-timer" class="countdown-timer">00:00</div>
+    </div>
+    <div class="bg-gray-800/70 border-2 rounded-md p-6 text-center" style="border-color:var(--realm-color)">
+      <p id="choice-question" class="text-xl text-white mb-6 min-h-[56px] flex items-center justify-center"></p>
+      <div id="choice-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+  </div>
+
+  <!-- PLAY: FILL -->
+  <div id="view-play-fill" class="view hidden glass-panel p-8">
+    <div class="corner-b"></div>
+    <div class="flex justify-between items-center mb-4">
+      <p id="fill-score-text" class="text-xl font-bold text-cyan-300"></p>
+      <div id="fill-timer" class="countdown-timer">00:00</div>
+    </div>
+    <div class="bg-gray-800/70 border-2 rounded-md p-6 text-center" style="border-color:var(--realm-color)">
+      <p id="fill-question" class="text-xl text-white mb-6 font-mono"></p>
+      <div class="flex items-center justify-center gap-2">
+        <input type="text" id="fill-answer-input" class="bg-gray-900 border-b-2 p-2 text-xl text-center w-56 focus:outline-none font-mono text-yellow-300" style="border-color:var(--realm-color)" autocomplete="off">
+      </div>
+      <button id="fill-submit-btn" class="btn-primary mt-6">ยืนยันคำตอบ</button>
+      <p id="fill-feedback" class="mt-4 h-6 text-lg font-mono"></p>
+    </div>
+  </div>
+
+  <!-- PLAY: MATCH -->
+  <div id="view-play-match" class="view hidden glass-panel p-8">
+    <div class="corner-b"></div>
+    <div class="flex justify-between items-center mb-4">
+      <p id="match-score-text" class="text-xl font-bold text-cyan-300"></p>
+      <div id="match-timer" class="countdown-timer">00:00</div>
+    </div>
+    <p class="text-center text-gray-400 mb-4">จับคู่คำศัพท์กับความหมาย</p>
+    <div class="grid grid-cols-2 gap-6">
+      <div id="match-col-words" class="space-y-3"></div>
+      <div id="match-col-meanings" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- PLAY: BOSS -->
+  <div id="view-play-boss" class="view hidden glass-panel p-8">
+    <div class="corner-b"></div>
+    <h2 id="boss-name" class="text-2xl font-orbitron text-center text-red-500 mb-3 text-glitch"></h2>
+    <div class="mb-2"><p class="text-sm text-gray-400 mb-1">Boss HP</p><div class="hp-bar-container"><div id="boss-hp-bar" class="hp-bar" style="width:100%"></div></div></div>
+    <div class="flex justify-between items-center mb-4 mt-4">
+      <div class="lives-hearts" id="boss-lives"></div>
+      <div id="boss-q-timer" class="countdown-timer text-3xl">15</div>
+    </div>
+    <div class="bg-gray-800/70 border-2 border-red-600 rounded-md p-6 text-center">
+      <p id="boss-question" class="text-xl text-white mb-6 min-h-[56px] flex items-center justify-center"></p>
+      <div id="boss-options" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+  </div>
+
+  <!-- NODE RESULT -->
+  <div id="view-node-result" class="view hidden glass-panel p-8 text-center">
+    <div class="corner-b"></div>
+    <p id="result-title" class="text-4xl font-orbitron mb-3"></p>
+    <p id="result-stars" class="star-rating text-4xl mb-4"></p>
+    <p id="result-detail" class="text-lg text-gray-300 mb-6"></p>
+    <div class="flex justify-center gap-4">
+      <button id="result-retry-btn" class="btn-ghost hidden">ลองใหม่</button>
+      <button id="result-continue-btn" class="btn-primary text-xl">ดำเนินต่อ</button>
+    </div>
+  </div>
+
+  <!-- REALM COMPLETE -->
+  <div id="view-realm-complete" class="view hidden glass-panel p-8 text-center">
+    <div class="corner-b"></div>
+    <p class="text-5xl mb-4">🏆</p>
+    <h2 id="realm-complete-title" class="text-3xl font-orbitron text-cyan-400 mb-3 text-glitch"></h2>
+    <p id="realm-complete-desc" class="text-lg text-gray-300 mb-8"></p>
+    <button id="realm-complete-btn" class="btn-primary text-xl">กลับแผนที่โลก</button>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div id="view-leaderboard" class="view hidden glass-panel p-8">
+    <div class="corner-b"></div>
+    <h2 class="text-4xl font-orbitron text-cyan-400 mb-6 text-center text-glitch">LEADERBOARD 👑</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead>
+          <tr class="border-b-2 border-cyan-700">
+            <th class="p-3 text-cyan-300">Rank</th>
+            <th class="p-3 text-cyan-300">ชื่อ</th>
+            <th class="p-3 text-cyan-300">ชั้น</th>
+            <th class="p-3 text-cyan-300">เลขที่</th>
+            <th class="p-3 text-cyan-300">อาณาจักรที่ผ่าน</th>
+            <th class="p-3 text-cyan-300">XP รวม</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body"></tbody>
+      </table>
+    </div>
+    <div class="text-center mt-8"><button id="leaderboard-back-btn" class="btn-primary">กลับ</button></div>
+  </div>
+
+  <footer class="text-center text-gray-500 text-sm mt-10">
+    พัฒนาโดยครูตรึงตระกานต์ ทองมา โรงเรียนบ้านหัวถนน ปีการศึกษา 2568
+  </footer>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+// ---------------------------------------------------------------------------
+// DATA
+// ---------------------------------------------------------------------------
+const REALMS = [
+  {
+    id:'whisper-woods', name:'Whisper Woods', grammarLabel:'Present Simple', icon:'🌲',
+    color:'#4ade80', colorRgb:'74,222,128', dark:'#166534',
+    brief:{
+      rules:[
+        'ใช้กับสิ่งที่ทำเป็นประจำ หรือความจริงทั่วไป',
+        'โครงสร้าง: Subject + V1 (เติม s/es เมื่อประธานเป็นเอกพจน์บุรุษที่ 3)',
+        'ปฏิเสธ: Subject + don\'t/doesn\'t + V1',
+        'คำถาม: Do/Does + Subject + V1 ?'
+      ],
+      examples:['She walks to school every day.','He doesn\'t like coffee.','Do you play football?']
+    },
+    choicePool:[
+      {q:"My brother ___ hard for his exams.",o:["study","studies","is studying","studying"],a:1},
+      {q:"A cat ___ mice.",o:["catch","catches","is catching","caught"],a:1},
+      {q:"She never ___ breakfast.",o:["eat","is eating","eats","ate"],a:2},
+      {q:"He ___ to the gym after work.",o:["goes","go","is going","went"],a:0},
+      {q:"My friend ___ cars.",o:["fix","is fixing","fixes","fixed"],a:2},
+      {q:"The baby ___ when it is hungry.",o:["cry","cries","is crying","cried"],a:1},
+      {q:"She always ___ her hands before meals.",o:["wash","washes","is washing","washed"],a:1},
+      {q:"My teacher ___ a lot of questions.",o:["ask","is asking","asks","asked"],a:2},
+      {q:"He ___ the piano.",o:["not play","don't play","doesn't play","isn't playing"],a:2},
+      {q:"What time ___ you finish work?",o:["do","does","are","is"],a:0},
+      {q:"Water ___ at 0 degrees Celsius.",o:["freeze","freezes","is freezing","froze"],a:1},
+      {q:"My parents ___ in a big city.",o:["live","lives","are living","lived"],a:0},
+      {q:"The train ___ at 7 AM every morning.",o:["leave","is leaving","leaves","left"],a:2},
+      {q:"She ___ to music in her free time.",o:["listen","listens","is listening","listened"],a:1}
+    ],
+    fillPool:[
+      {q:"A bee (fly) from flower to flower.",a:"flies"},
+      {q:"Sarah (mix) the ingredients for the cake.",a:"mixes"},
+      {q:"The Queen (live) in a palace.",a:"lives"},
+      {q:"A postman (deliver) letters.",a:"delivers"},
+      {q:"My mom (worry) about me when I'm late.",a:"worries"},
+      {q:"The earth (revolve) around the sun.",a:"revolves"},
+      {q:"He often (watch) movies.",a:"watches"},
+      {q:"She (teach) English at our school.",a:"teaches"},
+      {q:"The bus (arrive) at 10 AM.",a:"arrives"},
+      {q:"An artist (paint) pictures.",a:"paints"},
+      {q:"She (kiss) her son goodnight.",a:"kisses"},
+      {q:"The machine (wash) clothes.",a:"washes"},
+      {q:"He (pass) the ball.",a:"passes"},
+      {q:"A dog (chase) a cat.",a:"chases"}
+    ],
+    vocabPairs:[
+      {w:"wake up",m:"ตื่นนอน"},{w:"brush teeth",m:"แปรงฟัน"},{w:"eat breakfast",m:"กินอาหารเช้า"},
+      {w:"go to school",m:"ไปโรงเรียน"},{w:"do homework",m:"ทำการบ้าน"},{w:"watch TV",m:"ดูทีวี"},
+      {w:"take a bath",m:"อาบน้ำ"},{w:"go to bed",m:"เข้านอน"}
+    ],
+    bossPool:[
+      {q:"My father ___ in a bank.",o:["work","works","is working","worked"],a:1},
+      {q:"___ they live near the park?",o:["Are","Is","Do","Does"],a:2},
+      {q:"The children ___ in the garden.",o:["play","plays","are playing","played"],a:0},
+      {q:"The sun ___ in the east.",o:["rise","is rising","rises","rose"],a:2},
+      {q:"My cat ___ on my bed every night.",o:["sleep","sleeps","is sleeping","slept"],a:1},
+      {q:"___ you speak English?",o:["Do","Does","Are","Is"],a:0},
+      {q:"He ___ a doctor.",o:["am","are","is","be"],a:2},
+      {q:"We ___ watch TV in the morning.",o:["doesn't","aren't","don't","not"],a:2},
+      {q:"What time ___ the train leave?",o:["do","is","does","are"],a:2},
+      {q:"Water ___ at 100 degrees Celsius.",o:["boil","boils","is boiling","boiled"],a:1}
+    ]
+  },
+  {
+    id:'sandstone-ruins', name:'Sandstone Ruins', grammarLabel:'Present Continuous', icon:'🏜️',
+    color:'#f59e0b', colorRgb:'245,158,11', dark:'#92400e',
+    brief:{
+      rules:[
+        'ใช้กับสิ่งที่กำลังเกิดขึ้นตอนนี้',
+        'โครงสร้าง: Subject + is/am/are + V-ing',
+        'ปฏิเสธ: Subject + is/am/are + not + V-ing',
+        'คำถาม: Is/Am/Are + Subject + V-ing ?'
+      ],
+      examples:['She is reading a book now.','They are not playing outside.','Are you listening to me?']
+    },
+    choicePool:[
+      {q:"Look! The children ___ in the pool.",o:["swim","swims","are swimming","swam"],a:2},
+      {q:"Right now, she ___ a letter.",o:["write","writes","is writing","wrote"],a:2},
+      {q:"I ___ my homework at the moment.",o:["do","does","am doing","did"],a:2},
+      {q:"They ___ football right now.",o:["play","plays","are playing","played"],a:2},
+      {q:"He ___ TV at the moment.",o:["watch","watches","is watching","watched"],a:2},
+      {q:"We ___ for the bus now.",o:["wait","waits","are waiting","waited"],a:2},
+      {q:"___ it raining outside?",o:["Do","Does","Is","Are"],a:2},
+      {q:"She ___ to music right now.",o:["listen","listens","is listening","listened"],a:2},
+      {q:"The dog ___ in the garden now.",o:["run","runs","is running","ran"],a:2},
+      {q:"I ___ not sleeping.",o:["am","is","are","be"],a:0},
+      {q:"___ you working today?",o:["Do","Does","Are","Is"],a:2},
+      {q:"The chef ___ dinner right now.",o:["cook","cooks","is cooking","cooked"],a:2},
+      {q:"They ___ a movie at the moment.",o:["watch","watches","are watching","watched"],a:2},
+      {q:"My sister ___ her bike now.",o:["ride","rides","is riding","rode"],a:2}
+    ],
+    fillPool:[
+      {q:"Right now, she is (write) a letter.",a:"writing"},
+      {q:"Look! The dog is (run) in the yard.",a:"running"},
+      {q:"We are (sit) in the classroom now.",a:"sitting"},
+      {q:"He is (swim) in the lake at the moment.",a:"swimming"},
+      {q:"I am (make) a sandwich right now.",a:"making"},
+      {q:"They are (dance) at the party now.",a:"dancing"},
+      {q:"The baby is (cry) loudly right now.",a:"crying"},
+      {q:"She is (drive) to work at the moment.",a:"driving"},
+      {q:"We are (plan) a trip right now.",a:"planning"},
+      {q:"He is (study) for his test now.",a:"studying"},
+      {q:"The kids are (play) in the park now.",a:"playing"},
+      {q:"I am (try) to finish my work.",a:"trying"},
+      {q:"She is (clean) her room right now.",a:"cleaning"},
+      {q:"They are (dig) a hole in the garden.",a:"digging"}
+    ],
+    vocabPairs:[
+      {w:"running",m:"กำลังวิ่ง"},{w:"jumping",m:"กำลังกระโดด"},{w:"swimming",m:"กำลังว่ายน้ำ"},
+      {w:"climbing",m:"กำลังปีน"},{w:"flying",m:"กำลังบิน"},{w:"cooking",m:"กำลังทำอาหาร"},
+      {w:"singing",m:"กำลังร้องเพลง"},{w:"drawing",m:"กำลังวาดภาพ"}
+    ],
+    bossPool:[
+      {q:"Look! It ___ heavily now.",o:["rain","rains","is raining","rained"],a:2},
+      {q:"She ___ a cake right now.",o:["bake","bakes","is baking","baked"],a:2},
+      {q:"___ they studying for the exam?",o:["Do","Does","Are","Is"],a:2},
+      {q:"My brother ___ his bike at the moment.",o:["ride","rides","is riding","rode"],a:2},
+      {q:"We ___ dinner right now.",o:["have","has","are having","had"],a:2},
+      {q:"The birds ___ in the sky now.",o:["fly","flies","are flying","flew"],a:2},
+      {q:"I ___ a new book at the moment.",o:["read","reads","am reading","read"],a:2},
+      {q:"He ___ his teeth right now.",o:["brush","brushes","is brushing","brushed"],a:2},
+      {q:"___ she sleeping now?",o:["Do","Does","Is","Are"],a:2},
+      {q:"The team ___ hard for the match.",o:["train","trains","is training","trained"],a:2}
+    ]
+  },
+  {
+    id:'frostpeak-pass', name:'Frostpeak Pass', grammarLabel:'Past Simple', icon:'⛰️',
+    color:'#38bdf8', colorRgb:'56,189,248', dark:'#075985',
+    brief:{
+      rules:[
+        'ใช้กับเหตุการณ์ที่จบไปแล้วในอดีต',
+        'โครงสร้าง: Subject + V2 (กริยาช่องที่ 2 — regular เติม -ed, irregular เปลี่ยนรูป)',
+        'ปฏิเสธ: Subject + did not (didn\'t) + V1',
+        'คำถาม: Did + Subject + V1 ?'
+      ],
+      examples:['I visited my grandmother last week.','He didn\'t finish his homework.','Did you see that movie?']
+    },
+    choicePool:[
+      {q:"She ___ to the market yesterday.",o:["go","goes","went","going"],a:2},
+      {q:"They ___ a movie last night.",o:["watch","watches","watched","watching"],a:2},
+      {q:"He ___ his homework two hours ago.",o:["finish","finishes","finished","finishing"],a:2},
+      {q:"I ___ a letter to my friend last week.",o:["write","writes","wrote","written"],a:2},
+      {q:"We ___ very happy yesterday.",o:["are","were","was","be"],a:1},
+      {q:"She ___ not come to school yesterday.",o:["do","does","did","doing"],a:2},
+      {q:"___ you see that movie last night?",o:["Do","Does","Did","Are"],a:2},
+      {q:"The boy ___ the ball hard.",o:["kick","kicks","kicked","kicking"],a:2},
+      {q:"My parents ___ to Chiang Mai last summer.",o:["travel","travels","traveled","traveling"],a:2},
+      {q:"She ___ her keys yesterday.",o:["lose","loses","lost","losing"],a:2},
+      {q:"He ___ a fish at the lake.",o:["catch","catches","caught","catching"],a:2},
+      {q:"They ___ at the party until midnight.",o:["stay","stays","stayed","staying"],a:2},
+      {q:"I ___ breakfast this morning.",o:["eat","eats","ate","eating"],a:2},
+      {q:"We ___ the news yesterday.",o:["hear","hears","heard","hearing"],a:2}
+    ],
+    fillPool:[
+      {q:"Yesterday, she (walk) to school.",a:"walked"},
+      {q:"Last night, he (watch) a scary movie.",a:"watched"},
+      {q:"Two days ago, I (buy) a new bag.",a:"bought"},
+      {q:"Last year, they (visit) Japan.",a:"visited"},
+      {q:"He (break) his arm last winter.",a:"broke"},
+      {q:"We (see) a shooting star last night.",a:"saw"},
+      {q:"She (write) a poem yesterday.",a:"wrote"},
+      {q:"The team (win) the match last week.",a:"won"},
+      {q:"I (find) my lost book yesterday.",a:"found"},
+      {q:"He (run) five kilometers this morning.",a:"ran"},
+      {q:"They (build) a sandcastle at the beach.",a:"built"},
+      {q:"She (bring) a cake to the party.",a:"brought"},
+      {q:"We (drink) hot chocolate last night.",a:"drank"},
+      {q:"The dog (dig) a hole in the yard yesterday.",a:"dug"}
+    ],
+    vocabPairs:[
+      {w:"went",m:"ไปแล้ว"},{w:"ate",m:"กินแล้ว"},{w:"saw",m:"เห็นแล้ว"},{w:"ran",m:"วิ่งแล้ว"},
+      {w:"wrote",m:"เขียนแล้ว"},{w:"bought",m:"ซื้อแล้ว"},{w:"found",m:"พบแล้ว"},{w:"broke",m:"ทำแตกแล้ว"}
+    ],
+    bossPool:[
+      {q:"She ___ to Paris last month.",o:["fly","flies","flew","flying"],a:2},
+      {q:"They ___ dinner at 7 PM yesterday.",o:["have","has","had","having"],a:2},
+      {q:"___ he call you last night?",o:["Do","Does","Did","Was"],a:2},
+      {q:"I ___ my phone at home yesterday.",o:["leave","leaves","left","leaving"],a:2},
+      {q:"We ___ a great time at the festival.",o:["have","has","had","having"],a:2},
+      {q:"She ___ the door quietly.",o:["close","closes","closed","closing"],a:2},
+      {q:"He ___ his best friend at the mall.",o:["meet","meets","met","meeting"],a:2},
+      {q:"The children ___ in the rain.",o:["play","plays","played","playing"],a:2},
+      {q:"I ___ not understand the question.",o:["do","does","did","was"],a:2},
+      {q:"They ___ home late last night.",o:["come","comes","came","coming"],a:2}
+    ]
+  }
+];
+
+const NODE_TEMPLATE = [
+  {type:'choice', tier:'novice', need:5, time:75},
+  {type:'fill',   tier:'novice', need:5, time:70},
+  {type:'match',  tier:'adept',  pairs:6, time:60},
+  {type:'choice', tier:'adept',  need:6, time:60},
+  {type:'fill',   tier:'adept',  need:6, time:55},
+  {type:'boss',   tier:'master', hp:8, lives:3}
+];
+
+REALMS.forEach(r => {
+  r.nodes = NODE_TEMPLATE.map((n,i) => ({...n, id:r.id+'-n'+(i+1)}));
+});
+
+const NODE_TYPE_META = {
+  choice:{icon:'⚔️', label:'Grammar Duel'},
+  fill:{icon:'🔤', label:'Rune Forge'},
+  match:{icon:'🧩', label:'Word Match'},
+  boss:{icon:'👑', label:'Boss Battle'}
+};
+const AVATARS = ['🧙','🧝','🛡️','🏹','🧚','🐉'];
+
+// ---------------------------------------------------------------------------
+// STATE
+// ---------------------------------------------------------------------------
+let state = null;
+let profileKey = null;
+let currentRealmIdx = 0;
+let currentNodeIdx = 0;
+let playCtx = null; // transient in-round data
+
+function initProgress(){
+  const progress = {};
+  REALMS.forEach((r,ri) => {
+    const nodes = {};
+    r.nodes.forEach((n,ni) => { nodes[n.id] = {completed:false, stars:0, unlocked: ni===0}; });
+    progress[r.id] = {unlocked: ri===0, completed:false, nodes};
+  });
+  return progress;
+}
+
+function newState(profile){
+  const sum = [...(profile.name||'')].reduce((s,c)=>s+c.charCodeAt(0),0);
+  return {
+    profile, xp:0, level:1, coins:0,
+    streak:{count:0,lastDate:null},
+    avatar: AVATARS[sum % AVATARS.length],
+    progress: initProgress()
+  };
+}
+
+function keyFor(p){ return (p.class||'').trim()+'|'+(p.number||'').trim()+'|'+(p.name||'').trim(); }
+
+function loadAllProfiles(){
+  try { return JSON.parse(localStorage.getItem('wordkeepersProfilesV2')) || {}; }
+  catch(e){ return {}; }
+}
+function saveState(){
+  const all = loadAllProfiles();
+  all[profileKey] = state;
+  localStorage.setItem('wordkeepersProfilesV2', JSON.stringify(all));
+  updateLeaderboardEntry();
+}
+
+function updateStreak(){
+  const today = new Date().toISOString().slice(0,10);
+  if(state.streak.lastDate === today) return;
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  state.streak.count = (state.streak.lastDate === yesterday) ? state.streak.count+1 : 1;
+  state.streak.lastDate = today;
+}
+
+function xpForLevel(level){ return level*150; }
+function addXP(amount){
+  state.xp += amount;
+  while(state.xp >= xpForLevel(state.level)){
+    state.xp -= xpForLevel(state.level);
+    state.level++;
+    playLevelUp();
+  }
+}
+
+function realmsCompletedCount(){
+  return REALMS.filter(r => state.progress[r.id].completed).length;
+}
+
+function updateLeaderboardEntry(){
+  let board = [];
+  try{ board = JSON.parse(localStorage.getItem('wordkeepersLeaderboardV2')) || []; }catch(e){}
+  const idx = board.findIndex(e => e.class===state.profile.class && e.number===state.profile.number);
+  const totalXP = state.level*1000 + state.xp; // rough combined score for sorting
+  const entry = {name:state.profile.name, class:state.profile.class, number:state.profile.number,
+    realmsCompleted: realmsCompletedCount(), level: state.level, totalXP};
+  if(idx>-1) board[idx] = entry; else board.push(entry);
+  board.sort((a,b)=> b.totalXP - a.totalXP);
+  localStorage.setItem('wordkeepersLeaderboardV2', JSON.stringify(board));
+}
+
+// ---------------------------------------------------------------------------
+// SOUND
+// ---------------------------------------------------------------------------
+let sounds = null;
+function initSounds(){
+  if(sounds) return;
+  sounds = {
+    click: new Tone.Synth({oscillator:{type:'sine'},envelope:{attack:.005,decay:.1,sustain:.3,release:.1}}).toDestination(),
+    correct: new Tone.Synth({oscillator:{type:'triangle'},envelope:{attack:.005,decay:.2,sustain:.1,release:.2}}).toDestination(),
+    incorrect: new Tone.Synth({oscillator:{type:'square'},envelope:{attack:.01,decay:.3,sustain:0,release:.1}}).toDestination(),
+    fanfare: new Tone.PolySynth(Tone.Synth,{oscillator:{type:'sawtooth'}}).toDestination(),
+    explosion: new Tone.NoiseSynth({noise:{type:'white'},envelope:{attack:.005,decay:.5,sustain:.1,release:.5}}).toDestination(),
+    victory: new Tone.PolySynth(Tone.Synth).toDestination(),
+    levelup: new Tone.PolySynth(Tone.Synth).toDestination()
+  };
+}
+function playClick(){ sounds && sounds.click.triggerAttackRelease("C5","8n"); }
+function playCorrect(){ sounds && sounds.correct.triggerAttackRelease("G5","8n"); }
+function playIncorrect(){ sounds && sounds.incorrect.triggerAttackRelease("C3","4n"); }
+function playFanfare(){ sounds && sounds.fanfare.triggerAttackRelease(["C4","E4","G4"],"1n"); }
+function playExplosion(){ sounds && sounds.explosion.triggerAttackRelease("1n"); }
+function playVictory(){ sounds && sounds.victory.triggerAttackRelease(["C4","E4","G4","C5"],"1n"); }
+function playLevelUp(){ sounds && sounds.levelup.triggerAttackRelease(["E4","G4","C5"],"0.5n"); }
+
+// ---------------------------------------------------------------------------
+// DOM HELPERS
+// ---------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+const views = document.querySelectorAll('.view');
+function showView(id){
+  views.forEach(v => v.classList.toggle('hidden', v.id!==id));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function setRealmTheme(realm){
+  const root = document.documentElement.style;
+  if(realm){ root.setProperty('--realm-color', realm.color); root.setProperty('--realm-rgb', realm.colorRgb); root.setProperty('--realm-dark', realm.dark); }
+  else { root.setProperty('--realm-color', '#22d3ee'); root.setProperty('--realm-rgb', '34,211,238'); root.setProperty('--realm-dark', '#0e7490'); }
+}
+function flashRed(){ $('screen-flash-overlay').classList.add('screen-flash-red'); setTimeout(()=>$('screen-flash-overlay').classList.remove('screen-flash-red'),500); }
+function flashGreen(){ $('screen-flash-overlay').classList.add('screen-flash-green'); setTimeout(()=>$('screen-flash-overlay').classList.remove('screen-flash-green'),500); }
+
+function renderTopbar(){
+  $('topbar').classList.remove('hidden');
+  $('topbar-avatar').textContent = state.avatar;
+  $('topbar-name').textContent = state.profile.name;
+  $('topbar-level').textContent = state.level;
+  $('topbar-streak').textContent = state.streak.count;
+  $('topbar-coins').textContent = state.coins;
+  const need = xpForLevel(state.level);
+  $('topbar-xp-bar').style.width = Math.min(100,(state.xp/need)*100)+'%';
+  $('topbar-xp-text').textContent = `${state.xp}/${need} XP`;
+}
+
+// ---------------------------------------------------------------------------
+// REGISTRATION
+// ---------------------------------------------------------------------------
+const regModal = $('registration-modal');
+const regForm = $('registration-form');
+const regInputs = regForm.querySelectorAll('input');
+
+$('btn-start').addEventListener('click', async () => {
+  await Tone.start();
+  initSounds();
+  playClick();
+  regModal.classList.remove('hidden','opacity-0');
+});
+
+regForm.addEventListener('input', () => {
+  $('go-operational-btn').disabled = ![...regInputs].every(i=>i.value.trim()!=='');
+});
+
+regForm.addEventListener('submit', e => {
+  e.preventDefault();
+  playClick();
+  const profile = {
+    name: $('student-name').value.trim(),
+    class: $('student-class').value.trim(),
+    number: $('student-number').value.trim()
+  };
+  profileKey = keyFor(profile);
+  const all = loadAllProfiles();
+  state = all[profileKey] || newState(profile);
+  state.profile = profile;
+  updateStreak();
+  saveState();
+
+  regModal.classList.add('opacity-0');
+  setTimeout(()=>regModal.classList.add('hidden'),300);
+  regForm.reset();
+  $('go-operational-btn').disabled = true;
+
+  renderTopbar();
+  renderWorldMap();
+  showView('view-map');
+});
+
+// ---------------------------------------------------------------------------
+// WORLD MAP
+// ---------------------------------------------------------------------------
+function renderWorldMap(){
+  setRealmTheme(null);
+  const list = $('realm-list');
+  list.innerHTML = '';
+  REALMS.forEach((r,ri) => {
+    const prog = state.progress[r.id];
+    const unlocked = prog.unlocked;
+    const div = document.createElement('div');
+    div.className = 'realm-bubble ' + (unlocked ? 'unlocked':'locked');
+    div.style.setProperty('--realm-color', r.color);
+    div.style.setProperty('--realm-rgb', r.colorRgb);
+    const doneNodes = Object.values(prog.nodes).filter(n=>n.completed).length;
+    div.innerHTML = `
+      <div class="text-4xl mb-2 text-center">${unlocked ? r.icon : '🔒'}</div>
+      <h3 class="font-orbitron text-lg text-center mb-1" style="color:${r.color}">${r.name}</h3>
+      <p class="text-center text-sm text-gray-400 mb-2">${r.grammarLabel}</p>
+      <p class="text-center text-xs text-gray-500">${doneNodes}/${r.nodes.length} ด่าน ${prog.completed?'✅':''}</p>
+    `;
+    if(unlocked){
+      div.addEventListener('click', () => { playClick(); enterRealm(ri); });
+    }
+    list.appendChild(div);
+  });
+}
+
+function enterRealm(ri){
+  currentRealmIdx = ri;
+  const realm = REALMS[ri];
+  setRealmTheme(realm);
+  $('brief-title').textContent = realm.icon+' '+realm.name;
+  $('brief-title').style.color = realm.color;
+  $('brief-sub').textContent = realm.grammarLabel;
+  $('brief-rules').innerHTML = realm.brief.rules.map(r=>`<li>${r}</li>`).join('');
+  $('brief-examples').innerHTML = realm.brief.examples.map(e=>`<li>&gt; ${e}</li>`).join('');
+  showView('view-realm-brief');
+}
+$('brief-back-btn').addEventListener('click', () => { playClick(); renderWorldMap(); showView('view-map'); });
+$('brief-continue-btn').addEventListener('click', () => { playClick(); renderNodeMap(currentRealmIdx); showView('view-node-map'); });
+
+// ---------------------------------------------------------------------------
+// NODE MAP
+// ---------------------------------------------------------------------------
+function renderNodeMap(ri){
+  const realm = REALMS[ri];
+  setRealmTheme(realm);
+  $('nodemap-title').textContent = realm.icon+' '+realm.name;
+  $('nodemap-title').style.color = realm.color;
+  $('nodemap-sub').textContent = realm.grammarLabel;
+  const track = $('node-path');
+  track.innerHTML = '';
+  const prog = state.progress[realm.id];
+  realm.nodes.forEach((node, ni) => {
+    const np = prog.nodes[node.id];
+    const isBoss = node.type==='boss';
+    const wrap = document.createElement('div');
+    wrap.className = 'path-node ' + (np.unlocked?'unlocked':'') + ' ' + (np.completed?'completed':'') + ' ' + (isBoss?'boss':'');
+    const meta = NODE_TYPE_META[node.type];
+    wrap.innerHTML = `
+      <div class="node-dot">${np.completed ? '✔' : (isBoss?'👑':(ni+1))}</div>
+      <div class="node-card ${np.unlocked?'':'locked'}">
+        <p class="font-orbitron text-sm" style="color:${np.unlocked?realm.color:'#9ca3af'}">${meta.icon} ${meta.label} <span class="text-xs text-gray-500">(${node.tier})</span></p>
+        <p class="star-rating text-sm mt-1">${'★'.repeat(np.stars)}${'☆'.repeat(3-np.stars)}</p>
+      </div>
+    `;
+    if(np.unlocked){
+      wrap.style.cursor='pointer';
+      wrap.addEventListener('click', () => { playClick(); openNodeIntro(ri, ni); });
+    }
+    track.appendChild(wrap);
+  });
+}
+$('nodemap-back-btn').addEventListener('click', () => { playClick(); renderWorldMap(); showView('view-map'); });
+
+// ---------------------------------------------------------------------------
+// NODE INTRO
+// ---------------------------------------------------------------------------
+function openNodeIntro(ri, ni){
+  currentRealmIdx = ri; currentNodeIdx = ni;
+  const realm = REALMS[ri]; const node = realm.nodes[ni];
+  setRealmTheme(realm);
+  const meta = NODE_TYPE_META[node.type];
+  $('intro-title').textContent = `${meta.icon} ${meta.label}`;
+  let details = '';
+  if(node.type==='choice'){
+    $('intro-desc').textContent = `ตอบให้ถูก ${node.need} ข้อ ก่อนเวลาหมด!`;
+    details = `<p><span style="color:var(--realm-color)" class="font-bold">OBJECTIVE:</span> ตอบถูก ${node.need} ข้อ</p><p><span style="color:var(--realm-color)" class="font-bold">TIME LIMIT:</span> ${node.time} วินาที</p><p class="text-red-400">คำตอบผิดจะทำให้เวลาลดลง!</p>`;
+  } else if(node.type==='fill'){
+    $('intro-desc').textContent = `เติมคำในช่องว่างให้ถูก ${node.need} ข้อ`;
+    details = `<p><span style="color:var(--realm-color)" class="font-bold">OBJECTIVE:</span> เติมคำถูก ${node.need} ข้อ</p><p><span style="color:var(--realm-color)" class="font-bold">TIME LIMIT:</span> ${node.time} วินาที</p><p class="text-red-400">คำตอบผิดจะทำให้เวลาลดลง! ตอบถูกได้เวลาคืนเล็กน้อย</p>`;
+  } else if(node.type==='match'){
+    $('intro-desc').textContent = `จับคู่คำศัพท์กับความหมายให้ครบ ${node.pairs} คู่`;
+    details = `<p><span style="color:var(--realm-color)" class="font-bold">OBJECTIVE:</span> จับคู่ให้ครบ ${node.pairs} คู่</p><p><span style="color:var(--realm-color)" class="font-bold">TIME LIMIT:</span> ${node.time} วินาที</p>`;
+  } else {
+    $('intro-desc').textContent = `ปะทะบอสประจำอาณาจักร!`;
+    details = `<p><span class="text-red-400 font-bold">BOSS HP:</span> ${node.hp}</p><p><span class="text-red-400 font-bold">YOUR LIVES:</span> ${node.lives}</p><p class="text-gray-400">ตอบถูกก่อนหมดเวลาต่อข้อ (15 วินาที) เพื่อโจมตีบอส ตอบผิด/ช้าจะเสียหัวใจ!</p>`;
+  }
+  $('intro-details').innerHTML = details;
+  showView('view-node-intro');
+}
+
+$('intro-start-btn').addEventListener('click', () => {
+  playClick();
+  const realm = REALMS[currentRealmIdx]; const node = realm.nodes[currentNodeIdx];
+  if(node.type==='choice') startChoiceNode(realm, node);
+  else if(node.type==='fill') startFillNode(realm, node);
+  else if(node.type==='match') startMatchNode(realm, node);
+  else startBossNode(realm, node);
+});
+
+// ---------------------------------------------------------------------------
+// SHARED RESULT HANDLING
+// ---------------------------------------------------------------------------
+function finishNode(success, stars, wrongCount, extraDetail){
+  const realm = REALMS[currentRealmIdx]; const node = realm.nodes[currentNodeIdx];
+  const prog = state.progress[realm.id];
+  const np = prog.nodes[node.id];
+
+  if(success){
+    const baseXP = node.type==='boss' ? 60 : 30;
+    const xpGain = baseXP + stars*15;
+    np.completed = true;
+    np.stars = Math.max(np.stars, stars);
+    state.coins += stars*5;
+    addXP(xpGain);
+
+    const nodeIds = realm.nodes.map(n=>n.id);
+    const idx = nodeIds.indexOf(node.id);
+    if(idx < nodeIds.length-1){
+      prog.nodes[nodeIds[idx+1]].unlocked = true;
+    } else {
+      prog.completed = true;
+      const nextRealm = REALMS[currentRealmIdx+1];
+      if(nextRealm) state.progress[nextRealm.id].unlocked = true;
+    }
+    saveState();
+    renderTopbar();
+
+    $('result-title').textContent = node.type==='boss' ? 'บอสถูกปราบแล้ว!' : 'ด่านผ่านแล้ว!';
+    $('result-title').className = 'text-4xl font-orbitron mb-3 text-green-400';
+    $('result-stars').textContent = '★'.repeat(stars)+'☆'.repeat(3-stars);
+    $('result-detail').textContent = `+${xpGain} XP  •  +${stars*5} ⭐  ${extraDetail||''}`;
+    $('result-retry-btn').classList.add('hidden');
+    $('result-continue-btn').textContent = (idx===nodeIds.length-1) ? 'ไปหน้าสรุปอาณาจักร' : 'ดำเนินต่อ';
+    $('result-continue-btn').onclick = () => {
+      playClick();
+      if(idx===nodeIds.length-1){ showRealmComplete(realm); }
+      else { renderNodeMap(currentRealmIdx); showView('view-node-map'); }
+    };
+    playVictory(); flashGreen();
+  } else {
+    $('result-title').textContent = node.type==='boss' ? 'พ่ายแพ้ให้บอส...' : 'เวลาหมด! ลองใหม่อีกครั้ง';
+    $('result-title').className = 'text-4xl font-orbitron mb-3 text-red-500';
+    $('result-stars').textContent = '☆☆☆';
+    $('result-detail').textContent = extraDetail || 'ฝึกฝนคำศัพท์อีกนิด แล้วกลับมาลองใหม่!';
+    $('result-retry-btn').classList.remove('hidden');
+    $('result-retry-btn').onclick = () => { playClick(); openNodeIntro(currentRealmIdx, currentNodeIdx); };
+    $('result-continue-btn').textContent = 'กลับแผนที่ด่าน';
+    $('result-continue-btn').onclick = () => { playClick(); renderNodeMap(currentRealmIdx); showView('view-node-map'); };
+    playExplosion(); flashRed();
+  }
+  showView('view-node-result');
+}
+
+function showRealmComplete(realm){
+  setRealmTheme(realm);
+  $('realm-complete-title').textContent = `${realm.name} ถูกปลดปล่อยแล้ว!`;
+  const nextRealm = REALMS[currentRealmIdx+1];
+  $('realm-complete-desc').textContent = nextRealm
+    ? `อาณาจักรถัดไป: ${nextRealm.icon} ${nextRealm.name} (${nextRealm.grammarLabel}) ถูกปลดล็อกแล้ว!`
+    : `เจ้าคือ Wordkeeper ผู้กอบกู้โลก Lexicora ครบทุกอาณาจักรแล้ว! 🎉`;
+  $('realm-complete-btn').onclick = () => { playClick(); renderWorldMap(); showView('view-map'); };
+  showView('view-realm-complete');
+}
+
+function starsFromWrongs(wrong){ return wrong===0?3:(wrong<=2?2:1); }
+
+// ---------------------------------------------------------------------------
+// CHOICE NODE
+// ---------------------------------------------------------------------------
+function startChoiceNode(realm, node){
+  playCtx = { pool: shuffle(realm.choicePool), idx:0, correct:0, wrong:0, timeLeft:node.time, timer:null, need:node.need };
+  setRealmTheme(realm);
+  updateChoiceScore();
+  renderChoiceQuestion();
+  showView('view-play-choice');
+  playCtx.timer = setInterval(() => {
+    playCtx.timeLeft--;
+    renderChoiceTimer();
+    if(playCtx.timeLeft<=0){ clearInterval(playCtx.timer); finishNode(false,0,playCtx.wrong,'หมดเวลาก่อนตอบถูกครบ'); }
+  },1000);
+  renderChoiceTimer();
+}
+function renderChoiceTimer(){
+  const m = Math.floor(playCtx.timeLeft/60).toString().padStart(2,'0');
+  const s = (playCtx.timeLeft%60).toString().padStart(2,'0');
+  $('choice-timer').textContent = `${m}:${s}`;
+}
+function updateChoiceScore(){ $('choice-score-text').textContent = `ตอบถูกแล้ว: ${playCtx.correct}/${playCtx.need}`; }
+function renderChoiceQuestion(){
+  if(playCtx.idx >= playCtx.pool.length){ playCtx.pool = shuffle([...playCtx.pool]); playCtx.idx = 0; }
+  const q = playCtx.pool[playCtx.idx];
+  $('choice-question').textContent = q.q;
+  const opts = $('choice-options'); opts.innerHTML = '';
+  q.o.forEach((opt,i) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.className = 'w-full p-4 rounded-md transition-all duration-200 bg-gray-700 border-2 hover:brightness-125';
+    btn.style.borderColor = 'var(--realm-dark)';
+    btn.onclick = () => handleChoiceAnswer(i, q.a, btn, opts);
+    opts.appendChild(btn);
+  });
+}
+function handleChoiceAnswer(sel, correctIdx, btn, opts){
+  opts.querySelectorAll('button').forEach(b=>b.disabled=true);
+  if(sel===correctIdx){
+    playCorrect(); playCtx.correct++; btn.classList.add('bg-green-500');
+    updateChoiceScore();
+    if(playCtx.correct>=playCtx.need){ clearInterval(playCtx.timer); finishNode(true, starsFromWrongs(playCtx.wrong), playCtx.wrong); return; }
+  } else {
+    playIncorrect(); playCtx.wrong++; playCtx.timeLeft = Math.max(0,playCtx.timeLeft-10);
+    flashRed();
+    btn.classList.add('bg-red-500');
+    opts.children[correctIdx].classList.add('bg-green-500');
+  }
+  playCtx.idx++;
+  setTimeout(() => { if(playCtx) renderChoiceQuestion(); }, 1000);
+}
+
+// ---------------------------------------------------------------------------
+// FILL NODE
+// ---------------------------------------------------------------------------
+function startFillNode(realm, node){
+  playCtx = { pool: shuffle(realm.fillPool), idx:0, correct:0, wrong:0, timeLeft:node.time, timer:null, need:node.need };
+  setRealmTheme(realm);
+  updateFillScore();
+  renderFillQuestion();
+  showView('view-play-fill');
+  playCtx.timer = setInterval(() => {
+    playCtx.timeLeft--;
+    renderFillTimer();
+    if(playCtx.timeLeft<=0){ clearInterval(playCtx.timer); finishNode(false,0,playCtx.wrong,'หมดเวลาก่อนตอบถูกครบ'); }
+  },1000);
+  renderFillTimer();
+}
+function renderFillTimer(){
+  const m = Math.floor(playCtx.timeLeft/60).toString().padStart(2,'0');
+  const s = (playCtx.timeLeft%60).toString().padStart(2,'0');
+  $('fill-timer').textContent = `${m}:${s}`;
+}
+function updateFillScore(){ $('fill-score-text').textContent = `ตอบถูกแล้ว: ${playCtx.correct}/${playCtx.need}`; }
+function renderFillQuestion(){
+  if(playCtx.idx >= playCtx.pool.length){ playCtx.pool = shuffle([...playCtx.pool]); playCtx.idx = 0; }
+  const q = playCtx.pool[playCtx.idx];
+  $('fill-question').textContent = q.q;
+  $('fill-answer-input').value = '';
+  $('fill-feedback').textContent = '';
+  $('fill-answer-input').focus();
+}
+function submitFillAnswer(){
+  if(!playCtx) return;
+  const q = playCtx.pool[playCtx.idx];
+  const userAns = $('fill-answer-input').value.trim().toLowerCase();
+  if(userAns === q.a.toLowerCase()){
+    playCorrect(); playCtx.correct++; playCtx.timeLeft += 5;
+    $('fill-feedback').textContent = '✓ ถูกต้อง!'; $('fill-feedback').className='mt-4 h-6 text-lg font-mono text-green-400';
+    updateFillScore();
+    if(playCtx.correct>=playCtx.need){ clearInterval(playCtx.timer); finishNode(true, starsFromWrongs(playCtx.wrong), playCtx.wrong); return; }
+  } else {
+    playIncorrect(); playCtx.wrong++; playCtx.timeLeft = Math.max(0,playCtx.timeLeft-10);
+    flashRed();
+    $('fill-feedback').textContent = `✗ เฉลย: ${q.a}`; $('fill-feedback').className='mt-4 h-6 text-lg font-mono text-red-400';
+  }
+  playCtx.idx++;
+  $('fill-submit-btn').disabled = true;
+  setTimeout(() => { if(playCtx){ renderFillQuestion(); $('fill-submit-btn').disabled=false; } }, 1000);
+}
+$('fill-submit-btn').addEventListener('click', () => { playClick(); submitFillAnswer(); });
+$('fill-answer-input').addEventListener('keyup', e => { if(e.key==='Enter'){ playClick(); submitFillAnswer(); } });
+
+// ---------------------------------------------------------------------------
+// MATCH NODE
+// ---------------------------------------------------------------------------
+function startMatchNode(realm, node){
+  const pairs = shuffle(realm.vocabPairs).slice(0, node.pairs);
+  playCtx = { pairs, matched:0, need:node.pairs, timeLeft:node.time, timer:null, selWord:null, selMeaning:null };
+  setRealmTheme(realm);
+  $('match-score-text').textContent = `จับคู่แล้ว: 0/${node.pairs}`;
+  const wordsCol = $('match-col-words'); const meaningsCol = $('match-col-meanings');
+  wordsCol.innerHTML=''; meaningsCol.innerHTML='';
+  const words = pairs.map((p,i)=>({text:p.w, pairId:i}));
+  const meanings = shuffle(pairs.map((p,i)=>({text:p.m, pairId:i})));
+  words.forEach(w => {
+    const el = document.createElement('div');
+    el.className='match-card'; el.textContent=w.text; el.dataset.pairId=w.pairId;
+    el.addEventListener('click', () => selectMatchCard(el,'word'));
+    wordsCol.appendChild(el);
+  });
+  meanings.forEach(m => {
+    const el = document.createElement('div');
+    el.className='match-card'; el.textContent=m.text; el.dataset.pairId=m.pairId;
+    el.addEventListener('click', () => selectMatchCard(el,'meaning'));
+    meaningsCol.appendChild(el);
+  });
+  showView('view-play-match');
+  playCtx.timer = setInterval(() => {
+    playCtx.timeLeft--;
+    renderMatchTimer();
+    if(playCtx.timeLeft<=0){ clearInterval(playCtx.timer); finishNode(false,0,0,'หมดเวลาก่อนจับคู่ครบ'); }
+  },1000);
+  renderMatchTimer();
+}
+function renderMatchTimer(){
+  const m = Math.floor(playCtx.timeLeft/60).toString().padStart(2,'0');
+  const s = (playCtx.timeLeft%60).toString().padStart(2,'0');
+  $('match-timer').textContent = `${m}:${s}`;
+}
+function selectMatchCard(el, kind){
+  if(!playCtx || el.classList.contains('matched')) return;
+  playClick();
+  if(kind==='word'){
+    if(playCtx.selWord) playCtx.selWord.classList.remove('selected');
+    playCtx.selWord = el; el.classList.add('selected');
+  } else {
+    if(playCtx.selMeaning) playCtx.selMeaning.classList.remove('selected');
+    playCtx.selMeaning = el; el.classList.add('selected');
+  }
+  if(playCtx.selWord && playCtx.selMeaning){
+    const w = playCtx.selWord, m = playCtx.selMeaning;
+    if(w.dataset.pairId === m.dataset.pairId){
+      playCorrect();
+      w.classList.remove('selected'); m.classList.remove('selected');
+      w.classList.add('matched'); m.classList.add('matched');
+      playCtx.matched++;
+      $('match-score-text').textContent = `จับคู่แล้ว: ${playCtx.matched}/${playCtx.need}`;
+      playCtx.selWord=null; playCtx.selMeaning=null;
+      if(playCtx.matched>=playCtx.need){ clearInterval(playCtx.timer); finishNode(true, 3, 0); }
+    } else {
+      playIncorrect();
+      w.classList.add('wrong'); m.classList.add('wrong');
+      setTimeout(() => {
+        w.classList.remove('selected','wrong'); m.classList.remove('selected','wrong');
+        playCtx.selWord=null; playCtx.selMeaning=null;
+      },400);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// BOSS NODE
+// ---------------------------------------------------------------------------
+function startBossNode(realm, node){
+  playCtx = { pool: shuffle(realm.bossPool), idx:0, bossHp:node.hp, maxHp:node.hp, lives:node.lives, qTimer:null, qTimeLeft:15 };
+  setRealmTheme(realm);
+  $('boss-name').textContent = `${realm.icon} Boss of ${realm.name}`;
+  renderBossHP(); renderBossLives();
+  renderBossQuestion();
+  showView('view-play-boss');
+}
+function renderBossHP(){ $('boss-hp-bar').style.width = Math.max(0,(playCtx.bossHp/playCtx.maxHp)*100)+'%'; }
+function renderBossLives(){ $('boss-lives').innerHTML = '❤️'.repeat(playCtx.lives) + '🖤'.repeat(Math.max(0,3-playCtx.lives)); }
+function renderBossQuestion(){
+  if(playCtx.idx >= playCtx.pool.length){ playCtx.pool = shuffle([...playCtx.pool]); playCtx.idx = 0; }
+  const q = playCtx.pool[playCtx.idx];
+  $('boss-question').textContent = q.q;
+  const opts = $('boss-options'); opts.innerHTML='';
+  q.o.forEach((opt,i) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.className = 'w-full p-4 rounded-md transition-all duration-200 bg-gray-700 border-2 border-red-800 hover:brightness-125';
+    btn.onclick = () => handleBossAnswer(i, q.a, btn, opts);
+    opts.appendChild(btn);
+  });
+  clearInterval(playCtx.qTimer);
+  playCtx.qTimeLeft = 15;
+  $('boss-q-timer').textContent = playCtx.qTimeLeft;
+  playCtx.qTimer = setInterval(() => {
+    playCtx.qTimeLeft--;
+    $('boss-q-timer').textContent = playCtx.qTimeLeft;
+    if(playCtx.qTimeLeft<=0){
+      clearInterval(playCtx.qTimer);
+      opts.querySelectorAll('button').forEach(b=>b.disabled=true);
+      opts.children[q.a].classList.add('bg-green-500');
+      bossPlayerHit();
+    }
+  },1000);
+}
+function bossPlayerHit(){
+  playIncorrect(); flashRed();
+  playCtx.lives--; renderBossLives();
+  if(playCtx.lives<=0){ finishNode(false,0,0,'เจ้าพ่ายแพ้ให้บอส ลองใหม่อีกครั้ง!'); return; }
+  playCtx.idx++;
+  setTimeout(() => { if(playCtx) renderBossQuestion(); },1000);
+}
+function handleBossAnswer(sel, correctIdx, btn, opts){
+  clearInterval(playCtx.qTimer);
+  opts.querySelectorAll('button').forEach(b=>b.disabled=true);
+  if(sel===correctIdx){
+    playCorrect(); btn.classList.add('bg-green-500');
+    playCtx.bossHp--; renderBossHP();
+    if(playCtx.bossHp<=0){ finishNode(true, playCtx.lives>=3?3:(playCtx.lives===2?2:1), 3-playCtx.lives, `เหลือหัวใจ ${playCtx.lives}/3`); return; }
+    playCtx.idx++;
+    setTimeout(() => { if(playCtx) renderBossQuestion(); },900);
+  } else {
+    btn.classList.add('bg-red-500');
+    opts.children[correctIdx].classList.add('bg-green-500');
+    bossPlayerHit();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// LEADERBOARD
+// ---------------------------------------------------------------------------
+function renderLeaderboard(){
+  setRealmTheme(null);
+  let board = [];
+  try{ board = JSON.parse(localStorage.getItem('wordkeepersLeaderboardV2')) || []; }catch(e){}
+  const body = $('leaderboard-body'); body.innerHTML='';
+  board.forEach((e,i) => {
+    const isMe = state && e.class===state.profile.class && e.number===state.profile.number;
+    const tr = document.createElement('tr');
+    tr.className = 'border-b border-gray-700' + (isMe?' bg-cyan-900/40':'');
+    tr.innerHTML = `<td class="p-3">${i+1}</td><td class="p-3">${e.name}${isMe?' 🌟':''}</td><td class="p-3">${e.class}</td><td class="p-3">${e.number}</td><td class="p-3">${e.realmsCompleted}/${REALMS.length}</td><td class="p-3 font-bold text-cyan-400">Lv.${e.level}</td>`;
+    body.appendChild(tr);
+  });
+  showView('view-leaderboard');
+}
+$('topbar-leaderboard-btn').addEventListener('click', () => { playClick(); renderLeaderboard(); });
+$('leaderboard-back-btn').addEventListener('click', () => { playClick(); renderWorldMap(); showView('view-map'); });
+
+// ---------------------------------------------------------------------------
+// LOGOUT
+// ---------------------------------------------------------------------------
+$('topbar-logout-btn').addEventListener('click', () => {
+  playClick();
+  state = null; profileKey = null;
+  $('topbar').classList.add('hidden');
+  setRealmTheme(null);
+  showView('view-landing');
+});
+
+// ---------------------------------------------------------------------------
+// BACKGROUND PARTICLES
+// ---------------------------------------------------------------------------
+function createRuneParticle(){
+  const bg = $('background-animation');
+  const el = document.createElement('div');
+  el.className = 'rune-text';
+  el.textContent = '0110100101101110011101000110010101101100';
+  el.style.left = `${Math.random()*100}vw`;
+  el.style.animationDuration = `${Math.random()*10+8}s`;
+  bg.appendChild(el);
+  setTimeout(()=>el.remove(), 18000);
+}
+setInterval(createRuneParticle, 400);
+
+// ---------------------------------------------------------------------------
+// INIT
+// ---------------------------------------------------------------------------
+showView('view-landing');
+
+});
+</script>
 </body>
 </html>
