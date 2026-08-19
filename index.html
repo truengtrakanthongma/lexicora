@@ -99,6 +99,27 @@
   .lives-hearts span{font-size:1.4rem;margin-right:.25rem;}
 
   #topbar{position:sticky;top:0;z-index:40;}
+
+  .pixelated{image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges;}
+  .hero-thumb{width:2.6rem;height:auto;flex-shrink:0;}
+  .gear-strip{display:flex;gap:.35rem;}
+  .gear-strip img{width:1.6rem;height:1.6rem;opacity:.25;filter:grayscale(1);transition:all .3s;}
+  .gear-strip img.unlocked{opacity:1;filter:none;filter:drop-shadow(0 0 4px rgba(250,204,21,.6));}
+
+  .realm-boss-thumb{width:64px;height:64px;margin:0 auto;display:block;}
+  .realm-bubble.locked .realm-boss-thumb{filter:grayscale(1) brightness(.5);}
+
+  .boss-art-wrap{position:relative;width:180px;height:180px;margin:0 auto 1rem;display:flex;align-items:center;justify-content:center;}
+  .boss-sprite{width:160px;height:160px;animation:boss-idle 2.2s ease-in-out infinite;transition:opacity .5s,transform .5s;}
+  .boss-sprite.hit{animation:boss-hit .35s;}
+  .boss-sprite.defeated{opacity:0;transform:scale(.4) rotate(15deg);}
+  @keyframes boss-idle{0%,100%{transform:translateY(0);}50%{transform:translateY(-6px);}}
+  @keyframes boss-hit{0%,100%{transform:translateX(0);filter:none;}25%{transform:translateX(-6px);filter:brightness(2) saturate(0);}75%{transform:translateX(6px);filter:brightness(2) saturate(0);}}
+  .boss-fx-layer{position:absolute;inset:0;pointer-events:none;}
+  .fx-sprite{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);image-rendering:pixelated;}
+
+  .hero-showcase{width:96px;height:auto;margin:0 auto;display:block;}
+  .gear-reward-icon{width:80px;height:80px;margin:0 auto;display:block;filter:drop-shadow(0 0 12px var(--realm-color));}
 </style>
 </head>
 <body class="min-h-screen">
@@ -111,7 +132,7 @@
   <div class="corner-b"></div>
   <div class="max-w-5xl mx-auto flex items-center justify-between gap-3 flex-wrap">
     <div class="flex items-center gap-3">
-      <div id="topbar-avatar" class="text-3xl">🧙</div>
+      <img id="topbar-hero" class="pixelated hero-thumb" src="assets/sprites/hero_tier0.png" alt="hero">
       <div>
         <p id="topbar-name" class="font-orbitron text-sm text-cyan-300 leading-tight"></p>
         <p class="text-xs text-gray-400 leading-tight">Lv. <span id="topbar-level">1</span></p>
@@ -121,6 +142,7 @@
       <div class="xp-bar-container"><div id="topbar-xp-bar" class="xp-bar" style="width:0%"></div></div>
       <p class="text-[11px] text-gray-400 mt-0.5"><span id="topbar-xp-text">0/150 XP</span></p>
     </div>
+    <div id="topbar-gear-strip" class="gear-strip"></div>
     <div class="flex items-center gap-4 text-sm">
       <span title="Streak">🔥 <span id="topbar-streak">0</span></span>
       <span title="Stars">⭐ <span id="topbar-coins">0</span></span>
@@ -210,6 +232,7 @@
   <div id="view-node-intro" class="view hidden glass-panel p-8 text-center">
     <div class="corner-b"></div>
     <h2 id="intro-title" class="text-2xl font-orbitron mb-2 text-glitch"></h2>
+    <img id="intro-boss-preview" class="boss-sprite pixelated hidden" style="width:120px;height:120px;" src="" alt="boss preview">
     <p id="intro-desc" class="text-lg text-gray-300 mb-6"></p>
     <div id="intro-details" class="text-left max-w-md mx-auto space-y-2 text-lg"></div>
     <button id="intro-start-btn" class="btn-primary mt-8 text-xl">เริ่มด่าน</button>
@@ -263,6 +286,10 @@
   <div id="view-play-boss" class="view hidden glass-panel p-8">
     <div class="corner-b"></div>
     <h2 id="boss-name" class="text-2xl font-orbitron text-center text-red-500 mb-3 text-glitch"></h2>
+    <div class="boss-art-wrap">
+      <img id="boss-sprite-img" class="boss-sprite pixelated" src="" alt="boss">
+      <div id="boss-fx-layer" class="boss-fx-layer"></div>
+    </div>
     <div class="mb-2"><p class="text-sm text-gray-400 mb-1">Boss HP</p><div class="hp-bar-container"><div id="boss-hp-bar" class="hp-bar" style="width:100%"></div></div></div>
     <div class="flex justify-between items-center mb-4 mt-4">
       <div class="lives-hearts" id="boss-lives"></div>
@@ -277,6 +304,7 @@
   <!-- NODE RESULT -->
   <div id="view-node-result" class="view hidden glass-panel p-8 text-center">
     <div class="corner-b"></div>
+    <div id="result-fx-layer" style="position:relative;height:110px;"></div>
     <p id="result-title" class="text-4xl font-orbitron mb-3"></p>
     <p id="result-stars" class="star-rating text-4xl mb-4"></p>
     <p id="result-detail" class="text-lg text-gray-300 mb-6"></p>
@@ -291,6 +319,11 @@
     <div class="corner-b"></div>
     <p class="text-5xl mb-4">🏆</p>
     <h2 id="realm-complete-title" class="text-3xl font-orbitron text-cyan-400 mb-3 text-glitch"></h2>
+    <div id="gear-reward-box" class="hidden mb-4">
+      <img id="gear-reward-icon" class="gear-reward-icon pixelated" src="" alt="gear reward">
+      <p id="gear-reward-label" class="font-orbitron text-yellow-300 mt-2"></p>
+    </div>
+    <img id="realm-complete-hero" class="hero-showcase pixelated mb-4" src="" alt="hero">
     <p id="realm-complete-desc" class="text-lg text-gray-300 mb-8"></p>
     <button id="realm-complete-btn" class="btn-primary text-xl">กลับแผนที่โลก</button>
   </div>
@@ -721,6 +754,7 @@ const NODE_TEMPLATE_LATE = [
 REALMS.forEach((r,ri) => {
   const template = ri < 3 ? NODE_TEMPLATE_EARLY : NODE_TEMPLATE_LATE;
   r.nodes = template.map((n,i) => ({...n, id:r.id+'-n'+(i+1)}));
+  r.bossSprite = `assets/sprites/boss_${r.id.replace(/-/g,'_')}.png`;
 });
 
 const NODE_TYPE_META = {
@@ -729,7 +763,43 @@ const NODE_TYPE_META = {
   match:{icon:'🧩', label:'Word Match'},
   boss:{icon:'👑', label:'Boss Battle'}
 };
-const AVATARS = ['🧙','🧝','🛡️','🏹','🧚','🐉'];
+
+// Hero gear progression: realm index -> gear slot unlocked on boss defeat.
+const GEAR_ORDER = [
+  {key:'helmet',   icon:'assets/icons/gear_helmet.png',   label:'หมวกเกราะ (Helmet)'},
+  {key:'armor',    icon:'assets/icons/gear_armor.png',    label:'เกราะอก (Armor)'},
+  {key:'boots',    icon:'assets/icons/gear_boots.png',    label:'รองเท้าเกราะ (Boots)'},
+  {key:'gauntlet', icon:'assets/icons/gear_gauntlet.png', label:'ถุงมือเกราะ (Gauntlet)'},
+  {key:'weapon',   icon:'assets/icons/gear_weapon.png',   label:'ดาบวิเศษ (Weapon)'},
+  {key:'ring',     icon:'assets/icons/gear_ring.png',     label:'แหวนเวทมนตร์ (Ring)'}
+];
+const HERO_TIERS = [0,1,2,3,4,5,6].map(t => `assets/sprites/hero_tier${t}.png`);
+function heroSpriteFor(gearCount){ return HERO_TIERS[Math.max(0, Math.min(6, gearCount))]; }
+
+// FX sprite sheets: 4 frames, 120x120 native frame size (20x20 @6x scale)
+const FX_SHEETS = {
+  fireball: {src:'assets/fx/fx_fireball.png', frames:4, frameSize:120},
+  frostnova: {src:'assets/fx/fx_frostnova.png', frames:4, frameSize:120},
+  divineheal: {src:'assets/fx/fx_divineheal.png', frames:4, frameSize:120},
+  lightning: {src:'assets/fx/fx_lightning.png', frames:4, frameSize:120}
+};
+function spawnFX(container, fxName, displaySize){
+  const fx = FX_SHEETS[fxName]; if(!fx || !container) return;
+  const size = displaySize || 96;
+  const el = document.createElement('div');
+  el.className = 'fx-sprite';
+  el.style.width = size+'px'; el.style.height = size+'px';
+  el.style.backgroundImage = `url(${fx.src})`;
+  el.style.backgroundSize = `${size*fx.frames}px ${size}px`;
+  el.style.backgroundPosition = '0px 0px';
+  container.appendChild(el);
+  let frame = 0;
+  const iv = setInterval(() => {
+    frame++;
+    if(frame >= fx.frames){ clearInterval(iv); el.remove(); return; }
+    el.style.backgroundPosition = `-${frame*size}px 0px`;
+  }, 110);
+}
 
 // ---------------------------------------------------------------------------
 // STATE
@@ -751,11 +821,9 @@ function initProgress(){
 }
 
 function newState(profile){
-  const sum = [...(profile.name||'')].reduce((s,c)=>s+c.charCodeAt(0),0);
   return {
     profile, xp:0, level:1, coins:0,
     streak:{count:0,lastDate:null},
-    avatar: AVATARS[sum % AVATARS.length],
     progress: initProgress()
   };
 }
@@ -855,7 +923,8 @@ function flashGreen(){ $('screen-flash-overlay').classList.add('screen-flash-gre
 
 function renderTopbar(){
   $('topbar').classList.remove('hidden');
-  $('topbar-avatar').textContent = state.avatar;
+  const gearCount = realmsCompletedCount();
+  $('topbar-hero').src = heroSpriteFor(gearCount);
   $('topbar-name').textContent = state.profile.name;
   $('topbar-level').textContent = state.level;
   $('topbar-streak').textContent = state.streak.count;
@@ -863,6 +932,15 @@ function renderTopbar(){
   const need = xpForLevel(state.level);
   $('topbar-xp-bar').style.width = Math.min(100,(state.xp/need)*100)+'%';
   $('topbar-xp-text').textContent = `${state.xp}/${need} XP`;
+
+  const strip = $('topbar-gear-strip');
+  strip.innerHTML = '';
+  GEAR_ORDER.forEach((g,i) => {
+    const img = document.createElement('img');
+    img.src = g.icon; img.title = g.label; img.alt = g.key;
+    img.className = 'pixelated' + (i < gearCount ? ' unlocked' : '');
+    strip.appendChild(img);
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -924,7 +1002,8 @@ function renderWorldMap(){
     div.style.setProperty('--realm-rgb', r.colorRgb);
     const doneNodes = Object.values(prog.nodes).filter(n=>n.completed).length;
     div.innerHTML = `
-      <div class="text-4xl mb-2 text-center">${unlocked ? r.icon : '🔒'}</div>
+      <img class="realm-boss-thumb pixelated mb-2" src="${r.bossSprite}" alt="${r.name} boss">
+      <div class="text-xl text-center -mt-1 mb-1">${unlocked ? r.icon : '🔒'}</div>
       <h3 class="font-orbitron text-lg text-center mb-1" style="color:${r.color}">${r.name}</h3>
       <p class="text-center text-sm text-gray-400 mb-2">${r.grammarLabel}</p>
       <p class="text-center text-xs text-gray-500">${doneNodes}/${r.nodes.length} ด่าน ${prog.completed?'✅':''}</p>
@@ -993,6 +1072,9 @@ function openNodeIntro(ri, ni){
   setRealmTheme(realm);
   const meta = NODE_TYPE_META[node.type];
   $('intro-title').textContent = `${meta.icon} ${meta.label}`;
+  const bossPreview = $('intro-boss-preview');
+  if(node.type==='boss'){ bossPreview.src = realm.bossSprite; bossPreview.classList.remove('hidden'); }
+  else { bossPreview.classList.add('hidden'); }
   let details = '';
   if(node.type==='choice'){
     $('intro-desc').textContent = `ตอบให้ถูก ${node.need} ข้อ ก่อนเวลาหมด!`;
@@ -1060,7 +1142,10 @@ function finishNode(success, stars, wrongCount, extraDetail){
       else { renderNodeMap(currentRealmIdx); showView('view-node-map'); }
     };
     playVictory(); flashGreen();
+    $('result-fx-layer').innerHTML = '';
+    spawnFX($('result-fx-layer'), 'divineheal', 100);
   } else {
+    $('result-fx-layer').innerHTML = '';
     $('result-title').textContent = node.type==='boss' ? 'พ่ายแพ้ให้บอส...' : 'เวลาหมด! ลองใหม่อีกครั้ง';
     $('result-title').className = 'text-4xl font-orbitron mb-3 text-red-500';
     $('result-stars').textContent = '☆☆☆';
@@ -1081,6 +1166,17 @@ function showRealmComplete(realm){
   $('realm-complete-desc').textContent = nextRealm
     ? `อาณาจักรถัดไป: ${nextRealm.icon} ${nextRealm.name} (${nextRealm.grammarLabel}) ถูกปลดล็อกแล้ว!`
     : `เจ้าคือ Wordkeeper ผู้กอบกู้โลก Lexicora ครบทุกอาณาจักรแล้ว! 🎉`;
+
+  const gear = GEAR_ORDER[currentRealmIdx];
+  if(gear){
+    $('gear-reward-box').classList.remove('hidden');
+    $('gear-reward-icon').src = gear.icon;
+    $('gear-reward-label').textContent = `ได้รับ: ${gear.label}!`;
+  } else {
+    $('gear-reward-box').classList.add('hidden');
+  }
+  $('realm-complete-hero').src = heroSpriteFor(realmsCompletedCount());
+
   $('realm-complete-btn').onclick = () => { playClick(); renderWorldMap(); showView('view-map'); };
   showView('view-realm-complete');
 }
@@ -1265,6 +1361,9 @@ function startBossNode(realm, node){
   playCtx = { pool: shuffle(realm.bossPool), idx:0, bossHp:node.hp, maxHp:node.hp, lives:node.lives, qTimer:null, qTimeLeft:15 };
   setRealmTheme(realm);
   $('boss-name').textContent = `${realm.icon} Boss of ${realm.name}`;
+  const bossImg = $('boss-sprite-img');
+  bossImg.src = realm.bossSprite;
+  bossImg.classList.remove('defeated','hit');
   renderBossHP(); renderBossLives();
   renderBossQuestion();
   showView('view-play-boss');
@@ -1299,6 +1398,7 @@ function renderBossQuestion(){
 }
 function bossPlayerHit(){
   playIncorrect(); flashRed();
+  spawnFX($('boss-fx-layer'), 'lightning', 110);
   playCtx.lives--; renderBossLives();
   if(playCtx.lives<=0){ finishNode(false,0,0,'เจ้าพ่ายแพ้ให้บอส ลองใหม่อีกครั้ง!'); return; }
   playCtx.idx++;
@@ -1309,8 +1409,15 @@ function handleBossAnswer(sel, correctIdx, btn, opts){
   opts.querySelectorAll('button').forEach(b=>b.disabled=true);
   if(sel===correctIdx){
     playCorrect(); btn.classList.add('bg-green-500');
+    spawnFX($('boss-fx-layer'), 'fireball', 110);
+    const bossImg = $('boss-sprite-img');
+    bossImg.classList.remove('hit'); void bossImg.offsetWidth; bossImg.classList.add('hit');
     playCtx.bossHp--; renderBossHP();
-    if(playCtx.bossHp<=0){ finishNode(true, playCtx.lives>=3?3:(playCtx.lives===2?2:1), 3-playCtx.lives, `เหลือหัวใจ ${playCtx.lives}/3`); return; }
+    if(playCtx.bossHp<=0){
+      bossImg.classList.add('defeated');
+      setTimeout(() => finishNode(true, playCtx.lives>=3?3:(playCtx.lives===2?2:1), 3-playCtx.lives, `เหลือหัวใจ ${playCtx.lives}/3`), 550);
+      return;
+    }
     playCtx.idx++;
     setTimeout(() => { if(playCtx) renderBossQuestion(); },900);
   } else {
