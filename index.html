@@ -513,10 +513,195 @@ const REALMS = [
       {q:"I ___ not understand the question.",o:["do","does","did","was"],a:2},
       {q:"They ___ home late last night.",o:["come","comes","came","coming"],a:2}
     ]
+  },
+  {
+    id:'tidecaller-bay', name:'Tidecaller Bay', grammarLabel:'Past Continuous', icon:'🌊',
+    color:'#2dd4bf', colorRgb:'45,212,191', dark:'#0f766e',
+    brief:{
+      rules:[
+        'ใช้กับเหตุการณ์ที่กำลังดำเนินอยู่ ณ จุดหนึ่งในอดีต (มักถูกขัดจังหวะด้วย Past Simple)',
+        'โครงสร้าง: Subject + was/were + V-ing',
+        'ปฏิเสธ: Subject + was/were + not + V-ing',
+        'คำถาม: Was/Were + Subject + V-ing ?'
+      ],
+      examples:['I was reading a book when she called.','They were not listening.','Were you sleeping at 10 PM?']
+    },
+    choicePool:[
+      {q:"She ___ TV when the phone rang.",o:["watch","watches","was watching","is watching"],a:2},
+      {q:"They ___ football when it started to rain.",o:["play","played","were playing","are playing"],a:2},
+      {q:"I ___ my homework at 8 PM last night.",o:["do","did","was doing","am doing"],a:2},
+      {q:"He ___ when I called him.",o:["sleep","slept","was sleeping","sleeps"],a:2},
+      {q:"We ___ for the bus when we saw you.",o:["wait","waited","were waiting","are waiting"],a:2},
+      {q:"___ you cooking dinner at 7 PM yesterday?",o:["Do","Did","Was","Were"],a:3},
+      {q:"The kids ___ in the garden when it started to rain.",o:["play","played","were playing","are playing"],a:2},
+      {q:"She ___ not listening when the teacher explained.",o:["do","did","was","were"],a:2},
+      {q:"What ___ you doing at midnight?",o:["do","did","was","were"],a:3},
+      {q:"I ___ walking home when I met an old friend.",o:["was","were","is","am"],a:0},
+      {q:"They ___ dancing when the music stopped.",o:["was","were","is","are"],a:1},
+      {q:"He ___ driving too fast when the accident happened.",o:["was","were","is","are"],a:0},
+      {q:"___ it raining when you left the house?",o:["Do","Did","Was","Were"],a:2},
+      {q:"She ___ writing a letter when the lights went out.",o:["was","were","is","are"],a:0}
+    ],
+    fillPool:[
+      {q:"At 9 PM last night, she was (read) a book.",a:"reading"},
+      {q:"They were (swim) when the storm began.",a:"swimming"},
+      {q:"I was (walk) to school when it started to rain.",a:"walking"},
+      {q:"He was (cook) dinner when the fire alarm rang.",a:"cooking"},
+      {q:"We were (study) when the power went out.",a:"studying"},
+      {q:"She was (talk) on the phone when I arrived.",a:"talking"},
+      {q:"The dog was (bark) loudly at midnight.",a:"barking"},
+      {q:"They were (build) a sandcastle when the tide came in.",a:"building"},
+      {q:"I was (write) an email when my computer crashed.",a:"writing"},
+      {q:"He was (drive) to work when he saw the accident.",a:"driving"},
+      {q:"We were (plan) the party when she called.",a:"planning"},
+      {q:"She was (clean) the house all morning.",a:"cleaning"},
+      {q:"The children were (play) hide and seek.",a:"playing"},
+      {q:"I was (dream) about the beach last night.",a:"dreaming"}
+    ],
+    vocabPairs:[
+      {w:"sailing",m:"กำลังแล่นเรือ"},{w:"diving",m:"กำลังดำน้ำ"},{w:"fishing",m:"กำลังตกปลา"},
+      {w:"rowing",m:"กำลังพายเรือ"},{w:"exploring",m:"กำลังสำรวจ"},{w:"searching",m:"กำลังค้นหา"},
+      {w:"rescuing",m:"กำลังช่วยเหลือ"},{w:"sinking",m:"กำลังจม"}
+    ],
+    bossPool:[
+      {q:"I ___ sleeping when the earthquake struck.",o:["was","were","is","are"],a:0},
+      {q:"They ___ arguing when I walked in.",o:["was","were","is","are"],a:1},
+      {q:"___ she crying when you saw her?",o:["Do","Did","Was","Were"],a:2},
+      {q:"He ___ not paying attention during class.",o:["was","were","is","are"],a:0},
+      {q:"We ___ having dinner when the lights went out.",o:["was","were","is","are"],a:1},
+      {q:"The ship ___ sinking when the crew escaped.",o:["was","were","is","are"],a:0},
+      {q:"___ you waiting long?",o:["Do","Did","Was","Were"],a:3},
+      {q:"She ___ singing when I entered the room.",o:["was","were","is","are"],a:0},
+      {q:"They ___ camping near the river last weekend.",o:["was","were","is","are"],a:1},
+      {q:"I ___ thinking about you.",o:["was","were","is","are"],a:0}
+    ]
+  },
+  {
+    id:'ember-citadel', name:'Ember Citadel', grammarLabel:'Present Perfect', icon:'🌋',
+    color:'#fb7185', colorRgb:'251,113,133', dark:'#9f1239',
+    brief:{
+      rules:[
+        'ใช้กับเหตุการณ์ในอดีตที่ยังส่งผลถึงปัจจุบัน หรือประสบการณ์ที่เคย/ไม่เคยทำ',
+        'โครงสร้าง: Subject + have/has + V3 (past participle)',
+        'ปฏิเสธ: Subject + have/has + not + V3',
+        'คำถาม: Have/Has + Subject + V3 ?'
+      ],
+      examples:['I have visited Japan twice.','She hasn\'t finished her homework yet.','Have you ever eaten sushi?']
+    },
+    choicePool:[
+      {q:"I ___ never seen a ghost.",o:["have","has","had","having"],a:0},
+      {q:"She ___ already finished her homework.",o:["have","has","had","having"],a:1},
+      {q:"___ you ever been to London?",o:["Do","Did","Have","Has"],a:2},
+      {q:"He ___ just arrived home.",o:["have","has","had","having"],a:1},
+      {q:"We ___ known each other for ten years.",o:["have","has","had","having"],a:0},
+      {q:"They ___ not seen this movie yet.",o:["have","has","had","having"],a:0},
+      {q:"___ she finished her project?",o:["Do","Does","Have","Has"],a:3},
+      {q:"I ___ lost my keys somewhere.",o:["have","has","had","having"],a:0},
+      {q:"The train ___ already left.",o:["have","has","had","having"],a:1},
+      {q:"My parents ___ traveled to many countries.",o:["have","has","had","having"],a:0},
+      {q:"He ___ never eaten sushi before.",o:["have","has","had","having"],a:0},
+      {q:"___ you finished your dinner yet?",o:["Do","Did","Have","Has"],a:2},
+      {q:"She ___ broken her arm twice.",o:["have","has","had","having"],a:1},
+      {q:"We ___ just cleaned the house.",o:["have","has","had","having"],a:0}
+    ],
+    fillPool:[
+      {q:"I have (visit) Paris three times.",a:"visited"},
+      {q:"She has (write) three books.",a:"written"},
+      {q:"They have (eat) all the food already.",a:"eaten"},
+      {q:"He has never (see) snow.",a:"seen"},
+      {q:"We have (finish) our project.",a:"finished"},
+      {q:"I have (lose) my phone.",a:"lost"},
+      {q:"She has (break) her leg.",a:"broken"},
+      {q:"They have (go) to the market.",a:"gone"},
+      {q:"He has (do) his homework already.",a:"done"},
+      {q:"We have (buy) a new car.",a:"bought"},
+      {q:"I have already (read) this book.",a:"read"},
+      {q:"She has (forget) her password.",a:"forgotten"},
+      {q:"They have (build) a new bridge.",a:"built"},
+      {q:"He has (drink) all the water.",a:"drunk"}
+    ],
+    vocabPairs:[
+      {w:"forged",m:"ถูกตีขึ้นรูปแล้ว"},{w:"burned",m:"ถูกเผาแล้ว"},{w:"melted",m:"ละลายแล้ว"},
+      {w:"discovered",m:"ค้นพบแล้ว"},{w:"conquered",m:"พิชิตแล้ว"},{w:"awakened",m:"ตื่นขึ้นแล้ว"},
+      {w:"vanished",m:"หายไปแล้ว"},{w:"transformed",m:"แปลงร่างแล้ว"}
+    ],
+    bossPool:[
+      {q:"I ___ finished my mission.",o:["have","has","had","having"],a:0},
+      {q:"She ___ never lied to me.",o:["have","has","had","having"],a:1},
+      {q:"___ they arrived yet?",o:["Do","Does","Have","Has"],a:2},
+      {q:"He ___ already left the castle.",o:["have","has","had","having"],a:1},
+      {q:"We ___ found the treasure!",o:["have","has","had","having"],a:0},
+      {q:"The dragon ___ awakened.",o:["have","has","had","having"],a:1},
+      {q:"___ you ever seen a dragon?",o:["Do","Did","Have","Has"],a:2},
+      {q:"I ___ never given up.",o:["have","has","had","having"],a:0},
+      {q:"She ___ broken the curse.",o:["have","has","had","having"],a:1},
+      {q:"They ___ built a new kingdom.",o:["have","has","had","having"],a:0}
+    ]
+  },
+  {
+    id:'nebula-spire', name:'Nebula Spire', grammarLabel:'Future Simple', icon:'🌌',
+    color:'#a78bfa', colorRgb:'167,139,250', dark:'#5b21b6',
+    brief:{
+      rules:[
+        'ใช้พูดถึงเหตุการณ์ในอนาคต การตัดสินใจ ณ ขณะพูด หรือการคาดการณ์',
+        'โครงสร้าง (will): Subject + will + V1',
+        'โครงสร้าง (going to): Subject + am/is/are + going to + V1 (ใช้เมื่อมีแผน/หลักฐานชัดเจน)',
+        'ปฏิเสธ: will not (won\'t) + V1 / am/is/are + not + going to + V1'
+      ],
+      examples:['I will help you.','Look at those clouds — it is going to rain.','Will you come to the party?']
+    },
+    choicePool:[
+      {q:"I think it ___ rain tomorrow.",o:["will","is going to","are","was"],a:0},
+      {q:"Look at those clouds! It ___ rain soon.",o:["will","is going to","are","was"],a:1},
+      {q:"She ___ visit her grandma next week.",o:["will","is going to","are","was"],a:0},
+      {q:"___ you help me with this?",o:["Do","Will","Did","Are"],a:1},
+      {q:"We ___ travel to space one day.",o:["will","is going to","are","was"],a:0},
+      {q:"They ___ not come to the party tonight.",o:["will","is going to","are","was"],a:0},
+      {q:"I ___ study hard for my exams.",o:["will","is going to","are","was"],a:0},
+      {q:"He ___ going to be a scientist.",o:["will","is","are","was"],a:1},
+      {q:"___ she going to call you later?",o:["Do","Is","Are","Will"],a:1},
+      {q:"We ___ meet at 6 PM tomorrow.",o:["will","is going to","are","was"],a:0},
+      {q:"The robot ___ complete the mission.",o:["will","is going to","are","was"],a:0},
+      {q:"___ they going to launch the rocket today?",o:["Do","Is","Are","Will"],a:2},
+      {q:"I promise I ___ never give up.",o:["will","is going to","are","was"],a:0},
+      {q:"It ___ going to be an amazing adventure.",o:["will","is","are","was"],a:1}
+    ],
+    fillPool:[
+      {q:"I will (finish) the mission tomorrow.",a:"finish"},
+      {q:"She will (call) you tonight.",a:"call"},
+      {q:"We will (explore) the new galaxy.",a:"explore"},
+      {q:"They will (arrive) at noon.",a:"arrive"},
+      {q:"He will (help) us win the battle.",a:"help"},
+      {q:"I will (protect) my team.",a:"protect"},
+      {q:"The team will (launch) the rocket at dawn.",a:"launch"},
+      {q:"She will (become) a great leader.",a:"become"},
+      {q:"We will (defeat) the darkness.",a:"defeat"},
+      {q:"He will (return) home safely.",a:"return"},
+      {q:"I will (remember) this day forever.",a:"remember"},
+      {q:"They will (build) a new world.",a:"build"},
+      {q:"She will (discover) the truth.",a:"discover"},
+      {q:"We will (succeed) in the end.",a:"succeed"}
+    ],
+    vocabPairs:[
+      {w:"rocket",m:"จรวด"},{w:"galaxy",m:"กาแล็กซี"},{w:"mission",m:"ภารกิจ"},{w:"robot",m:"หุ่นยนต์"},
+      {w:"starship",m:"ยานอวกาศ"},{w:"planet",m:"ดาวเคราะห์"},{w:"astronaut",m:"นักบินอวกาศ"},{w:"future",m:"อนาคต"}
+    ],
+    bossPool:[
+      {q:"I ___ save the world.",o:["will","is going to","are","was"],a:0},
+      {q:"Look! The ship ___ crash!",o:["will","is going to","are","was"],a:1},
+      {q:"___ you join us on this mission?",o:["Do","Will","Did","Are"],a:1},
+      {q:"We ___ never surrender.",o:["will","is going to","are","was"],a:0},
+      {q:"She ___ become the next hero.",o:["will","is going to","are","was"],a:0},
+      {q:"___ they going to attack tonight?",o:["Do","Is","Are","Will"],a:2},
+      {q:"I ___ find a way home.",o:["will","is going to","are","was"],a:0},
+      {q:"He ___ going to lead the team.",o:["will","is","are","was"],a:1},
+      {q:"The future ___ be bright.",o:["will","is going to","are","was"],a:0},
+      {q:"We ___ win this battle together.",o:["will","is going to","are","was"],a:0}
+    ]
   }
 ];
 
-const NODE_TEMPLATE = [
+const NODE_TEMPLATE_EARLY = [
   {type:'choice', tier:'novice', need:5, time:75},
   {type:'fill',   tier:'novice', need:5, time:70},
   {type:'match',  tier:'adept',  pairs:6, time:60},
@@ -524,9 +709,18 @@ const NODE_TEMPLATE = [
   {type:'fill',   tier:'adept',  need:6, time:55},
   {type:'boss',   tier:'master', hp:8, lives:3}
 ];
+const NODE_TEMPLATE_LATE = [
+  {type:'choice', tier:'adept',  need:6, time:65},
+  {type:'fill',   tier:'adept',  need:6, time:60},
+  {type:'match',  tier:'adept',  pairs:8, time:55},
+  {type:'choice', tier:'master', need:7, time:55},
+  {type:'fill',   tier:'master', need:7, time:50},
+  {type:'boss',   tier:'master', hp:10, lives:3}
+];
 
-REALMS.forEach(r => {
-  r.nodes = NODE_TEMPLATE.map((n,i) => ({...n, id:r.id+'-n'+(i+1)}));
+REALMS.forEach((r,ri) => {
+  const template = ri < 3 ? NODE_TEMPLATE_EARLY : NODE_TEMPLATE_LATE;
+  r.nodes = template.map((n,i) => ({...n, id:r.id+'-n'+(i+1)}));
 });
 
 const NODE_TYPE_META = {
