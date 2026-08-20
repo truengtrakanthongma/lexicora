@@ -370,6 +370,70 @@ kbd{
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
 }
+
+/* ------------------------------------------------------------ world map */
+#screen-worldmap{padding:0;}
+#map-wrap{position:relative;width:100%;height:100%;overflow:hidden;}
+#map-canvas{position:absolute;inset:0;width:100%;height:100%;}
+#map-markers{position:absolute;inset:0;}
+#map-title{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);text-align:center;
+  z-index:5;pointer-events:none;
+}
+#map-title h2{font-size:clamp(1.6rem,5vw,2.6rem);line-height:1;}
+#map-title p{
+  font-family:'Cinzel',serif;font-weight:700;letter-spacing:.26em;text-transform:uppercase;
+  color:#ffeec4;font-size:.68rem;margin-top:4px;text-shadow:0 2px 8px rgba(0,0,0,.8);
+}
+.zone-pin{
+  position:absolute;transform:translate(-50%,-100%);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;
+  filter:drop-shadow(0 5px 8px rgba(0,0,0,.55));transition:transform .16s;
+}
+.zone-pin:hover{transform:translate(-50%,-104%) scale(1.05);}
+.zone-pin.locked{cursor:not-allowed;filter:grayscale(.85) brightness(.7) drop-shadow(0 4px 6px rgba(0,0,0,.5));}
+.zone-flag{
+  display:flex;align-items:center;gap:7px;padding:4px 11px 4px 5px;border-radius:5px;
+  background:linear-gradient(180deg,#f3e3c0,#d9bd8c);
+  border:2px solid var(--wood);box-shadow:inset 0 1px 0 rgba(255,255,255,.6);
+  white-space:nowrap;
+}
+.zone-num{
+  width:21px;height:21px;flex:none;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-weight:900;font-size:.82rem;color:#3a2408;
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold));
+  border:1px solid var(--gold-dk);
+}
+.zone-pin.done .zone-num{background:linear-gradient(180deg,#a8e39a,#5fae53);color:#183c14;border-color:#3d7a34;}
+.zone-name{font-weight:600;font-size:.8rem;color:var(--ink);}
+.zone-topic{font-size:.66rem;color:var(--ink-2);}
+.zone-pole{width:3px;height:26px;background:linear-gradient(90deg,#6b4526,#3d2413);}
+.zone-dot{
+  width:13px;height:13px;border-radius:50%;border:2px solid var(--wood);
+  background:radial-gradient(circle at 35% 30%,#fff,var(--gold));
+  margin-top:-2px;
+}
+.zone-pin.current .zone-dot{
+  background:radial-gradient(circle at 35% 30%,#fff,#ff6a4a);
+  animation:pin-pulse 1.4s ease-in-out infinite;
+}
+@keyframes pin-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,120,80,.7);}50%{box-shadow:0 0 0 9px rgba(255,120,80,0);}}
+.zone-stars{font-size:.62rem;color:#7a5a2a;letter-spacing:1px;}
+#map-footer{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap;justify-content:center;
+}
+#map-progress{
+  padding:7px 15px;border-radius:999px;
+  background:linear-gradient(180deg,rgba(58,36,20,.94),rgba(32,19,10,.96));
+  border:2px solid var(--gold-dk);color:#ffeec4;font-size:.82rem;font-weight:600;
+}
+@media (max-width:720px){
+  .zone-name{font-size:.68rem;} .zone-topic{display:none;}
+  .zone-num{width:18px;height:18px;font-size:.7rem;}
+  .zone-flag{padding:3px 8px 3px 4px;}
+}
 </style>
 </head>
 <body>
@@ -394,8 +458,9 @@ kbd{
     </div>
 
     <div id="minimap-wrap">
-      <canvas id="minimap" width="168" height="96"></canvas>
+      <canvas id="minimap" width="168" height="108"></canvas>
       <div id="region-name">—</div>
+      <button class="btn" id="btn-to-map" style="width:100%;margin-top:6px;font-size:.74rem;padding:.34rem .5rem">🗺 แผนที่โลก</button>
     </div>
 
     <div id="toast-stack"></div>
@@ -417,7 +482,7 @@ kbd{
       <h1 class="title-epic" id="landing-title">LEXICORA</h1>
       <p id="landing-sub">The Wordkeeper's Journey</p>
       <p id="landing-blurb">
-        โลกแห่งถ้อยคำถูกผนึกด้วยคำสาปแห่งกาลเวลา ออกเดินทางข้าม 6 ดินแดน
+        เกาะแห่งถ้อยคำถูกผนึกด้วยคำสาปแห่งกาลเวลา ออกเดินทางข้าม 10 ดินแดน
         ล่ามอนสเตอร์ เก็บคริสตัลคำศัพท์ และปราบเจ้าผู้พิทักษ์ เพื่อปลดปล่อย Lexicora
       </p>
       <button class="btn btn-gold" id="btn-begin" style="font-size:1.16rem;padding:.8rem 2.3rem">เริ่มการผจญภัย</button>
@@ -437,6 +502,22 @@ kbd{
         <div class="field"><label for="in-no">เลขที่</label><input id="in-no" required maxlength="4" inputmode="numeric" autocomplete="off"></div>
         <button class="btn btn-gold" id="btn-embark" type="submit" style="width:100%;margin-top:6px" disabled>ออกเดินทาง</button>
       </form>
+    </div>
+  </div>
+
+  <!-- ====================================================== WORLD MAP -->
+  <div class="overlay" id="screen-worldmap">
+    <div id="map-wrap">
+      <canvas id="map-canvas"></canvas>
+      <div id="map-markers"></div>
+      <div id="map-title">
+        <h2 class="title-epic">LEXICORA</h2>
+        <p>เลือกดินแดน</p>
+      </div>
+      <div id="map-footer">
+        <div id="map-progress">—</div>
+        <button class="btn" id="btn-map-codex" style="font-size:.82rem;padding:.44rem 1rem">📖 สมุดคำศัพท์</button>
+      </div>
     </div>
   </div>
 
@@ -486,7 +567,7 @@ kbd{
       <p id="reward-text" style="margin-top:12px;line-height:1.65;font-size:1rem"></p>
       <img id="reward-hero" src="" alt="">
       <div style="margin-top:18px">
-        <button class="btn btn-gold" id="btn-reward-close">เดินทางต่อ</button>
+        <button class="btn btn-gold" id="btn-reward-close">กลับสู่แผนที่</button>
       </div>
     </div>
   </div>
@@ -501,35 +582,31 @@ kbd{
       <div id="codex-body"></div>
       <div class="rule-gold tight"></div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-gold" id="btn-codex-close">กลับสู่การผจญภัย</button>
+        <button class="btn btn-gold" id="btn-codex-close">กลับ</button>
         <button class="btn" id="btn-quit">ออกจากระบบ</button>
       </div>
     </div>
   </div>
 </div>
-
 <script>
 (() => {
 'use strict';
 
-// ═══════════════════════════════════════════════════════════════ CONTENT
-const REGIONS = [
+const ZONES = [
   {
-    id:'woods', name:'Whisper Woods', thai:'ป่ากระซิบ', tense:'Present Simple',
-    ground:'grass', ground2:'forest', path:'dirt', accent:'#6cc06a', sky:'#8fd6a0',
-    props:[0,1,2,3,4], monster:0, boss:0,
-    bossName:'Forest Golem', bossThai:'โกเลมพิทักษ์ป่า',
+    id:'woods', no:1, name:'Verdant Woods', thai:'ป่าเขียวขจี', topic:'Present Simple',
+    map:{x:0.16, y:0.58, r:0.115, kind:'forest'},
+    ground:'grass', ground2:'forest', path:'dirt', accent:'#68b45e', sky:'#a8dc9c',
+    props:[0,1,2,3,4], mon:[0,2,4], boss:0,
     rules:[
       'ใช้กับสิ่งที่ทำเป็นประจำ หรือความจริงทั่วไป',
-      'โครงสร้าง: ประธาน + กริยาช่อง 1 (เติม s/es เมื่อประธานเป็นเอกพจน์บุรุษที่ 3)',
-      'ปฏิเสธ: ประธาน + don\'t / doesn\'t + กริยาช่อง 1',
+      'ประธาน + กริยาช่อง 1 (เอกพจน์บุรุษที่ 3 เติม s/es)',
+      'ปฏิเสธ: don\'t / doesn\'t + กริยาช่อง 1',
       'คำถาม: Do / Does + ประธาน + กริยาช่อง 1 ?'
     ],
     examples:['She walks to school every day.','He doesn\'t like coffee.','Do you play football?'],
-    words:[
-      ['forest','ป่าไม้'],['river','แม่น้ำ'],['flower','ดอกไม้'],['bird','นก'],
-      ['leaf','ใบไม้'],['path','เส้นทาง'],['morning','ตอนเช้า'],['village','หมู่บ้าน']
-    ],
+    words:[['forest','ป่าไม้'],['tree','ต้นไม้'],['river','แม่น้ำ'],['bird','นก'],
+           ['leaf','ใบไม้'],['path','เส้นทาง'],['morning','ตอนเช้า'],['walk','เดิน']],
     quiz:[
       ['My brother ___ hard for his exams.',['study','studies','is studying','studied'],1],
       ['A cat ___ mice.',['catch','catches','is catching','caught'],1],
@@ -540,27 +617,54 @@ const REGIONS = [
       ['He ___ the piano.',['not play','don\'t play','doesn\'t play','isn\'t playing'],2],
       ['Water ___ at 0 degrees Celsius.',['freeze','freezes','is freezing','froze'],1],
       ['My parents ___ in a big city.',['live','lives','are living','lived'],0],
-      ['The train ___ at 7 AM every morning.',['leave','is leaving','leaves','left'],2],
       ['___ your sister play the guitar?',['Do','Does','Is','Are'],1],
-      ['The sun ___ in the east.',['rise','is rising','rises','rose'],2]
+      ['The sun ___ in the east.',['rise','is rising','rises','rose'],2],
+      ['We ___ to school by bus.',['go','goes','is going','gone'],0]
     ]
   },
   {
-    id:'ruins', name:'Sandstone Ruins', thai:'ซากปรักหักพัง', tense:'Present Continuous',
-    ground:'sand', ground2:'stone', path:'pstone', accent:'#e8b352', sky:'#f0cf92',
-    props:[5,6,7], monster:1, boss:1,
-    bossName:'Sand Pharaoh', bossThai:'ฟาโรห์แห่งทราย',
+    id:'hills', no:2, name:'Grass Hills', thai:'เนินเขาหญ้า', topic:'Verb to be',
+    map:{x:0.28, y:0.38, r:0.105, kind:'hills'},
+    ground:'grass', ground2:'dirt', path:'dirt', accent:'#8fc95e', sky:'#cbe79a',
+    props:[2,3,4,0], mon:[1,3,6], boss:1,
+    rules:[
+      'Verb to be คือ am / is / are แปลว่า "เป็น อยู่ คือ"',
+      'I + am · He/She/It + is · You/We/They + are',
+      'ปฏิเสธ: เติม not หลัง am/is/are (isn\'t, aren\'t)',
+      'คำถาม: สลับ am/is/are มาไว้หน้าประธาน'
+    ],
+    examples:['I am a student.','She is very kind.','They are not at home.'],
+    words:[['hill','เนินเขา','n'],['grass','หญ้า'],['sheep','แกะ'],['farm','ฟาร์ม'],
+           ['village','หมู่บ้าน'],['sky','ท้องฟ้า'],['wind','ลม'],['happy','มีความสุข']],
+    quiz:[
+      ['I ___ a student.',['am','is','are','be'],0],
+      ['She ___ my best friend.',['am','is','are','be'],1],
+      ['They ___ in the classroom.',['am','is','are','be'],2],
+      ['My father ___ a farmer.',['am','is','are','be'],1],
+      ['You ___ very kind.',['am','is','are','be'],2],
+      ['We ___ not late today.',['am','is','are','be'],2],
+      ['___ she your sister?',['Am','Is','Are','Be'],1],
+      ['The books ___ on the table.',['am','is','are','be'],2],
+      ['It ___ a beautiful day.',['am','is','are','be'],1],
+      ['___ you ready?',['Am','Is','Are','Be'],2],
+      ['The cat ___ under the chair.',['am','is','are','be'],1],
+      ['I ___ not hungry now.',['am','is','are','be'],0]
+    ]
+  },
+  {
+    id:'desert', no:3, name:'Sand Desert', thai:'ทะเลทรายแห่งทราย', topic:'Present Continuous',
+    map:{x:0.2, y:0.2, r:0.115, kind:'desert'},
+    ground:'sand', ground2:'dirt', path:'dirt', accent:'#e6bc63', sky:'#f2dba4',
+    props:[5,7,6], mon:[10,11,12], boss:3,
     rules:[
       'ใช้กับสิ่งที่กำลังเกิดขึ้นตอนนี้',
-      'โครงสร้าง: ประธาน + is / am / are + กริยาเติม -ing',
-      'ปฏิเสธ: ประธาน + is / am / are + not + กริยาเติม -ing',
-      'คำถาม: Is / Am / Are + ประธาน + กริยาเติม -ing ?'
+      'ประธาน + is / am / are + กริยาเติม -ing',
+      'ปฏิเสธ: is / am / are + not + กริยาเติม -ing',
+      'คำบอกเวลา: now, right now, at the moment, Look!'
     ],
     examples:['She is reading a book now.','They are not playing outside.','Are you listening to me?'],
-    words:[
-      ['desert','ทะเลทราย'],['ruin','ซากปรักหักพัง'],['sand','ทราย'],['pillar','เสาหิน'],
-      ['treasure','สมบัติ'],['ancient','โบราณ'],['tomb','สุสาน'],['statue','รูปปั้น']
-    ],
+    words:[['desert','ทะเลทราย'],['sand','ทราย'],['camel','อูฐ'],['oasis','โอเอซิส'],
+           ['hot','ร้อน'],['thirsty','กระหายน้ำ'],['travel','เดินทาง'],['map','แผนที่']],
     quiz:[
       ['Look! The children ___ in the pool.',['swim','swims','are swimming','swam'],2],
       ['Right now, she ___ a letter.',['write','writes','is writing','wrote'],2],
@@ -571,27 +675,25 @@ const REGIONS = [
       ['I ___ not sleeping.',['am','is','are','be'],0],
       ['___ you working today?',['Do','Does','Are','Is'],2],
       ['They ___ a movie at the moment.',['watch','watches','are watching','watched'],2],
-      ['My sister ___ her bike now.',['ride','rides','is riding','rode'],2],
       ['We ___ for the bus now.',['wait','waits','are waiting','waited'],2],
-      ['The chef ___ dinner right now.',['cook','cooks','is cooking','cooked'],2]
+      ['The chef ___ dinner right now.',['cook','cooks','is cooking','cooked'],2],
+      ['She ___ her bike now.',['ride','rides','is riding','rode'],2]
     ]
   },
   {
-    id:'frost', name:'Frostpeak Pass', thai:'ช่องเขาน้ำแข็ง', tense:'Past Simple',
-    ground:'snow', ground2:'ice', path:'stone', accent:'#7fc8ea', sky:'#cfe9f7',
-    props:[8,9,10], monster:2, boss:2,
-    bossName:'Frost Wyrm', bossThai:'มังกรน้ำแข็ง',
+    id:'caves', no:4, name:'Caves & Crags', thai:'ถ้ำและหิน', topic:'Past Simple',
+    map:{x:0.4, y:0.16, r:0.105, kind:'caves'},
+    ground:'stone', ground2:'dirt', path:'pstone', accent:'#9a8f86', sky:'#c9bfb4',
+    props:[7,10,6], mon:[13,14,15], boss:4,
     rules:[
       'ใช้กับเหตุการณ์ที่จบไปแล้วในอดีต',
-      'โครงสร้าง: ประธาน + กริยาช่อง 2 (regular เติม -ed, irregular เปลี่ยนรูป)',
-      'ปฏิเสธ: ประธาน + did not (didn\'t) + กริยาช่อง 1',
-      'คำถาม: Did + ประธาน + กริยาช่อง 1 ?'
+      'ประธาน + กริยาช่อง 2 (regular เติม -ed, irregular เปลี่ยนรูป)',
+      'ปฏิเสธ: did not (didn\'t) + กริยาช่อง 1',
+      'คำบอกเวลา: yesterday, last night, ago, in 2020'
     ],
     examples:['I visited my grandmother last week.','He didn\'t finish his homework.','Did you see that movie?'],
-    words:[
-      ['snow','หิมะ'],['ice','น้ำแข็ง'],['mountain','ภูเขา'],['cold','หนาว'],
-      ['wind','ลม'],['cave','ถ้ำ'],['frozen','เย็นจนแข็ง'],['peak','ยอดเขา']
-    ],
+    words:[['cave','ถ้ำ'],['rock','หิน'],['dark','มืด'],['torch','คบเพลิง'],
+           ['deep','ลึก'],['echo','เสียงสะท้อน'],['found','พบ (อดีต)'],['climb','ปีน']],
     quiz:[
       ['She ___ to the market yesterday.',['go','goes','went','going'],2],
       ['They ___ a movie last night.',['watch','watches','watched','watching'],2],
@@ -602,27 +704,25 @@ const REGIONS = [
       ['He ___ a fish at the lake.',['catch','catches','caught','catching'],2],
       ['I ___ breakfast this morning.',['eat','eats','ate','eating'],2],
       ['She ___ not come to school yesterday.',['do','does','did','doing'],2],
-      ['My parents ___ to Chiang Mai last summer.',['travel','travels','traveled','traveling'],2],
       ['He ___ his best friend at the mall.',['meet','meets','met','meeting'],2],
-      ['They ___ home late last night.',['come','comes','came','coming'],2]
+      ['They ___ home late last night.',['come','comes','came','coming'],2],
+      ['I ___ my phone at home yesterday.',['leave','leaves','left','leaving'],2]
     ]
   },
   {
-    id:'bay', name:'Tidecaller Bay', thai:'อ่าวเรียกคลื่น', tense:'Past Continuous',
-    ground:'sand', ground2:'grass', path:'dirt', accent:'#4fc2b8', sky:'#a9e4dd',
-    props:[11,12,13], monster:3, boss:3,
-    bossName:'Tide Kraken', bossThai:'คราเคนแห่งคลื่น',
+    id:'snow', no:5, name:'Snow Peaks', thai:'ภูเขาหิมะ', topic:'Past Continuous',
+    map:{x:0.6, y:0.18, r:0.115, kind:'snow'},
+    ground:'snow', ground2:'ice', path:'stone', accent:'#8fcfe8', sky:'#d8eef8',
+    props:[8,9,10], mon:[16,17,18], boss:5,
     rules:[
       'ใช้กับเหตุการณ์ที่กำลังดำเนินอยู่ ณ จุดหนึ่งในอดีต',
-      'โครงสร้าง: ประธาน + was / were + กริยาเติม -ing',
-      'มักถูกขัดจังหวะด้วย Past Simple (…when + ประโยค Past Simple)',
-      'คำถาม: Was / Were + ประธาน + กริยาเติม -ing ?'
+      'ประธาน + was / were + กริยาเติม -ing',
+      'I/He/She/It + was · You/We/They + were',
+      'มักถูกขัดจังหวะ: …was V-ing when + Past Simple'
     ],
     examples:['I was reading when she called.','They were not listening.','Were you sleeping at 10 PM?'],
-    words:[
-      ['ocean','มหาสมุทร'],['wave','คลื่น'],['beach','ชายหาด'],['shell','เปลือกหอย'],
-      ['boat','เรือ'],['island','เกาะ'],['sailor','กะลาสี'],['storm','พายุ']
-    ],
+    words:[['snow','หิมะ'],['ice','น้ำแข็ง'],['mountain','ภูเขา'],['cold','หนาว'],
+           ['freeze','แข็งตัว'],['peak','ยอดเขา'],['warm','อบอุ่น'],['slip','ลื่น']],
     quiz:[
       ['She ___ TV when the phone rang.',['watch','watches','was watching','is watching'],2],
       ['They ___ football when it started to rain.',['play','played','were playing','are playing'],2],
@@ -639,21 +739,48 @@ const REGIONS = [
     ]
   },
   {
-    id:'ember', name:'Ember Citadel', thai:'ป้อมเพลิง', tense:'Present Perfect',
-    ground:'ash', ground2:'stone', path:'pstone', accent:'#f07a3c', sky:'#f0a06a',
-    props:[14,15,16], monster:4, boss:4,
-    bossName:'Ember Titan', bossThai:'ไททันเพลิง',
+    id:'volcano', no:6, name:'Volcano Valley', thai:'หุบเขาภูเขาไฟ', topic:'Future Simple',
+    map:{x:0.72, y:0.4, r:0.115, kind:'volcano'},
+    ground:'ash', ground2:'stone', path:'pstone', accent:'#ee8244', sky:'#f6b083',
+    props:[14,15,16], mon:[19,20,21], boss:6,
     rules:[
-      'ใช้กับเหตุการณ์ในอดีตที่ยังส่งผลถึงปัจจุบัน หรือประสบการณ์ที่เคย/ไม่เคยทำ',
-      'โครงสร้าง: ประธาน + have / has + กริยาช่อง 3',
-      'ปฏิเสธ: ประธาน + have / has + not + กริยาช่อง 3',
-      'มักใช้กับ already, yet, just, ever, never, since, for'
+      'ใช้พูดถึงอนาคต การตัดสินใจ ณ ขณะพูด หรือการคาดการณ์',
+      'will: ประธาน + will + กริยาช่อง 1',
+      'going to: ประธาน + am/is/are + going to + กริยาช่อง 1 (มีแผน/หลักฐาน)',
+      'ปฏิเสธ: will not (won\'t) + กริยาช่อง 1'
+    ],
+    examples:['I will help you.','Look at those clouds — it is going to rain.','Will you come to the party?'],
+    words:[['fire','ไฟ'],['flame','เปลวไฟ'],['smoke','ควัน'],['ash','เถ้าถ่าน'],
+           ['burn','เผาไหม้'],['danger','อันตราย'],['escape','หลบหนี'],['brave','กล้าหาญ']],
+    quiz:[
+      ['I think it ___ rain tomorrow.',['will','is going to','are','was'],0],
+      ['Look at those clouds! It ___ rain soon.',['will','is going to','are','was'],1],
+      ['She ___ visit her grandma next week.',['will','is going to','are','was'],0],
+      ['___ you help me with this?',['Do','Will','Did','Are'],1],
+      ['They ___ not come to the party tonight.',['will','is going to','are','was'],0],
+      ['He ___ going to be a scientist.',['will','is','are','was'],1],
+      ['___ she going to call you later?',['Do','Is','Are','Will'],1],
+      ['We ___ meet at 6 PM tomorrow.',['will','is going to','are','was'],0],
+      ['___ they going to launch the rocket today?',['Do','Is','Are','Will'],2],
+      ['I promise I ___ never give up.',['will','is going to','are','was'],0],
+      ['It ___ going to be an amazing adventure.',['will','is','are','was'],1],
+      ['We ___ win this battle together.',['will','is going to','are','was'],0]
+    ]
+  },
+  {
+    id:'ruins', no:7, name:'Ancient Ruins', thai:'ซากปรักหักพังโบราณ', topic:'Present Perfect',
+    map:{x:0.56, y:0.58, r:0.11, kind:'ruins'},
+    ground:'sand', ground2:'stone', path:'pstone', accent:'#c8b078', sky:'#e2d0a6',
+    props:[6,7,5], mon:[8,9,22], boss:7,
+    rules:[
+      'ใช้กับอดีตที่ยังส่งผลถึงปัจจุบัน หรือประสบการณ์ที่เคย/ไม่เคยทำ',
+      'ประธาน + have / has + กริยาช่อง 3',
+      'He/She/It + has · I/You/We/They + have',
+      'คำที่ใช้บ่อย: already, yet, just, ever, never, since, for'
     ],
     examples:['I have visited Japan twice.','She hasn\'t finished her homework yet.','Have you ever eaten sushi?'],
-    words:[
-      ['fire','ไฟ'],['flame','เปลวไฟ'],['ash','เถ้าถ่าน'],['forge','เตาหลอม'],
-      ['sword','ดาบ'],['armor','เกราะ'],['smoke','ควัน'],['ember','ถ่านไฟ']
-    ],
+    words:[['ruin','ซากปรักหักพัง'],['ancient','โบราณ'],['temple','วิหาร'],['statue','รูปปั้น'],
+           ['treasure','สมบัติ'],['secret','ความลับ'],['history','ประวัติศาสตร์'],['discover','ค้นพบ']],
     quiz:[
       ['I ___ never seen a ghost.',['have','has','had','having'],0],
       ['She ___ already finished her homework.',['have','has','had','having'],1],
@@ -670,47 +797,108 @@ const REGIONS = [
     ]
   },
   {
-    id:'nebula', name:'Nebula Spire', thai:'หอคอยดารา', tense:'Future Simple',
-    ground:'void', ground2:'stone', path:'pstone', accent:'#a98cf0', sky:'#8f79d6',
-    props:[17,18,19], monster:5, boss:5,
-    bossName:'Void Sovereign', bossThai:'จอมราชันย์แห่งความว่างเปล่า',
+    id:'grove', no:8, name:'Enchanted Grove', thai:'ป่าเวทมนตร์', topic:'Modal Verbs',
+    map:{x:0.34, y:0.62, r:0.105, kind:'enchanted'},
+    ground:'grass', ground2:'forest', path:'dirt', accent:'#5ad2b4', sky:'#a6f0dc',
+    props:[17,2,3], mon:[26,27,5], boss:8,
     rules:[
-      'ใช้พูดถึงอนาคต การตัดสินใจ ณ ขณะพูด หรือการคาดการณ์',
-      'โครงสร้าง (will): ประธาน + will + กริยาช่อง 1',
-      'โครงสร้าง (going to): ประธาน + am/is/are + going to + กริยาช่อง 1 (มีแผน/หลักฐานชัดเจน)',
-      'ปฏิเสธ: will not (won\'t) + กริยาช่อง 1'
+      'Modal verbs: can, could, may, must, should, will',
+      'ตามด้วยกริยาช่อง 1 เสมอ (ไม่เติม s / ing / ed)',
+      'can = ทำได้ · must = ต้อง · should = ควร · may = อาจจะ',
+      'ปฏิเสธ: เติม not หลัง modal (cannot, mustn\'t, shouldn\'t)'
     ],
-    examples:['I will help you.','Look at those clouds — it is going to rain.','Will you come to the party?'],
-    words:[
-      ['star','ดาว'],['sky','ท้องฟ้า'],['future','อนาคต'],['journey','การเดินทาง'],
-      ['light','แสง'],['dream','ความฝัน'],['hero','วีรบุรุษ'],['destiny','โชคชะตา']
-    ],
+    examples:['I can swim very well.','You should study every day.','She must finish it today.'],
+    words:[['magic','เวทมนตร์'],['spell','คาถา'],['fairy','นางฟ้า'],['glow','เปล่งแสง'],
+           ['wish','ปรารถนา'],['power','พลัง'],['secretly','อย่างลับๆ'],['believe','เชื่อ']],
     quiz:[
-      ['I think it ___ rain tomorrow.',['will','is going to','are','was'],0],
-      ['Look at those clouds! It ___ rain soon.',['will','is going to','are','was'],1],
-      ['She ___ visit her grandma next week.',['will','is going to','are','was'],0],
-      ['___ you help me with this?',['Do','Will','Did','Are'],1],
-      ['They ___ not come to the party tonight.',['will','is going to','are','was'],0],
-      ['He ___ going to be a scientist.',['will','is','are','was'],1],
-      ['___ she going to call you later?',['Do','Is','Are','Will'],1],
-      ['We ___ meet at 6 PM tomorrow.',['will','is going to','are','was'],0],
-      ['___ they going to launch the rocket today?',['Do','Is','Are','Will'],2],
-      ['I promise I ___ never give up.',['will','is going to','are','was'],0],
-      ['It ___ going to be an amazing adventure.',['will','is','are','was'],1],
-      ['We ___ win this battle together.',['will','is going to','are','was'],0]
+      ['I ___ swim very well.',['can','cans','to can','canning'],0],
+      ['You ___ study harder for the exam.',['should','shoulds','to should','shoulding'],0],
+      ['She ___ finish her work today. It is very important.',['must','musts','musting','to must'],0],
+      ['Birds ___ fly, but they cannot swim well.',['can','cans','could to','canning'],0],
+      ['We ___ not talk loudly in the library.',['should','shoulds','to should','shoulding'],0],
+      ['___ you help me carry this box?',['Can','Cans','Canning','To can'],0],
+      ['He can ___ three languages.',['speak','speaks','spoke','speaking'],0],
+      ['You must ___ your homework before dinner.',['do','does','did','doing'],0],
+      ['It ___ rain later, so take an umbrella.',['may','mays','maying','to may'],0],
+      ['I ___ not find my keys anywhere.',['can','cans','canning','to can'],0],
+      ['Students should ___ to school on time.',['come','comes','came','coming'],0],
+      ['___ I borrow your pencil, please?',['May','Mays','Maying','To may'],0]
+    ]
+  },
+  {
+    id:'shadow', no:9, name:'Shadow Ravine', thai:'หุบเหวเงามืด', topic:'Past Perfect',
+    map:{x:0.5, y:0.8, r:0.105, kind:'shadow'},
+    ground:'ash', ground2:'stone', path:'pstone', accent:'#8f7fb8', sky:'#b0a2d4',
+    props:[14,18,15], mon:[23,24,7], boss:2,
+    rules:[
+      'ใช้กับเหตุการณ์ที่เกิด "ก่อน" อีกเหตุการณ์หนึ่งในอดีต',
+      'ประธาน + had + กริยาช่อง 3 (ใช้ had ได้กับทุกประธาน)',
+      'มักคู่กับ Past Simple: had + V3 … before / after / when …',
+      'ปฏิเสธ: had not (hadn\'t) + กริยาช่อง 3'
+    ],
+    examples:['I had finished my homework before dinner.','She had never seen snow before that day.','They had left when we arrived.'],
+    words:[['shadow','เงามืด'],['fear','ความกลัว'],['silence','ความเงียบ'],['bridge','สะพาน'],
+           ['fall','ตกลงมา'],['brave','กล้าหาญ'],['already','เรียบร้อยแล้ว'],['before','ก่อนหน้า']],
+    quiz:[
+      ['I ___ finished my homework before dinner.',['have','has','had','having'],2],
+      ['She ___ never seen snow before that day.',['have','has','had','having'],2],
+      ['They ___ already left when we arrived.',['have','has','had','having'],2],
+      ['He ___ eaten before he came to the party.',['have','has','had','having'],2],
+      ['We had ___ the movie before, so we left.',['see','sees','saw','seen'],3],
+      ['By 2020 she had ___ five countries.',['visit','visits','visited','visiting'],2],
+      ['The train had ___ when I got to the station.',['go','goes','went','gone'],3],
+      ['I had ___ my keys, so I could not enter.',['lose','loses','lost','losing'],2],
+      ['After he had ___ dinner, he watched TV.',['finish','finishes','finished','finishing'],2],
+      ['They had ___ the letter before Monday.',['write','writes','wrote','written'],3],
+      ['She had not ___ about the news.',['hear','hears','heard','hearing'],2],
+      ['We had ___ there twice before 2019.',['be','is','was','been'],3]
+    ]
+  },
+  {
+    id:'castle', no:10, name:'Dark Castle', thai:'ปราสาทมืด', topic:'Final Trial',
+    map:{x:0.7, y:0.72, r:0.115, kind:'castle'},
+    ground:'stone', ground2:'ash', path:'pstone', accent:'#7c6ea8', sky:'#a396c8',
+    props:[6,18,14], mon:[31,25,30], boss:9,
+    rules:[
+      'บททดสอบสุดท้าย — รวมทุกไวยากรณ์ที่เรียนมา',
+      'สังเกตคำบอกเวลาเพื่อเลือก tense ให้ถูก',
+      'every day / always → Present Simple · now → Present Continuous',
+      'yesterday / ago → Past Simple · tomorrow / will → Future'
+    ],
+    examples:['She goes to school every day.','She is going to school now.','She went to school yesterday.'],
+    words:[['castle','ปราสาท'],['king','กษัตริย์'],['throne','บัลลังก์'],['sword','ดาบ'],
+           ['victory','ชัยชนะ'],['courage','ความกล้าหาญ'],['final','สุดท้าย'],['legend','ตำนาน']],
+    quiz:[
+      ['She ___ to school every day.',['go','goes','is going','went'],1],
+      ['Listen! The baby ___ .',['cry','cries','is crying','cried'],2],
+      ['We ___ to Phuket last summer.',['travel','travels','traveled','traveling'],2],
+      ['I ___ call you tomorrow.',['will','am','was','have'],0],
+      ['He ___ already eaten lunch.',['have','has','had','having'],1],
+      ['They ___ playing when it started to rain.',['are','was','were','have'],2],
+      ['You ___ wear a helmet. It is the rule.',['must','musts','to must','musting'],0],
+      ['I ___ finished the work before he arrived.',['have','has','had','having'],2],
+      ['___ she like chocolate?',['Do','Does','Is','Are'],1],
+      ['The sun ___ in the west.',['set','sets','is setting','setted'],1],
+      ['We ___ not go out yesterday.',['do','does','did','are'],2],
+      ['Look! It ___ going to snow.',['is','are','was','will'],0]
     ]
   }
 ];
 
 const GEAR = [
   {key:'helmet',   thai:'หมวกเกราะแห่งป่า'},
-  {key:'armor',    thai:'เกราะอกทะเลทราย'},
-  {key:'boots',    thai:'รองเท้าน้ำแข็ง'},
-  {key:'gauntlet', thai:'ถุงมือแห่งคลื่น'},
-  {key:'weapon',   thai:'ดาบเพลิงนิรันดร์'},
-  {key:'ring',     thai:'แหวนดารา'}
+  {key:'armor',    thai:'เกราะอกเนินเขา'},
+  {key:'boots',    thai:'รองเท้าทะเลทราย'},
+  {key:'gauntlet', thai:'ถุงมือหินผา'},
+  {key:'weapon',   thai:'ดาบน้ำแข็ง'},
+  {key:'ring',     thai:'แหวนเพลิง'},
+  {key:'amulet',   thai:'เครื่องรางโบราณ'},
+  {key:'cloak',    thai:'ผ้าคลุมเวทมนตร์'},
+  {key:'crown',    thai:'มงกุฎเงามืด'},
+  {key:'crest',    thai:'ตราแห่งผู้พิทักษ์คำ'}
 ];
-const RANKS = ['ผู้ฝึกหัด','นักเดินทาง','นักล่า','อัศวิน','แชมเปี้ยน','ตำนาน','ผู้พิทักษ์คำ'];
+const RANKS = ['ผู้ฝึกหัด','นักเดินทาง','นักล่า','อัศวินฝึกหัด','อัศวิน','แชมเปี้ยน',
+               'วีรบุรุษ','ตำนาน','ผู้พิทักษ์คำ','จอมปราชญ์','ราชาแห่งถ้อยคำ'];
 
 // ══════════════════════════════════════════════════════════════════ ART
 const TILE = 32, SCALE = 2;
@@ -783,255 +971,161 @@ const sfx = {
   deny(){ beep(150,.2,'square',.06,90); }
 };
 
+// ═══════════════════════════════════════════════════════════════ STATE
+let S = null, profileKey = null;
+let mode = 'menu';           // 'menu' | 'map' | 'play'
+let zone = 0;                // index of the zone currently loaded
+
+function freshState(profile){
+  return {
+    profile, xp:0, level:1, hp:5, hpMax:5, gear:0, kills:0,
+    cleared:ZONES.map(()=>false),
+    stars:ZONES.map(()=>0),
+    words:ZONES.map(z => z.words.map(()=>false)),
+    lessonSeen:ZONES.map(()=>false)
+  };
+}
+function heroStage(){ const g = S.gear; return g===0?0 : g<=3?1 : g<=6?2 : 3; }
+function heroImg(){ return IMG['p'+heroStage()] || IMG.p0; }
+function xpNeed(){ return S.level*120; }
+function wordsFound(){ return S.words.reduce((a,r)=>a+r.filter(Boolean).length,0); }
+function wordsTotal(){ return ZONES.reduce((a,z)=>a+z.words.length,0); }
+function zoneUnlocked(i){ return i===0 || S.cleared[i-1]; }
+function clearedCount(){ return S.cleared.filter(Boolean).length; }
+
+function save(){
+  try{
+    const all = JSON.parse(localStorage.getItem('lexicoraSavesV3')||'{}');
+    all[profileKey] = S;
+    localStorage.setItem('lexicoraSavesV3', JSON.stringify(all));
+    const bd = JSON.parse(localStorage.getItem('lexicoraBoardV3')||'[]');
+    const k = bd.findIndex(e => e.k === profileKey);
+    const row = {k:profileKey, name:S.profile.name, cls:S.profile.class, no:S.profile.number,
+                 level:S.level, words:wordsFound(), zones:clearedCount()};
+    if(k>=0) bd[k] = row; else bd.push(row);
+    localStorage.setItem('lexicoraBoardV3', JSON.stringify(bd));
+  }catch(e){}
+}
+
 // ═══════════════════════════════════════════════════════════════ WORLD
-const RW = 56, RH = 42;                     // tiles per region
-const GRID = [[0,0],[1,0],[2,0],[2,1],[1,1],[0,1]];  // region -> grid cell (snake)
-const WORLD_W = RW*3, WORLD_H = RH*2;
-const WPX = WORLD_W*TILE, HPX = WORLD_H*TILE;
-
+const ZW = 56, ZH = 42;                 // tiles in one zone
+const WPX = ZW*TILE, HPX = ZH*TILE;
 const world = {
-  tiles:new Uint8Array(WORLD_W*WORLD_H),
-  region:new Uint8Array(WORLD_W*WORLD_H),
-  solid:new Uint8Array(WORLD_W*WORLD_H),
-  props:[], crystals:[], shrines:[], gates:[], bosses:[], monsters:[]
+  tiles:new Uint8Array(ZW*ZH), solid:new Uint8Array(ZW*ZH),
+  props:[], crystals:[], shrine:null, boss:null, monsters:[]
 };
-const tIdx = (x,y) => y*WORLD_W + x;
-function regionOriginOf(i){ const [cx,cy] = GRID[i]; return [cx*RW, cy*RH]; }
+const tIdx = (x,y) => y*ZW + x;
 
-function buildWorld(){
-  const T = TERRAIN_ROWS;
-  for(let ri=0; ri<6; ri++){
-    const R = REGIONS[ri];
-    const [ox,oy] = regionOriginOf(ri);
-    const g1 = T[R.ground], g2 = T[R.ground2], gp = T[R.path];
+function buildZone(zi){
+  const Z = ZONES[zi], T = TERRAIN_ROWS;
+  const g1 = T[Z.ground], g2 = T[Z.ground2], gp = T[Z.path];
+  world.props = []; world.crystals = []; world.monsters = [];
 
-    for(let y=0;y<RH;y++) for(let x=0;x<RW;x++){
-      const wx = ox+x, wy = oy+y, i = tIdx(wx,wy);
-      world.region[i] = ri;
-      const n = noise2(wx*.13, wy*.13, ri*97);
-      const n2 = noise2(wx*.31, wy*.31, ri*31+5);
-      let t = n > .56 ? g2 : g1;
+  for(let y=0;y<ZH;y++) for(let x=0;x<ZW;x++){
+    const i = tIdx(x,y);
+    let t = noise2(x*.13, y*.13, zi*97) > .56 ? g2 : g1;
 
-      const lx = wx-ox, ly = wy-oy;
+    const riverY = ZH*.52 + Math.sin(x*.075 + zi)*5.4 + Math.sin(x*.019 + zi*2)*2.6;
+    const onRiver = Math.abs(y - riverY) < 1.7 && x > 5 && x < ZW-6;
+    const roadY = ZH/2 + Math.sin(x*.055 + zi*2)*2.6;
+    const roadX = ZW/2 + Math.sin(y*.07 + zi)*2.4;
+    const onRoad = Math.abs(y-roadY) < .95 || Math.abs(x-roadX) < .95;
 
-      // a slow winding river (lava in Ember) cutting across the region
-      const riverY = RH*.52 + Math.sin(lx*.075 + ri)*5.4 + Math.sin(lx*.019 + ri*2)*2.6;
-      const onRiver = Math.abs(ly - riverY) < 1.7 && lx > 5 && lx < RW-6;
+    let blocked = 0;
+    if(onRoad)       t = onRiver ? T.pstone : gp;      // road bridges the river
+    else if(onRiver){ t = (Z.id==='volcano') ? T.lava : T.water; blocked = 1; }
+    else if(noise2(x*.31, y*.31, zi*31+5) > .93) t = g2;
 
-      // gently winding roads radiating from the region centre
-      const roadY = RH/2 + Math.sin(lx*.055 + ri*2)*2.6;
-      const roadX = RW/2 + Math.sin(ly*.07 + ri)*2.4;
-      const onRoad = Math.abs(ly - roadY) < .95 || Math.abs(lx - roadX) < .95;
+    world.tiles[i] = t;
+    world.solid[i] = blocked;
+    if(x===0||y===0||x===ZW-1||y===ZH-1) world.solid[i] = 1;
+  }
 
-      let blocked = 0;
-      if(onRoad){
-        // the road always wins — over water it becomes a walkable stone bridge
-        t = onRiver ? T.pstone : gp;
-      } else if(onRiver){
-        t = (ri === 4) ? T.lava : T.water;
-        blocked = 1;
-      } else if(n2 > .93){
-        t = g2;
-      }
-
-      world.tiles[i] = t;
-      world.solid[i] = blocked;
+  // ---- scenery
+  for(let y=2;y<ZH-2;y++) for(let x=2;x<ZW-2;x++){
+    const i = tIdx(x,y);
+    if(world.solid[i] || world.tiles[i]===gp) continue;
+    const dens = noise2(x*.09, y*.09, zi*7)*.1 + .022;
+    if(hash2(x,y,zi*13+1) < dens){
+      const type = Z.props[Math.floor(hash2(x,y,zi*13+2)*Z.props.length)];
+      world.props.push({x:x*TILE+TILE/2, y:y*TILE+TILE, type});
+      if(SOLID_PROPS.has(type)) world.solid[i] = 1;
     }
+  }
 
-    // world border wall
-    for(let y=0;y<RH;y++) for(let x=0;x<RW;x++){
-      const wx = ox+x, wy = oy+y;
-      if(wx===0||wy===0||wx===WORLD_W-1||wy===WORLD_H-1) world.solid[tIdx(wx,wy)] = 1;
-    }
+  // ---- clear a landing glade at the centre so arrivals are never boxed in
+  const glX = Math.floor(ZW/2), glY = Math.floor(ZH/2);
+  world.props = world.props.filter(p => {
+    const px = Math.floor(p.x/TILE), py = Math.floor(p.y/TILE)-1;
+    if(Math.hypot(px-glX, py-glY) > 3.4) return true;
+    world.solid[tIdx(px,py)] = 0;
+    return false;
+  });
 
-    // ---- props
-    const propRnd = (a,b,s) => hash2(a,b,ri*13+s);
-    for(let y=2;y<RH-2;y++) for(let x=2;x<RW-2;x++){
-      const wx = ox+x, wy = oy+y, i = tIdx(wx,wy);
-      if(world.solid[i]) continue;
-      if(world.tiles[i]===gp) continue;
-      const r = propRnd(wx,wy,1);
-      const dens = noise2(wx*.09, wy*.09, ri*7) * .1 + .022;
-      if(r < dens){
-        const type = R.props[Math.floor(propRnd(wx,wy,2)*R.props.length)];
-        world.props.push({x:wx*TILE+TILE/2, y:wy*TILE+TILE, type, region:ri});
-        if(SOLID_PROPS.has(type)) world.solid[i] = 1;
-      }
-    }
+  // ---- shrine
+  const sx = glX+3, sy = glY-4;
+  world.shrine = {x:sx*TILE+TILE/2, y:sy*TILE+TILE};
+  world.solid[tIdx(sx,sy)] = 1;
+  world.props.push({x:world.shrine.x, y:world.shrine.y, type:21});
 
-    // ---- clear a landing glade at the region centre so arrivals are never boxed in
-    const glX = ox+Math.floor(RW/2), glY = oy+Math.floor(RH/2);
-    world.props = world.props.filter(p => {
-      if(p.region !== ri) return true;
-      const ptx = Math.floor(p.x/TILE), pty = Math.floor(p.y/TILE)-1;
-      if(Math.hypot(ptx-glX, pty-glY) > 3.4) return true;
-      world.solid[tIdx(ptx,pty)] = 0;
-      return false;
+  // ---- word crystals
+  let placed = 0, guard = 0;
+  while(placed < Z.words.length && guard < 5000){
+    guard++;
+    const x = 2+Math.floor(hash2(guard,zi,71)*(ZW-4));
+    const y = 2+Math.floor(hash2(zi,guard,113)*(ZH-4));
+    if(world.solid[tIdx(x,y)]) continue;
+    if(world.crystals.some(c => Math.abs(c.x-x*TILE)<TILE*4 && Math.abs(c.y-y*TILE)<TILE*4)) continue;
+    world.crystals.push({x:x*TILE+TILE/2, y:y*TILE+TILE/2, idx:placed, got:S.words[zi][placed]});
+    placed++;
+  }
+
+  // ---- boss lair, far from the entrance
+  const bx = zi%2===0 ? ZW-8 : 7, by = zi<5 ? 6 : ZH-7;
+  world.boss = {x:bx*TILE+TILE/2, y:by*TILE+TILE};
+
+  // ---- roaming monsters, kept clear of the arrival glade
+  for(let m=0;m<10;m++){
+    let mx, my, tries=0;
+    do{
+      mx = 3+Math.floor(Math.random()*(ZW-6));
+      my = 3+Math.floor(Math.random()*(ZH-6));
+      tries++;
+    } while((world.solid[tIdx(mx,my)] || Math.hypot(mx-glX,my-glY) < 9) && tries<120);
+    world.monsters.push({
+      x:mx*TILE+TILE/2, y:my*TILE+TILE/2, dead:false, respawn:0,
+      type:Z.mon[m % Z.mon.length], dir:Math.random()*Math.PI*2, timer:Math.random()*2, iframe:0
     });
-
-    // ---- shrine near region centre
-    const sx = ox+Math.floor(RW/2)+3, sy = oy+Math.floor(RH/2)-4;
-    world.shrines.push({x:sx*TILE+TILE/2, y:sy*TILE+TILE, region:ri});
-    world.solid[tIdx(sx,sy)] = 1;
-    world.props.push({x:sx*TILE+TILE/2, y:sy*TILE+TILE, type:21, region:ri});
-
-    // ---- word crystals scattered on walkable ground
-    let placed = 0, guard = 0;
-    while(placed < R.words.length && guard < 4000){
-      guard++;
-      const x = ox+2+Math.floor(hash2(guard,ri,71)*(RW-4));
-      const y = oy+2+Math.floor(hash2(ri,guard,113)*(RH-4));
-      const i = tIdx(x,y);
-      if(world.solid[i]) continue;
-      if(world.crystals.some(c => Math.abs(c.x-(x*TILE)) < TILE*4 && Math.abs(c.y-(y*TILE)) < TILE*4)) continue;
-      world.crystals.push({x:x*TILE+TILE/2, y:y*TILE+TILE/2, region:ri, idx:placed, got:false});
-      placed++;
-    }
-
-    // ---- boss arena in a corner away from the entrance
-    const bx = ox + (ri%2===0 ? RW-8 : 7), by = oy + (ri<3 ? 6 : RH-7);
-    world.bosses.push({x:bx*TILE+TILE/2, y:by*TILE+TILE, region:ri, dead:false});
-
-    // ---- roaming monsters (kept clear of the arrival point at the centre)
-    const centreX = ox+RW/2, centreY = oy+RH/2;
-    for(let m=0;m<9;m++){
-      let mx, my, tries=0;
-      do{
-        mx = ox+3+Math.floor(Math.random()*(RW-6));
-        my = oy+3+Math.floor(Math.random()*(RH-6));
-        tries++;
-      } while((world.solid[tIdx(mx,my)] || Math.hypot(mx-centreX, my-centreY) < 9) && tries<120);
-      world.monsters.push({
-        x:mx*TILE+TILE/2, y:my*TILE+TILE/2, region:ri, type:R.monster,
-        dead:false, respawn:0, dir:Math.random()*Math.PI*2, timer:Math.random()*2
-      });
-    }
-  }
-
-  // ---- gates between consecutive regions (locked until previous boss falls)
-  for(let i=0;i<5;i++){
-    const [ax,ay] = GRID[i], [bx,by] = GRID[i+1];
-    let gx, gy;
-    if(ay === by){                       // horizontal neighbours
-      gx = (Math.max(ax,bx))*RW;
-      gy = ay*RH + Math.floor(RH/2);
-    } else {                             // vertical neighbours
-      gx = ax*RW + Math.floor(RW/2);
-      gy = (Math.max(ay,by))*RH;
-    }
-    world.gates.push({tx:gx, ty:gy, from:i, to:i+1});
-    // carve a 3-wide doorway, walled off elsewhere along the seam
-    for(let k=-1;k<=1;k++){
-      if(ay===by){ const y = gy+k; world.solid[tIdx(gx,y)] = 1; world.tiles[tIdx(gx,y)] = TERRAIN_ROWS.pstone; }
-      else       { const x = gx+k; world.solid[tIdx(x,gy)] = 1; world.tiles[tIdx(x,gy)] = TERRAIN_ROWS.pstone; }
-    }
-    world.props.push({x:gx*TILE+TILE/2, y:gy*TILE+TILE, type:22, region:i, gate:world.gates.length-1});
-  }
-  // seal the rest of each seam so regions only connect through gates
-  for(let i=0;i<5;i++){
-    const g = world.gates[i];
-    const [ax,ay] = GRID[i], [bx,by] = GRID[i+1];
-    if(ay===by){
-      for(let y=ay*RH; y<ay*RH+RH; y++){
-        if(Math.abs(y-g.ty) <= 1) continue;
-        world.solid[tIdx(g.tx,y)] = 1;
-      }
-    } else {
-      for(let x=ax*RW; x<ax*RW+RW; x++){
-        if(Math.abs(x-g.tx) <= 1) continue;
-        world.solid[tIdx(x,g.ty)] = 1;
-      }
-    }
-  }
-  // walls between non-consecutive touching regions stay solid by default
-  for(let y=0;y<WORLD_H;y++) for(let x=0;x<WORLD_W;x++){
-    const onSeamX = (x % RW === 0) && x !== 0;
-    const onSeamY = (y % RH === 0) && y !== 0;
-    if(onSeamX || onSeamY){
-      const isGate = world.gates.some(g =>
-        (onSeamX && g.tx === x && Math.abs(g.ty - y) <= 1) ||
-        (onSeamY && g.ty === y && Math.abs(g.tx - x) <= 1));
-      if(!isGate) world.solid[tIdx(x,y)] = 1;
-    }
   }
 }
 
-function gateOpen(gi){ return S.bossDown[world.gates[gi].from]; }
-
-// Nearest open tile to a region's centre that is not a one-tile pocket.
-function findSpawn(ri){
-  const [ox,oy] = regionOriginOf(ri);
-  const cx = ox+Math.floor(RW/2), cy = oy+Math.floor(RH/2);
-  const openNeighbours = (x,y) =>
-    [[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy]) => {
-      const nx = x+dx, ny = y+dy;
-      return nx>=ox && ny>=oy && nx<ox+RW && ny<oy+RH && !world.solid[tIdx(nx,ny)];
-    }).length;
-  for(let r=0;r<Math.max(RW,RH);r++){
+function solidAt(px,py){
+  const x = Math.floor(px/TILE), y = Math.floor(py/TILE);
+  if(x<0||y<0||x>=ZW||y>=ZH) return true;
+  return !!world.solid[tIdx(x,y)];
+}
+function findSpawn(){
+  const cx = Math.floor(ZW/2), cy = Math.floor(ZH/2);
+  const open = (x,y) => [[1,0],[-1,0],[0,1],[0,-1]].filter(([dx,dy]) => {
+    const nx=x+dx, ny=y+dy;
+    return nx>0 && ny>0 && nx<ZW-1 && ny<ZH-1 && !world.solid[tIdx(nx,ny)];
+  }).length;
+  for(let r=0;r<Math.max(ZW,ZH);r++){
     for(let dy=-r;dy<=r;dy++) for(let dx=-r;dx<=r;dx++){
       if(Math.max(Math.abs(dx),Math.abs(dy)) !== r) continue;
-      const x = cx+dx, y = cy+dy;
-      if(x<ox+1||y<oy+1||x>=ox+RW-1||y>=oy+RH-1) continue;
-      if(world.solid[tIdx(x,y)]) continue;
-      if(openNeighbours(x,y) < 3) continue;
+      const x=cx+dx, y=cy+dy;
+      if(x<1||y<1||x>=ZW-1||y>=ZH-1) continue;
+      if(world.solid[tIdx(x,y)] || open(x,y) < 3) continue;
       return [x*TILE+TILE/2, y*TILE+TILE/2];
     }
   }
   return [cx*TILE+TILE/2, cy*TILE+TILE/2];
-}
-function solidAt(px,py){
-  const x = Math.floor(px/TILE), y = Math.floor(py/TILE);
-  if(x<0||y<0||x>=WORLD_W||y>=WORLD_H) return true;
-  if(world.solid[tIdx(x,y)]) {
-    const g = world.gates.findIndex(g => Math.abs(g.tx-x)<=1 && Math.abs(g.ty-y)<=1 &&
-      ((GRID[g.from][1]===GRID[g.to][1] && g.tx===x) || (GRID[g.from][1]!==GRID[g.to][1] && g.ty===y)));
-    if(g >= 0 && gateOpen(g)) return false;
-    return true;
-  }
-  return false;
-}
-
-// ═══════════════════════════════════════════════════════════════ STATE
-let S = null, profileKey = null;
-const HERO_MAX = 5;
-
-function freshState(profile){
-  return {
-    profile, xp:0, level:1, hp:5, hpMax:5,
-    gear:0, bossDown:[false,false,false,false,false,false],
-    words:REGIONS.map(r => r.words.map(()=>false)),
-    lessonSeen:[false,false,false,false,false,false],
-    crystals:[], kills:0, region:0,
-    px:0, py:0
-  };
-}
-// 4 armour sprites across 6 bosses — the very first kit change lands on boss 1
-function heroStage(){ return S.gear === 0 ? 0 : S.gear <= 2 ? 1 : S.gear <= 4 ? 2 : 3; }
-function heroImg(){ return IMG['p'+heroStage()] || IMG.p0; }
-function xpNeed(){ return S.level*120; }
-function wordsFound(){ return S.words.reduce((a,r)=>a+r.filter(Boolean).length,0); }
-function wordsTotal(){ return REGIONS.reduce((a,r)=>a+r.words.length,0); }
-
-function save(){
-  try{
-    const all = JSON.parse(localStorage.getItem('lexicoraSaves')||'{}');
-    S.px = player.x; S.py = player.y;
-    all[profileKey] = S;
-    localStorage.setItem('lexicoraSaves', JSON.stringify(all));
-    const bd = JSON.parse(localStorage.getItem('lexicoraBoard')||'[]');
-    const k = bd.findIndex(e => e.k === profileKey);
-    const row = {k:profileKey, name:S.profile.name, cls:S.profile.class, no:S.profile.number,
-                 level:S.level, words:wordsFound(), bosses:S.bossDown.filter(Boolean).length};
-    if(k>=0) bd[k] = row; else bd.push(row);
-    localStorage.setItem('lexicoraBoard', JSON.stringify(bd));
-  }catch(e){}
 }
 
 // ═══════════════════════════════════════════════════════════════ PLAYER
 const player = {x:0, y:0, dir:0, anim:0, moving:false, speed:132, iframe:0};
 const cam = {x:0, y:0};
 
-// ═══════════════════════════════════════════════════════════ RENDERING
 const cv = $('world'), ctx = cv.getContext('2d', {alpha:false});
 let VW = 0, VH = 0;
 function resize(){
@@ -1041,6 +1135,7 @@ function resize(){
   cv.style.width = VW+'px'; cv.style.height = VH+'px';
   ctx.setTransform(dpr,0,0,dpr,0,0);
   ctx.imageSmoothingEnabled = false;
+  sizeMapCanvas();
 }
 addEventListener('resize', resize);
 
@@ -1058,10 +1153,10 @@ function seedAmbient(){
   ambient.length = 0;
   for(let i=0;i<70;i++) ambient.push({x:Math.random()*VW, y:Math.random()*VH, s:.3+Math.random(), r:1+Math.random()*2, p:Math.random()*Math.PI*2});
 }
-
 let shake = 0;
+
 function drawWorld(dt){
-  const R = REGIONS[S.region];
+  const Z = ZONES[zone];
   ctx.fillStyle = '#10222f'; ctx.fillRect(0,0,VW,VH);
 
   const sx = shake ? (Math.random()-.5)*shake : 0, sy = shake ? (Math.random()-.5)*shake : 0;
@@ -1072,61 +1167,41 @@ function drawWorld(dt){
   ctx.translate(-camX, -camY);
 
   const x0 = Math.max(0, Math.floor(camX/TILE)), y0 = Math.max(0, Math.floor(camY/TILE));
-  const x1 = Math.min(WORLD_W-1, Math.ceil((camX+VW/SCALE)/TILE)), y1 = Math.min(WORLD_H-1, Math.ceil((camY+VH/SCALE)/TILE));
+  const x1 = Math.min(ZW-1, Math.ceil((camX+VW/SCALE)/TILE)), y1 = Math.min(ZH-1, Math.ceil((camY+VH/SCALE)/TILE));
 
-  // ---- terrain
-  const waterFrame = Math.floor(performance.now()/220)%4;
+  const frame = Math.floor(performance.now()/220)%4;
   const isLiquid = t => t===TERRAIN_ROWS.water || t===TERRAIN_ROWS.lava;
   if(IMG.terrain){
     for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
       const t = world.tiles[tIdx(x,y)];
-      const anim = isLiquid(t);
-      const v = anim ? waterFrame : Math.floor(hash2(x,y,3)*4);
+      const v = isLiquid(t) ? frame : Math.floor(hash2(x,y,3)*4);
       ctx.drawImage(IMG.terrain, v*TILE, t*TILE, TILE, TILE, x*TILE, y*TILE, TILE, TILE);
     }
-    // shoreline: foam crest on the liquid side, damp shadow on the land side
-    const foam = REGIONS[S.region].id === 'ember' ? 'rgba(255,222,150,.9)' : 'rgba(232,250,255,.88)';
+    const foam = Z.id==='volcano' ? 'rgba(255,222,150,.9)' : 'rgba(232,250,255,.88)';
     const bank = 'rgba(34,22,12,.42)';
     const wob = Math.sin(performance.now()/380)*1.2;
     for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
       const liquid = isLiquid(world.tiles[tIdx(x,y)]);
       for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0]]){
-        const nx = x+dx, ny = y+dy;
-        if(nx<0||ny<0||nx>=WORLD_W||ny>=WORLD_H) continue;
-        const nLiquid = isLiquid(world.tiles[tIdx(nx,ny)]);
-        if(liquid === nLiquid) continue;
+        const nx=x+dx, ny=y+dy;
+        if(nx<0||ny<0||nx>=ZW||ny>=ZH) continue;
+        if(liquid === isLiquid(world.tiles[tIdx(nx,ny)])) continue;
         ctx.fillStyle = liquid ? foam : bank;
-        const th = liquid ? 2 + wob : 3;
-        if(dy === -1) ctx.fillRect(x*TILE, y*TILE, TILE, th);
-        else if(dy === 1) ctx.fillRect(x*TILE, y*TILE+TILE-th, TILE, th);
-        else if(dx === -1) ctx.fillRect(x*TILE, y*TILE, th, TILE);
+        const th = liquid ? 2+wob : 3;
+        if(dy===-1) ctx.fillRect(x*TILE, y*TILE, TILE, th);
+        else if(dy===1) ctx.fillRect(x*TILE, y*TILE+TILE-th, TILE, th);
+        else if(dx===-1) ctx.fillRect(x*TILE, y*TILE, th, TILE);
         else ctx.fillRect(x*TILE+TILE-th, y*TILE, th, TILE);
       }
     }
   }
 
-  // ---- depth-sorted actors
   const draws = [];
-  for(const p of world.props){
-    if(p.x < camX-64 || p.x > camX+VW/SCALE+64 || p.y < camY-96 || p.y > camY+VH/SCALE+96) continue;
-    if(p.gate !== undefined && gateOpen(p.gate)) continue;
-    draws.push({y:p.y, kind:'prop', o:p});
-  }
-  for(const c of world.crystals){
-    if(c.got) continue;
-    if(c.x < camX-48 || c.x > camX+VW/SCALE+48 || c.y < camY-64 || c.y > camY+VH/SCALE+64) continue;
-    draws.push({y:c.y, kind:'crystal', o:c});
-  }
-  for(const b of world.bosses){
-    if(S.bossDown[b.region]) continue;
-    if(b.x < camX-96 || b.x > camX+VW/SCALE+96 || b.y < camY-128 || b.y > camY+VH/SCALE+128) continue;
-    draws.push({y:b.y, kind:'boss', o:b});
-  }
-  for(const m of world.monsters){
-    if(m.dead) continue;
-    if(m.x < camX-64 || m.x > camX+VW/SCALE+64 || m.y < camY-64 || m.y > camY+VH/SCALE+64) continue;
-    draws.push({y:m.y, kind:'mon', o:m});
-  }
+  const vis = (x,y,m=96) => x > camX-m && x < camX+VW/SCALE+m && y > camY-m && y < camY+VH/SCALE+m;
+  for(const p of world.props) if(vis(p.x,p.y)) draws.push({y:p.y, kind:'prop', o:p});
+  for(const c of world.crystals) if(!c.got && vis(c.x,c.y)) draws.push({y:c.y, kind:'crystal', o:c});
+  if(!S.cleared[zone] && vis(world.boss.x, world.boss.y, 128)) draws.push({y:world.boss.y, kind:'boss', o:world.boss});
+  for(const m of world.monsters) if(!m.dead && vis(m.x,m.y)) draws.push({y:m.y, kind:'mon', o:m});
   draws.push({y:player.y, kind:'player'});
   draws.sort((a,b) => a.y - b.y);
 
@@ -1138,31 +1213,26 @@ function drawWorld(dt){
         Math.round(p.x-OBJ/2), Math.round(p.y-OBJ), OBJ, OBJ);
     } else if(d.kind === 'crystal'){
       const c = d.o, bob = Math.sin(t*2.4 + c.x*.01)*3;
-      ctx.save(); ctx.globalAlpha = .55;
-      ctx.fillStyle = REGIONS[c.region].accent;
-      ctx.beginPath(); ctx.ellipse(c.x, c.y+16, 11, 4, 0, 0, 7); ctx.fill();
-      ctx.restore();
+      ctx.save(); ctx.globalAlpha = .55; ctx.fillStyle = Z.accent;
+      ctx.beginPath(); ctx.ellipse(c.x, c.y+16, 11, 4, 0, 0, 7); ctx.fill(); ctx.restore();
       if(IMG.objects) ctx.drawImage(IMG.objects, (20%OBJ_COLS)*OBJ, Math.floor(20/OBJ_COLS)*OBJ, OBJ, OBJ,
         Math.round(c.x-OBJ/2), Math.round(c.y-OBJ/2+bob-8), OBJ, OBJ);
     } else if(d.kind === 'boss'){
       const b = d.o, f = Math.floor(t*2.2)%2;
       ctx.save(); ctx.globalAlpha = .4; ctx.fillStyle = '#000';
       ctx.beginPath(); ctx.ellipse(b.x, b.y-4, 30, 9, 0, 0, 7); ctx.fill(); ctx.restore();
-      if(IMG.bosses) ctx.drawImage(IMG.bosses, f*64, REGIONS[b.region].boss*64, 64, 64,
-        Math.round(b.x-32), Math.round(b.y-64), 64, 64);
+      if(IMG.bosses) ctx.drawImage(IMG.bosses, f*64, Z.boss*64, 64, 64, Math.round(b.x-32), Math.round(b.y-64), 64, 64);
     } else if(d.kind === 'mon'){
       const m = d.o, f = Math.floor(t*3.4 + m.x)%2;
-      if(IMG.monsters) ctx.drawImage(IMG.monsters, f*32, m.type*32, 32, 32,
-        Math.round(m.x-16), Math.round(m.y-28), 32, 32);
+      if(IMG.monsters) ctx.drawImage(IMG.monsters, f*32, m.type*32, 32, 32, Math.round(m.x-16), Math.round(m.y-28), 32, 32);
     } else {
       const im = heroImg();
       const fr = player.moving ? Math.floor(player.anim*7)%4 : 0;
-      if(player.iframe > 0 && Math.floor(player.iframe*14)%2) { /* blink */ }
-      else if(im) ctx.drawImage(im, fr*24, player.dir*32, 24, 32, Math.round(player.x-12), Math.round(player.y-28), 24, 32);
+      const blink = player.iframe > 0 && Math.floor(player.iframe*14)%2;
+      if(im && !blink) ctx.drawImage(im, fr*24, player.dir*32, 24, 32, Math.round(player.x-12), Math.round(player.y-28), 24, 32);
     }
   }
 
-  // ---- particles
   for(let i=particles.length-1;i>=0;i--){
     const p = particles[i];
     p.life -= dt; if(p.life<=0){ particles.splice(i,1); continue; }
@@ -1174,18 +1244,16 @@ function drawWorld(dt){
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  // ---- ambient motes + region tint + vignette (screen space)
   ctx.save();
-  ctx.globalAlpha = .5; ctx.fillStyle = R.sky;
+  ctx.globalAlpha = .5; ctx.fillStyle = Z.sky;
   for(const a of ambient){
-    a.y += a.s*10*dt*(S.region===2?3:1);
+    a.y += a.s*10*dt*(Z.id==='snow'?3:1);
     a.x += Math.sin(t + a.p)*8*dt;
-    if(a.y > VH) { a.y = -6; a.x = Math.random()*VW; }
+    if(a.y > VH){ a.y = -6; a.x = Math.random()*VW; }
     ctx.fillRect(a.x|0, a.y|0, a.r, a.r);
   }
   ctx.restore();
 
-  // warm low sun raking in from the upper-left, then a soft vignette
   ctx.save();
   ctx.globalCompositeOperation = 'overlay';
   const sun = ctx.createLinearGradient(0,0,VW*.85,VH);
@@ -1196,8 +1264,7 @@ function drawWorld(dt){
   ctx.restore();
 
   const g = ctx.createRadialGradient(VW/2, VH/2, Math.min(VW,VH)*.32, VW/2, VH/2, Math.max(VW,VH)*.78);
-  g.addColorStop(0,'rgba(0,0,0,0)');
-  g.addColorStop(1,'rgba(18,10,26,.62)');
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(18,10,26,.62)');
   ctx.fillStyle = g; ctx.fillRect(0,0,VW,VH);
 
   if(shake > 0) shake = Math.max(0, shake - dt*46);
@@ -1206,49 +1273,47 @@ function drawWorld(dt){
 // ═════════════════════════════════════════════════════════════ MINIMAP
 const mm = $('minimap'), mmx = mm.getContext('2d');
 function drawMinimap(){
-  mmx.clearRect(0,0,168,96);
-  const cw = 168/3, ch = 96/2;
-  for(let i=0;i<6;i++){
-    const [gx,gy] = GRID[i];
-    const unlocked = i===0 || S.bossDown[i-1];
-    mmx.fillStyle = unlocked ? REGIONS[i].accent : '#4a3a2c';
-    mmx.globalAlpha = unlocked ? (i===S.region ? .95 : .55) : .35;
-    mmx.fillRect(gx*cw+1, gy*ch+1, cw-2, ch-2);
-    mmx.globalAlpha = 1;
-    if(i === S.region){ mmx.strokeStyle = '#ffda7b'; mmx.lineWidth = 2; mmx.strokeRect(gx*cw+1, gy*ch+1, cw-2, ch-2); }
-    if(!unlocked){ mmx.fillStyle = 'rgba(20,12,6,.6)'; mmx.fillRect(gx*cw+1, gy*ch+1, cw-2, ch-2); }
-    if(unlocked && !S.bossDown[i]){
-      const b = world.bosses[i];
-      mmx.fillStyle = '#ff5a4a';
-      mmx.fillRect(gx*cw + (b.x/(RW*TILE) - GRID[i][0])*cw - 2, gy*ch + (b.y/(RH*TILE) - GRID[i][1])*ch - 2, 5, 5);
-    }
+  const W = mm.width, H = mm.height;
+  mmx.clearRect(0,0,W,H);
+  const sx = W/ZW, sy = H/ZH;
+  for(let y=0;y<ZH;y+=1) for(let x=0;x<ZW;x+=1){
+    const t = world.tiles[tIdx(x,y)];
+    mmx.fillStyle = t===TERRAIN_ROWS.water ? '#3b7fbf'
+                  : t===TERRAIN_ROWS.lava ? '#d4551f'
+                  : world.solid[tIdx(x,y)] ? '#5a4a3a'
+                  : t===TERRAIN_ROWS[ZONES[zone].path] ? '#a98455'
+                  : ZONES[zone].accent;
+    mmx.globalAlpha = .85;
+    mmx.fillRect(x*sx, y*sy, sx+.6, sy+.6);
   }
+  mmx.globalAlpha = 1;
+  for(const c of world.crystals){ if(c.got) continue;
+    mmx.fillStyle='#eafcff'; mmx.fillRect(c.x/TILE*sx-1, c.y/TILE*sy-1, 3, 3); }
+  if(!S.cleared[zone]){ mmx.fillStyle='#ff5a4a';
+    mmx.fillRect(world.boss.x/TILE*sx-2, world.boss.y/TILE*sy-2, 5, 5); }
+  mmx.fillStyle='#ffe08a';
+  mmx.fillRect(world.shrine.x/TILE*sx-2, world.shrine.y/TILE*sy-2, 4, 4);
   mmx.fillStyle = '#fff'; mmx.strokeStyle = '#3a2716'; mmx.lineWidth = 1;
-  const pxm = (player.x/WPX)*168, pym = (player.y/HPX)*96;
-  mmx.beginPath(); mmx.arc(pxm, pym, 3.2, 0, 7); mmx.fill(); mmx.stroke();
+  mmx.beginPath(); mmx.arc(player.x/TILE*sx, player.y/TILE*sy, 3, 0, 7); mmx.fill(); mmx.stroke();
 }
 
 // ══════════════════════════════════════════════════════════════════ HUD
 function refreshHUD(){
+  const Z = ZONES[zone];
   $('hud-name').textContent = S.profile.name;
   $('hud-level').textContent = S.level;
   $('hud-title').textContent = RANKS[clamp(S.gear,0,RANKS.length-1)];
   $('hp-fill').style.width = (S.hp/S.hpMax*100)+'%';
   $('xp-fill').style.width = clamp(S.xp/xpNeed()*100,0,100)+'%';
-  $('region-name').textContent = REGIONS[S.region].name;
-  const R = REGIONS[S.region];
-  const got = S.words[S.region].filter(Boolean).length;
-  $('quest-text').innerHTML = S.bossDown[S.region]
-    ? `ดินแดนนี้ปลดปล่อยแล้ว · คริสตัล ${got}/${R.words.length}`
-    : `ปราบ <b>${R.bossThai}</b><br>คริสตัลคำศัพท์ ${got}/${R.words.length}`;
-  // portrait
+  $('region-name').textContent = Z.no+'. '+Z.name;
+  const got = S.words[zone].filter(Boolean).length;
+  $('quest-text').innerHTML = S.cleared[zone]
+    ? `ดินแดนนี้ปลดปล่อยแล้ว · คริสตัล ${got}/${Z.words.length}`
+    : `ปราบผู้พิทักษ์<br>คริสตัลคำศัพท์ ${got}/${Z.words.length}`;
   const pc = $('portrait').getContext('2d');
-  pc.imageSmoothingEnabled = false;
-  pc.clearRect(0,0,24,32);
+  pc.imageSmoothingEnabled = false; pc.clearRect(0,0,24,32);
   const im = heroImg(); if(im) pc.drawImage(im, 0, 0, 24, 32, 0, 0, 24, 32);
 }
-
-let toastTimer = [];
 function toast(icon, text){
   const el = document.createElement('div');
   el.className = 'toast';
@@ -1260,51 +1325,292 @@ let hintText = '';
 function setHint(t){
   if(t === hintText) return;
   hintText = t;
-  const b = $('hint-bar');
-  b.innerHTML = t;
-  b.classList.toggle('show', !!t);
+  $('hint-bar').innerHTML = t;
+  $('hint-bar').classList.toggle('show', !!t);
 }
 
 // ═════════════════════════════════════════════════════════════ OVERLAYS
-const OV = ['screen-landing','screen-register','screen-battle','screen-lesson','screen-reward','screen-codex'];
-function showOverlay(id){
-  OV.forEach(o => $(o).classList.toggle('show', o===id));
-  paused = !!id;
+const OV = ['screen-landing','screen-register','screen-worldmap','screen-battle',
+            'screen-lesson','screen-reward','screen-codex'];
+function showOverlay(id){ OV.forEach(o => $(o).classList.toggle('show', o===id)); }
+function hideOverlays(){ OV.forEach(o => $(o).classList.remove('show')); }
+const paused = () => mode !== 'play' || OV.some(o => $(o).classList.contains('show'));
+
+// ══════════════════════════════════════════════════════════ WORLD MAP
+const mapCv = $('map-canvas'), mapCtx = mapCv.getContext('2d');
+let mapRect = {x:0,y:0,w:0,h:0};
+function sizeMapCanvas(){
+  const dpr = Math.min(devicePixelRatio||1, 2);
+  const w = innerWidth, h = innerHeight;
+  mapCv.width = Math.floor(w*dpr); mapCv.height = Math.floor(h*dpr);
+  mapCtx.setTransform(dpr,0,0,dpr,0,0);
+  // island drawing area — the top band is left clear for the title and for the
+  // banners, which hang above their zone dot
+  mapRect = {x:w*.06, y:h*.20, w:w*.88, h:h*.62};
 }
-function hideOverlays(){ OV.forEach(o => $(o).classList.remove('show')); paused = false; }
-let paused = true;
+function mapPt(z){ return [mapRect.x + z.map.x*mapRect.w, mapRect.y + z.map.y*mapRect.h]; }
+
+function blobPath(c, cx, cy, r, seed){
+  c.beginPath();
+  const N = 28;
+  for(let i=0;i<=N;i++){
+    const a = i/N*Math.PI*2;
+    const rr = r*(1 + .17*Math.sin(a*3+seed) + .11*Math.sin(a*5-seed*1.7) + .07*Math.sin(a*7+seed*2.3));
+    const x = cx + Math.cos(a)*rr, y = cy + Math.sin(a)*rr*.82;
+    i ? c.lineTo(x,y) : c.moveTo(x,y);
+  }
+  c.closePath();
+}
+
+const BIOME = {
+  forest:{base:'#4e8f45', hi:'#68b45e'}, hills:{base:'#7ab049', hi:'#9ccb63'},
+  desert:{base:'#d9b56b', hi:'#eccb8c'}, caves:{base:'#8b8177', hi:'#a89c90'},
+  snow:{base:'#cfe4f0', hi:'#eef7fc'},   volcano:{base:'#6b4038', hi:'#8f4f3c'},
+  ruins:{base:'#bfa878', hi:'#d6c197'},  enchanted:{base:'#48a88f', hi:'#63cbac'},
+  shadow:{base:'#5c5070', hi:'#736489'}, castle:{base:'#5a5470', hi:'#726a8c'}
+};
+
+function decorate(c, kind, cx, cy, r, seed, t){
+  const rnd = (i) => hash2(seed*31+i, seed*17+i*7, 5);
+  const put = (i) => {
+    const a = rnd(i)*Math.PI*2, d = Math.sqrt(rnd(i+50))*r*.72;
+    return [cx+Math.cos(a)*d, cy+Math.sin(a)*d*.8];
+  };
+  const tree = (x,y,s,dark,light) => {
+    c.fillStyle = 'rgba(20,14,10,.22)'; c.beginPath(); c.ellipse(x, y+s*.5, s*.7, s*.28, 0,0,7); c.fill();
+    c.fillStyle = '#6b4526'; c.fillRect(x-s*.09, y-s*.1, s*.18, s*.6);
+    c.fillStyle = dark; c.beginPath(); c.arc(x, y-s*.35, s*.62, 0, 7); c.fill();
+    c.fillStyle = light; c.beginPath(); c.arc(x-s*.18, y-s*.5, s*.4, 0, 7); c.fill();
+  };
+  const pine = (x,y,s,dark,light,snowy) => {
+    c.fillStyle = 'rgba(20,14,10,.2)'; c.beginPath(); c.ellipse(x, y+s*.3, s*.5, s*.2, 0,0,7); c.fill();
+    c.fillStyle = '#5a3c22'; c.fillRect(x-s*.07, y-s*.1, s*.14, s*.42);
+    for(let k=0;k<3;k++){
+      const w = s*(.62-k*.15), yy = y-s*(.05+k*.42);
+      c.fillStyle = k===0?dark:light;
+      c.beginPath(); c.moveTo(x, yy-s*.62); c.lineTo(x-w, yy); c.lineTo(x+w, yy); c.closePath(); c.fill();
+    }
+    if(snowy){ c.fillStyle='#f2fbff'; c.beginPath(); c.moveTo(x, y-s*1.3); c.lineTo(x-s*.16, y-s*1.05); c.lineTo(x+s*.16, y-s*1.05); c.closePath(); c.fill(); }
+  };
+  const mountain = (x,y,s,capped) => {
+    c.fillStyle = '#8a8378'; c.beginPath(); c.moveTo(x, y-s); c.lineTo(x-s*.85, y+s*.45); c.lineTo(x+s*.85, y+s*.45); c.closePath(); c.fill();
+    c.fillStyle = '#a49b8e'; c.beginPath(); c.moveTo(x, y-s); c.lineTo(x-s*.3, y+s*.45); c.lineTo(x+s*.85, y+s*.45); c.closePath(); c.fill();
+    if(capped){ c.fillStyle='#f4fbff'; c.beginPath(); c.moveTo(x, y-s); c.lineTo(x-s*.3, y-s*.45); c.lineTo(x+s*.3, y-s*.45); c.closePath(); c.fill(); }
+  };
+  const s = r*.24;
+  if(kind==='forest'){ for(let i=0;i<9;i++){ const [x,y]=put(i); tree(x,y,s,'#2f6b34','#468f45'); } }
+  else if(kind==='hills'){
+    for(let i=0;i<5;i++){ const [x,y]=put(i);
+      c.fillStyle='#8cc158'; c.beginPath(); c.ellipse(x,y,r*.3,r*.16,0,Math.PI,0); c.fill(); }
+    for(let i=5;i<9;i++){ const [x,y]=put(i); tree(x,y,s*.8,'#3f7f3a','#57a34d'); }
+  }
+  else if(kind==='desert'){
+    for(let i=0;i<6;i++){ const [x,y]=put(i);
+      c.strokeStyle='rgba(180,146,88,.75)'; c.lineWidth=Math.max(2,r*.035);
+      c.beginPath(); c.ellipse(x,y,r*.24,r*.08,0,Math.PI,0); c.stroke(); }
+    const [ox,oy] = put(30);
+    c.fillStyle='#4fb8c4'; c.beginPath(); c.ellipse(ox,oy,r*.19,r*.11,0,0,7); c.fill();
+    c.fillStyle='#7fd8de'; c.beginPath(); c.ellipse(ox-r*.03,oy-r*.02,r*.11,r*.05,0,0,7); c.fill();
+    for(let i=0;i<3;i++){ const [x,y]=put(i+40);
+      c.fillStyle='#4f9147'; c.fillRect(x-s*.1, y-s*.5, s*.2, s*.7);
+      c.fillRect(x-s*.34, y-s*.3, s*.24, s*.12); c.fillRect(x+s*.12, y-s*.42, s*.24, s*.12); }
+  }
+  else if(kind==='caves'){
+    for(let i=0;i<7;i++){ const [x,y]=put(i); mountain(x,y,s*1.15,false); }
+    const [mx,my] = put(21);
+    c.fillStyle='#2b2620'; c.beginPath(); c.ellipse(mx,my+s*.2,s*.5,s*.42,0,Math.PI,0); c.fill();
+  }
+  else if(kind==='snow'){
+    for(let i=0;i<6;i++){ const [x,y]=put(i); mountain(x,y,s*1.3,true); }
+    for(let i=6;i<10;i++){ const [x,y]=put(i); pine(x,y,s*.8,'#2e5c46','#3f7a5b',true); }
+  }
+  else if(kind==='volcano'){
+    c.fillStyle='#4a2c26'; c.beginPath(); c.moveTo(cx, cy-r*.6); c.lineTo(cx-r*.62, cy+r*.36); c.lineTo(cx+r*.62, cy+r*.36); c.closePath(); c.fill();
+    c.fillStyle='#5d382e'; c.beginPath(); c.moveTo(cx, cy-r*.6); c.lineTo(cx-r*.2, cy+r*.36); c.lineTo(cx+r*.62, cy+r*.36); c.closePath(); c.fill();
+    const glow = .5+.5*Math.sin(t*2);
+    c.fillStyle = `rgba(255,140,50,${.7+glow*.3})`;
+    c.beginPath(); c.ellipse(cx, cy-r*.58, r*.16, r*.07, 0,0,7); c.fill();
+    c.strokeStyle = `rgba(255,120,40,${.75+glow*.25})`; c.lineWidth = Math.max(2,r*.045);
+    for(const dx of [-.28,0,.3]){
+      c.beginPath(); c.moveTo(cx+r*dx*.3, cy-r*.5);
+      c.quadraticCurveTo(cx+r*dx, cy-r*.05, cx+r*dx*1.5, cy+r*.4); c.stroke();
+    }
+  }
+  else if(kind==='ruins'){
+    for(let i=0;i<7;i++){ const [x,y]=put(i);
+      const h = s*(.8+rnd(i+9)*.8);
+      c.fillStyle='rgba(20,14,10,.2)'; c.beginPath(); c.ellipse(x,y+2,s*.32,s*.12,0,0,7); c.fill();
+      c.fillStyle='#cbbb96'; c.fillRect(x-s*.16, y-h, s*.32, h);
+      c.fillStyle='#e3d6b6'; c.fillRect(x-s*.16, y-h, s*.12, h);
+      c.fillStyle='#b8a681'; c.fillRect(x-s*.26, y-2, s*.52, s*.14);
+    }
+  }
+  else if(kind==='enchanted'){
+    for(let i=0;i<7;i++){ const [x,y]=put(i); tree(x,y,s,'#2b8f74','#46c2a0'); }
+    for(let i=0;i<10;i++){ const [x,y]=put(i+60);
+      const tw = .4+.6*Math.abs(Math.sin(t*2+i));
+      c.fillStyle = `rgba(190,255,235,${tw})`;
+      c.beginPath(); c.arc(x, y-s*.4, Math.max(1.2,r*.022), 0, 7); c.fill(); }
+  }
+  else if(kind==='shadow'){
+    for(let i=0;i<7;i++){ const [x,y]=put(i);
+      c.strokeStyle='#3d3450'; c.lineWidth=Math.max(2,r*.04);
+      c.beginPath(); c.moveTo(x, y+s*.3); c.lineTo(x, y-s*.7); c.stroke();
+      c.beginPath(); c.moveTo(x, y-s*.35); c.lineTo(x-s*.4, y-s*.75); c.stroke();
+      c.beginPath(); c.moveTo(x, y-s*.5); c.lineTo(x+s*.42, y-s*.85); c.stroke(); }
+    c.fillStyle = `rgba(150,120,200,${.12+.06*Math.sin(t*1.5)})`;
+    c.beginPath(); c.ellipse(cx, cy+r*.2, r*.7, r*.3, 0,0,7); c.fill();
+  }
+  else if(kind==='castle'){
+    const bw = r*.9, bh = r*.62, bx = cx-bw/2, by = cy-bh*.5;
+    c.fillStyle='rgba(15,10,20,.3)'; c.beginPath(); c.ellipse(cx, by+bh+r*.06, bw*.62, r*.12, 0,0,7); c.fill();
+    c.fillStyle='#4a4460'; c.fillRect(bx, by, bw, bh);
+    c.fillStyle='#5e5878'; c.fillRect(bx, by, bw*.4, bh);
+    for(const tx of [bx-r*.1, cx-r*.09, bx+bw-r*.08]){
+      c.fillStyle='#3f3a55'; c.fillRect(tx, by-r*.34, r*.19, bh+r*.34);
+      c.fillStyle='#544e6e'; c.fillRect(tx, by-r*.34, r*.09, bh+r*.34);
+      c.fillStyle='#7b2f3a'; c.beginPath();
+      c.moveTo(tx-r*.03, by-r*.34); c.lineTo(tx+r*.095, by-r*.6); c.lineTo(tx+r*.22, by-r*.34); c.closePath(); c.fill();
+    }
+    c.fillStyle='#2a2438'; c.fillRect(cx-r*.08, by+bh*.42, r*.16, bh*.58);
+    const gl = .5+.5*Math.sin(t*1.6);
+    c.fillStyle = `rgba(255,190,90,${.5+gl*.4})`;
+    c.fillRect(bx+bw*.22, by+bh*.3, r*.06, r*.09);
+    c.fillRect(bx+bw*.68, by+bh*.3, r*.06, r*.09);
+  }
+}
+
+function drawMap(t){
+  const W = innerWidth, H = innerHeight;
+  const c = mapCtx;
+  // ---- ocean
+  const og = c.createLinearGradient(0,0,0,H);
+  og.addColorStop(0,'#1a4a72'); og.addColorStop(.55,'#17567f'); og.addColorStop(1,'#0e3050');
+  c.fillStyle = og; c.fillRect(0,0,W,H);
+  c.strokeStyle = 'rgba(190,225,245,.16)'; c.lineWidth = 2;
+  for(let i=0;i<9;i++){
+    const y = ((i*97 + t*14) % (H+60)) - 30;
+    c.beginPath();
+    for(let x=0;x<=W;x+=26) c.lineTo(x, y + Math.sin(x*.012 + t + i)*5);
+    c.stroke();
+  }
+
+  // ---- island silhouette (sand shelf under every zone blob)
+  c.save();
+  c.shadowColor = 'rgba(0,0,0,.45)'; c.shadowBlur = 26; c.shadowOffsetY = 10;
+  c.fillStyle = '#e8d3a2';
+  ZONES.forEach((z,i) => { const [x,y] = mapPt(z); blobPath(c, x, y, z.map.r*mapRect.w*1.16, i+1); c.fill(); });
+  c.restore();
+  c.fillStyle = '#d8bd8c';
+  ZONES.forEach((z,i) => { const [x,y] = mapPt(z); blobPath(c, x, y, z.map.r*mapRect.w*1.06, i+1); c.fill(); });
+
+  // ---- biome fills + decorations
+  ZONES.forEach((z,i) => {
+    const [x,y] = mapPt(z), r = z.map.r*mapRect.w;
+    const b = BIOME[z.map.kind];
+    blobPath(c, x, y, r, i+1);
+    c.save(); c.clip();
+    const g = c.createLinearGradient(x-r, y-r, x+r, y+r);
+    g.addColorStop(0, b.hi); g.addColorStop(1, b.base);
+    c.fillStyle = g; c.fillRect(x-r*1.4, y-r*1.4, r*2.8, r*2.8);
+    decorate(c, z.map.kind, x, y, r, i+1, t);
+    if(!zoneUnlocked(i)){
+      // a light mist rather than a blackout — the map should still look inviting
+      c.fillStyle = 'rgba(150,160,190,.30)'; c.fillRect(x-r*1.4, y-r*1.4, r*2.8, r*2.8);
+      c.fillStyle = 'rgba(30,26,50,.14)'; c.fillRect(x-r*1.4, y-r*1.4, r*2.8, r*2.8);
+    }
+    c.restore();
+    c.strokeStyle = 'rgba(74,47,30,.5)'; c.lineWidth = 2;
+    blobPath(c, x, y, r, i+1); c.stroke();
+  });
+
+  // ---- roads, drawn on top of the biomes so the route reads at a glance
+  c.lineCap = 'round';
+  for(let i=0;i<ZONES.length-1;i++){
+    const [x1,y1] = mapPt(ZONES[i]), [x2,y2] = mapPt(ZONES[i+1]);
+    const mx = (x1+x2)/2 + (y2-y1)*.12, my = (y1+y2)/2 - (x2-x1)*.12;
+    const walked = zoneUnlocked(i+1);
+    c.setLineDash([]);
+    c.strokeStyle = 'rgba(92,66,36,.34)'; c.lineWidth = Math.max(6, mapRect.w*.011);
+    c.beginPath(); c.moveTo(x1,y1); c.quadraticCurveTo(mx,my,x2,y2); c.stroke();
+    c.setLineDash([mapRect.w*.013, mapRect.w*.011]);
+    c.strokeStyle = walked ? 'rgba(252,232,178,.95)' : 'rgba(214,188,140,.6)';
+    c.lineWidth = Math.max(3, mapRect.w*.005);
+    c.beginPath(); c.moveTo(x1,y1); c.quadraticCurveTo(mx,my,x2,y2); c.stroke();
+  }
+  c.setLineDash([]);
+
+  // ---- drifting clouds over the sea
+  c.fillStyle = 'rgba(255,255,255,.16)';
+  for(let i=0;i<5;i++){
+    const cx = ((i*331 + t*9) % (W+240)) - 120, cy = H*(.08+i*.19);
+    for(const [ox,oy,rr] of [[0,0,34],[26,6,26],[-24,5,22]]){
+      c.beginPath(); c.ellipse(cx+ox, cy+oy, rr*1.5, rr*.6, 0,0,7); c.fill();
+    }
+  }
+}
+
+function renderMapMarkers(){
+  const box = $('map-markers');
+  box.innerHTML = '';
+  ZONES.forEach((z,i) => {
+    const [x,y] = mapPt(z);
+    const unlocked = zoneUnlocked(i), done = S.cleared[i];
+    const pin = document.createElement('div');
+    pin.className = 'zone-pin' + (unlocked ? '' : ' locked') + (done ? ' done' : '') +
+                    (unlocked && !done && (i===0 || S.cleared[i-1]) && !S.cleared[i] ? ' current' : '');
+    pin.style.left = x+'px';
+    pin.style.top = (y - z.map.r*mapRect.w*.55)+'px';
+    const got = S.words[i].filter(Boolean).length;
+    pin.innerHTML =
+      `<div class="zone-flag">
+         <span class="zone-num">${unlocked ? (done ? '✔' : z.no) : '🔒'}</span>
+         <span>
+           <span class="zone-name">${z.thai}</span>
+           <span class="zone-topic" style="display:block">${z.topic}</span>
+         </span>
+       </div>
+       <div class="zone-stars">${unlocked ? '★'.repeat(S.stars[i])+'☆'.repeat(3-S.stars[i])+`  ${got}/${z.words.length}` : ''}</div>
+       <div class="zone-pole"></div><div class="zone-dot"></div>`;
+    if(unlocked) pin.onclick = () => enterZone(i);
+    else pin.onclick = () => { sfx.deny(); toast('🔒', `ต้องผ่าน ${ZONES[i-1].thai} ก่อน`); };
+    box.appendChild(pin);
+  });
+  $('map-progress').innerHTML =
+    `ดินแดนที่ปลดปล่อย <b>${clearedCount()}/${ZONES.length}</b> · คำศัพท์ <b>${wordsFound()}/${wordsTotal()}</b> · Lv.<b>${S.level}</b>`;
+}
+
+function openMap(){
+  mode = 'map';
+  $('hud').style.display = 'none';
+  showOverlay('screen-worldmap');
+  sizeMapCanvas();
+  renderMapMarkers();
+  save();
+}
+function enterZone(zi){
+  sfx.open();
+  zone = zi;
+  buildZone(zi);
+  const [px,py] = findSpawn();
+  player.x = px; player.y = py; player.iframe = 1.5;
+  cam.x = px; cam.y = py;
+  mode = 'play';
+  hideOverlays();
+  $('hud').style.display = 'block';
+  seedAmbient(); refreshHUD();
+  toast('🚩', 'เข้าสู่ '+ZONES[zi].thai);
+  if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 650);
+}
+$('btn-to-map').onclick = () => { sfx.open(); openMap(); };
+$('btn-map-codex').onclick = () => { codexTab = zone; renderCodex(); showOverlay('screen-codex'); };
 
 // ═══════════════════════════════════════════════════════════════ BATTLE
 let battle = null;
-function startBattle(kind, target){
-  const R = REGIONS[S.region];
-  const isBoss = kind === 'boss';
-  battle = {
-    kind, target,
-    hp: isBoss ? 6 : 3, hpMax: isBoss ? 6 : 3,
-    pool: shuffle(R.quiz), qi:0, locked:false
-  };
-  $('enemy-name').textContent = isBoss ? `${R.bossName} · ${R.bossThai}` : R.thai + ' · มอนสเตอร์';
-  $('battle-topic').textContent = R.tense;
-  const eImg = $('battle-enemy');
-  eImg.className = '';
-  // sized by height so the sprite always clears the name plate above it
-  if(isBoss){
-    eImg.src = spriteURL(IMG.bosses, 0, R.boss*64, 64, 64, 64);
-    eImg.style.height = '118px';
-  } else {
-    eImg.src = spriteURL(IMG.monsters, 0, R.monster*32, 32, 32, 32);
-    eImg.style.height = '92px';
-  }
-  paintBattleBG();
-  renderBattleQ();
-  showOverlay('screen-battle');
-  sfx.open();
-}
 const spriteCache = {};
 function spriteURL(img, sx, sy, sw, sh){
   if(!img) return '';
-  const key = img.src+sx+'_'+sy+'_'+sw;
+  const key = (img.src||'x').slice(-24)+sx+'_'+sy+'_'+sw;
   if(spriteCache[key]) return spriteCache[key];
   const c = document.createElement('canvas');
   c.width = sw; c.height = sh;
@@ -1315,10 +1621,9 @@ function spriteURL(img, sx, sy, sw, sh){
 function paintBattleBG(){
   const c = $('battle-bg'), w = c.clientWidth||600, h = c.clientHeight||190;
   c.width = w; c.height = h;
-  const x = c.getContext('2d');
-  const R = REGIONS[S.region];
+  const x = c.getContext('2d'), Z = ZONES[zone];
   const g = x.createLinearGradient(0,0,0,h);
-  g.addColorStop(0, R.sky); g.addColorStop(.62, R.accent); g.addColorStop(1, '#2b2016');
+  g.addColorStop(0, Z.sky); g.addColorStop(.62, Z.accent); g.addColorStop(1, '#2b2016');
   x.fillStyle = g; x.fillRect(0,0,w,h);
   x.globalAlpha = .22; x.fillStyle = '#000';
   for(let i=0;i<26;i++) x.fillRect(Math.random()*w, h*.62+Math.random()*h*.38, 26+Math.random()*40, 3);
@@ -1327,15 +1632,28 @@ function paintBattleBG(){
   rg.addColorStop(0,'rgba(255,240,200,.28)'); rg.addColorStop(1,'rgba(20,12,6,.55)');
   x.fillStyle = rg; x.fillRect(0,0,w,h);
 }
+function startBattle(kind, target){
+  const Z = ZONES[zone], isBoss = kind === 'boss';
+  battle = {kind, target, hp:isBoss?6:3, hpMax:isBoss?6:3, pool:shuffle(Z.quiz), qi:0, locked:false, wrong:0};
+  $('enemy-name').textContent = isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
+  $('battle-topic').textContent = Z.topic;
+  const e = $('battle-enemy'); e.className = '';
+  if(isBoss){ e.src = spriteURL(IMG.bosses, 0, Z.boss*64, 64, 64); e.style.height = '118px'; }
+  else { e.src = spriteURL(IMG.monsters, 0, target.type*32, 32, 32); e.style.height = '92px'; }
+  paintBattleBG();
+  renderBattleQ();
+  showOverlay('screen-battle');
+  sfx.open();
+}
 function renderBattleQ(){
   const b = battle;
-  if(b.qi >= b.pool.length) b.pool = shuffle(b.pool), b.qi = 0;
+  if(b.qi >= b.pool.length){ b.pool = shuffle(b.pool); b.qi = 0; }
   const [q,opts,ans] = b.pool[b.qi];
   $('battle-question').innerHTML = q.replace('___','<span class="blank">_____</span>');
   const box = $('battle-options'); box.innerHTML = '';
   opts.forEach((o,i) => {
     const btn = document.createElement('button');
-    btn.className = 'opt'; btn.textContent = o; btn.type = 'button';
+    btn.className = 'opt'; btn.type = 'button'; btn.textContent = o;
     btn.onclick = () => answerBattle(i, ans, btn);
     box.appendChild(btn);
   });
@@ -1350,30 +1668,22 @@ function renderBattleQ(){
   b.locked = false;
 }
 function answerBattle(sel, ans, btn){
-  const b = battle; if(b.locked) return;
+  const b = battle; if(!b || b.locked) return;
   b.locked = true;
   [...$('battle-options').children].forEach(c => c.disabled = true);
-  const eImg = $('battle-enemy');
-
+  const e = $('battle-enemy');
   if(sel === ans){
-    btn.classList.add('right');
-    b.hp--; sfx.hit();
+    btn.classList.add('right'); b.hp--; sfx.hit();
     $('enemy-hp').style.width = Math.max(0,b.hp/b.hpMax*100)+'%';
-    eImg.classList.remove('struck'); void eImg.offsetWidth; eImg.classList.add('struck');
+    e.classList.remove('struck'); void e.offsetWidth; e.classList.add('struck');
     $('battle-feedback').innerHTML = '<span style="color:#2f6b28">⚔ โจมตีสำเร็จ!</span>';
-    if(b.hp <= 0){
-      eImg.classList.add('slain');
-      setTimeout(() => winBattle(), 620);
-      return;
-    }
+    if(b.hp <= 0){ e.classList.add('slain'); setTimeout(winBattle, 620); return; }
   } else {
-    btn.classList.add('wrong');
+    btn.classList.add('wrong'); b.wrong++;
     [...$('battle-options').children][ans].classList.add('right');
-    S.hp--; sfx.hurt();
-    $('battle-feedback').innerHTML =
-      `<span style="color:#96271f">✖ พลาด! คำตอบคือ <b>${b.pool[b.qi][1][ans]}</b></span>`;
-    refreshHUD();
-    if(S.hp <= 0){ setTimeout(() => loseBattle(), 900); return; }
+    S.hp--; sfx.hurt(); refreshHUD();
+    $('battle-feedback').innerHTML = `<span style="color:#96271f">✖ พลาด! คำตอบคือ <b>${b.pool[b.qi][1][ans]}</b></span>`;
+    if(S.hp <= 0){ setTimeout(loseBattle, 900); return; }
   }
   b.qi++;
   setTimeout(() => { if(battle) renderBattleQ(); }, 1150);
@@ -1381,41 +1691,38 @@ function answerBattle(sel, ans, btn){
 function winBattle(){
   const b = battle; battle = null;
   if(b.kind === 'boss'){
-    const ri = S.region;
-    S.bossDown[ri] = true;
-    S.gear = Math.min(6, S.gear+1);
+    const zi = zone;
+    S.cleared[zi] = true;
+    S.stars[zi] = Math.max(S.stars[zi], b.wrong===0?3 : b.wrong<=2?2 : 1);
+    S.gear = Math.min(GEAR.length, S.gear+1);
     S.xp += 90; S.hp = S.hpMax;
-    while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; }
-    b.target.dead = true;
+    while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax; }
     sfx.gear();
-    const g = GEAR[ri];
+    const g = GEAR[zi], nxt = ZONES[zi+1];
     $('reward-eyebrow').textContent = 'ผู้พิทักษ์ล้มลงแล้ว';
-    $('reward-title').textContent = REGIONS[ri].name;
-    $('reward-icon').src = spriteURL(IMG.gear, ri*24, 0, 24, 24);
+    $('reward-title').textContent = ZONES[zi].thai;
+    $('reward-icon').src = spriteURL(IMG.gear, (zi%6)*24, 0, 24, 24);
     $('reward-hero').src = heroImg() ? spriteURL(heroImg(), 0, 0, 24, 32) : '';
-    const nxt = REGIONS[ri+1];
     $('reward-text').innerHTML = `ได้รับ <b>${g.thai}</b><br>` +
-      (nxt ? `ประตูสู่ <b>${nxt.name}</b> (${nxt.tense}) เปิดออกแล้ว!`
-           : `เจ้าได้ปลดปล่อย Lexicora ครบทุกดินแดนแล้ว! 🎉`);
+      (nxt ? `ดินแดน <b>${nxt.thai}</b> (${nxt.topic}) เปิดแล้ว!`
+           : `เจ้าได้ปลดปล่อยเกาะ Lexicora ครบทุกดินแดน! 🎉`);
     showOverlay('screen-reward');
   } else {
     S.xp += 22; S.kills++;
     while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax; toast('⬆','เลเวลอัป! พลังชีวิตเพิ่มขึ้น'); }
     b.target.dead = true; b.target.respawn = 22;
     player.iframe = 1.8;
-    sfx.win();
-    hideOverlays();
+    sfx.win(); hideOverlays();
     toast('⚔','ชนะแล้ว +22 XP');
-    puff(b.target.x, b.target.y-14, REGIONS[S.region].accent, 14, 60);
+    puff(b.target.x, b.target.y-14, ZONES[zone].accent, 14, 60);
   }
   refreshHUD(); save();
 }
 function loseBattle(){
-  const b = battle; battle = null;
+  battle = null;
   S.hp = S.hpMax;
-  const [rx,ry] = findSpawn(S.region);
-  player.x = rx; player.y = ry;
-  player.iframe = 2.4;
+  const [px,py] = findSpawn();
+  player.x = px; player.y = py; player.iframe = 2.4;
   hideOverlays();
   toast('💔','เจ้าล้มลง... ฟื้นคืนที่ใจกลางดินแดน');
   refreshHUD(); save();
@@ -1423,49 +1730,30 @@ function loseBattle(){
 $('btn-flee').onclick = () => {
   if(!battle) return;
   if(battle.kind === 'boss'){ toast('🚫','หนีจากผู้พิทักษ์ไม่ได้!'); sfx.deny(); return; }
-  battle.target.iframe = 1.2;
-  battle = null; hideOverlays();
-  player.iframe = 1.2;
+  battle.target.iframe = 1.4; battle = null;
+  hideOverlays(); player.iframe = 1.4;
 };
 
 // ═══════════════════════════════════════════════════════════ INTERACTION
-function nearest(list, maxD, filter){
-  let best = null, bd = maxD*maxD;
-  for(const o of list){
-    if(filter && !filter(o)) continue;
-    const dx = o.x-player.x, dy = o.y-player.y, d = dx*dx+dy*dy;
-    if(d < bd){ bd = d; best = o; }
-  }
-  return best;
-}
+function near(o, d){ return o && Math.hypot(o.x-player.x, o.y-player.y) < d; }
 function interact(){
-  if(paused) return;
-  const sh = nearest(world.shrines, 56);
-  if(sh){ openLesson(sh.region); return; }
-  const bs = nearest(world.bosses, 74, o => !S.bossDown[o.region]);
-  if(bs){
-    if(!S.lessonSeen[bs.region]){ toast('📜','อ่านศิลาจารึกก่อนท้าผู้พิทักษ์'); sfx.deny(); return; }
-    startBattle('boss', bs); return;
-  }
-  const gt = world.gates.find(g => {
-    const gx = g.tx*TILE+TILE/2, gy = g.ty*TILE+TILE/2;
-    return Math.hypot(gx-player.x, gy-player.y) < 70;
-  });
-  if(gt && !gateOpen(world.gates.indexOf(gt))){
-    toast('🔒',`ต้องปราบ ${REGIONS[gt.from].bossThai} ก่อน`); sfx.deny(); return;
+  if(mode !== 'play' || battle) return;
+  if(near(world.shrine, 58)){ openLesson(zone); return; }
+  if(!S.cleared[zone] && near(world.boss, 76)){
+    if(!S.lessonSeen[zone]){ toast('📜','อ่านศิลาจารึกก่อนท้าผู้พิทักษ์'); sfx.deny(); return; }
+    startBattle('boss', world.boss); return;
   }
 }
-function openLesson(ri){
-  const R = REGIONS[ri];
-  $('lesson-title').textContent = R.tense;
-  $('lesson-rules').innerHTML = R.rules.map(r=>`<li>${r}</li>`).join('');
-  $('lesson-examples').innerHTML = R.examples.map(e=>`<p>“${e}”</p>`).join('');
-  S.lessonSeen[ri] = true; save();
-  showOverlay('screen-lesson');
-  sfx.open();
+function openLesson(zi){
+  const Z = ZONES[zi];
+  $('lesson-title').textContent = Z.topic;
+  $('lesson-rules').innerHTML = Z.rules.map(r=>`<li>${r}</li>`).join('');
+  $('lesson-examples').innerHTML = Z.examples.map(e=>`<p>“${e}”</p>`).join('');
+  S.lessonSeen[zi] = true; save();
+  showOverlay('screen-lesson'); sfx.open();
 }
-$('btn-lesson-close').onclick = () => { hideOverlays(); };
-$('btn-reward-close').onclick = () => { hideOverlays(); refreshHUD(); };
+$('btn-lesson-close').onclick = () => hideOverlays();
+$('btn-reward-close').onclick = () => { hideOverlays(); openMap(); };
 
 // ═════════════════════════════════════════════════════════════════ INPUT
 const keys = {};
@@ -1473,7 +1761,8 @@ addEventListener('keydown', e => {
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
   keys[e.key.toLowerCase()] = true;
   if(e.key === 'e' || e.key === 'E' || e.key === ' ') interact();
-  if(e.key === 'Escape' || e.key === 'm' || e.key === 'M') toggleCodex();
+  if(e.key === 'm' || e.key === 'M') toggleCodex();
+  if(e.key === 'Escape' && mode === 'play' && !battle) openMap();
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
@@ -1483,8 +1772,8 @@ function setupTouch(){
   if(!isTouch) return;
   $('stick-zone').style.display = 'block';
   $('btn-action').style.display = 'flex';
-  const zone = $('stick-zone'), base = $('stick-base'), knob = $('stick-knob');
-  zone.addEventListener('touchstart', e => {
+  const zoneEl = $('stick-zone'), base = $('stick-base'), knob = $('stick-knob');
+  zoneEl.addEventListener('touchstart', e => {
     const t = e.changedTouches[0];
     stick.active = true; stick.id = t.identifier;
     stick.cx = t.clientX; stick.cy = t.clientY;
@@ -1493,7 +1782,7 @@ function setupTouch(){
     base.style.top = knob.style.top = t.clientY+'px';
     e.preventDefault();
   }, {passive:false});
-  zone.addEventListener('touchmove', e => {
+  zoneEl.addEventListener('touchmove', e => {
     for(const t of e.changedTouches){
       if(t.identifier !== stick.id) continue;
       let dx = t.clientX-stick.cx, dy = t.clientY-stick.cy;
@@ -1511,8 +1800,8 @@ function setupTouch(){
       base.style.display = knob.style.display = 'none';
     }
   };
-  zone.addEventListener('touchend', end);
-  zone.addEventListener('touchcancel', end);
+  zoneEl.addEventListener('touchend', end);
+  zoneEl.addEventListener('touchcancel', end);
   $('btn-action').addEventListener('touchstart', e => { interact(); e.preventDefault(); }, {passive:false});
 }
 $('btn-menu').onclick = () => toggleCodex();
@@ -1520,40 +1809,45 @@ $('btn-menu').onclick = () => toggleCodex();
 // ═══════════════════════════════════════════════════════════════ CODEX
 let codexTab = 0;
 function toggleCodex(){
-  if($('screen-codex').classList.contains('show')){ hideOverlays(); return; }
+  if($('screen-codex').classList.contains('show')){
+    hideOverlays();
+    if(mode === 'map') showOverlay('screen-worldmap');
+    return;
+  }
   if(battle) return;
-  renderCodex(); showOverlay('screen-codex'); sfx.open();
+  codexTab = zone; renderCodex(); showOverlay('screen-codex'); sfx.open();
 }
 function renderCodex(){
   const tabs = $('codex-tabs'); tabs.innerHTML = '';
-  REGIONS.forEach((R,i) => {
-    const unlocked = i===0 || S.bossDown[i-1];
+  ZONES.forEach((z,i) => {
     const b = document.createElement('button');
     b.className = 'tab' + (i===codexTab ? ' active' : '');
-    b.textContent = unlocked ? R.name : '🔒';
+    b.textContent = zoneUnlocked(i) ? z.no+'. '+z.thai : '🔒';
     b.onclick = () => { codexTab = i; renderCodex(); };
     tabs.appendChild(b);
   });
-  const R = REGIONS[codexTab];
-  const got = S.words[codexTab].filter(Boolean).length;
+  const Z = ZONES[codexTab], got = S.words[codexTab].filter(Boolean).length;
   $('codex-body').innerHTML =
     `<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:8px">
-       <span class="label-eyebrow">${R.tense}</span>
-       <span style="font-weight:700;color:var(--wood)">${got}/${R.words.length} คำ</span>
+       <span class="label-eyebrow">${Z.topic}</span>
+       <span style="font-weight:700;color:var(--wood)">${got}/${Z.words.length} คำ</span>
      </div>
      <div class="word-grid">` +
-    R.words.map((w,i) => S.words[codexTab][i]
+    Z.words.map((w,i) => S.words[codexTab][i]
       ? `<div class="word-chip"><b>${w[0]}</b><span>${w[1]}</span></div>`
       : `<div class="word-chip locked"><b>? ? ?</b><span>ยังไม่พบ</span></div>`).join('') +
     `</div>
      <div class="rule-gold tight"></div>
      <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-2)">
        <span>รวมคำศัพท์ <b style="color:var(--wood)">${wordsFound()}/${wordsTotal()}</b></span>
-       <span>ผู้พิทักษ์ที่ปราบแล้ว <b style="color:var(--wood)">${S.bossDown.filter(Boolean).length}/6</b></span>
+       <span>ดินแดนที่ผ่าน <b style="color:var(--wood)">${clearedCount()}/${ZONES.length}</b></span>
        <span>มอนสเตอร์ที่ล่า <b style="color:var(--wood)">${S.kills}</b></span>
      </div>`;
 }
-$('btn-codex-close').onclick = () => hideOverlays();
+$('btn-codex-close').onclick = () => {
+  hideOverlays();
+  if(mode === 'map') showOverlay('screen-worldmap');
+};
 $('btn-quit').onclick = () => { save(); location.reload(); };
 
 // ═════════════════════════════════════════════════════════════ GAME LOOP
@@ -1562,15 +1856,17 @@ function tick(now){
   requestAnimationFrame(tick);
   const dt = Math.min(.05, (now-last)/1000 || 0);
   last = now;
+  const t = now/1000;
+  if($('screen-worldmap').classList.contains('show')) drawMap(t);
   if(!S) return;
-
-  if(!paused) update(dt);
-  drawWorld(dt);
-  drawMinimap();
+  if(mode === 'play'){
+    if(!paused()) update(dt);
+    drawWorld(dt);
+    drawMinimap();
+  }
 }
 
 function update(dt){
-  // ---- movement
   let mx = 0, my = 0;
   if(keys['arrowleft']||keys['a']) mx -= 1;
   if(keys['arrowright']||keys['d']) mx += 1;
@@ -1585,7 +1881,6 @@ function update(dt){
     else player.dir = my < 0 ? 3 : 0;
     const spd = player.speed*dt;
     const nx = player.x + mx*spd, ny = player.y + my*spd;
-    // axis-separated collision against a small foot box
     if(!solidAt(nx-7, player.y-3) && !solidAt(nx+7, player.y-3) &&
        !solidAt(nx-7, player.y-14) && !solidAt(nx+7, player.y-14)) player.x = nx;
     if(!solidAt(player.x-7, ny-3) && !solidAt(player.x+7, ny-3) &&
@@ -1597,37 +1892,26 @@ function update(dt){
   }
   if(player.iframe > 0) player.iframe -= dt;
 
-  // ---- region tracking
-  const rgx = clamp(Math.floor(player.x/TILE/RW),0,2), rgy = clamp(Math.floor(player.y/TILE/RH),0,1);
-  const ri = GRID.findIndex(g => g[0]===rgx && g[1]===rgy);
-  if(ri >= 0 && ri !== S.region){
-    S.region = ri; seedAmbient(); refreshHUD(); save();
-    toast(['🌲','🏜️','⛰️','🌊','🌋','🌌'][ri], 'เข้าสู่ '+REGIONS[ri].name);
-  }
-
-  // ---- camera
   cam.x = lerp(cam.x, player.x, 1-Math.pow(.0016, dt));
   cam.y = lerp(cam.y, player.y, 1-Math.pow(.0016, dt));
-  cam.x = clamp(cam.x, VW/(2*SCALE), WPX-VW/(2*SCALE));
-  cam.y = clamp(cam.y, VH/(2*SCALE), HPX-VH/(2*SCALE));
+  cam.x = clamp(cam.x, VW/(2*SCALE), Math.max(VW/(2*SCALE), WPX-VW/(2*SCALE)));
+  cam.y = clamp(cam.y, VH/(2*SCALE), Math.max(VH/(2*SCALE), HPX-VH/(2*SCALE)));
 
-  // ---- crystals
   for(const c of world.crystals){
     if(c.got) continue;
     if(Math.hypot(c.x-player.x, c.y-player.y) < 26){
       c.got = true;
-      S.words[c.region][c.idx] = true;
-      const w = REGIONS[c.region].words[c.idx];
+      S.words[zone][c.idx] = true;
+      const w = ZONES[zone].words[c.idx];
       S.xp += 8;
       while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax; }
       sfx.pickup();
-      puff(c.x, c.y, REGIONS[c.region].accent, 12, 52);
+      puff(c.x, c.y, ZONES[zone].accent, 12, 52);
       toast('💎', `<b>${w[0]}</b> — ${w[1]}`);
       refreshHUD(); save();
     }
   }
 
-  // ---- monsters
   for(const m of world.monsters){
     if(m.dead){
       m.respawn -= dt;
@@ -1637,35 +1921,22 @@ function update(dt){
     if(m.iframe > 0) m.iframe -= dt;
     const d = Math.hypot(m.x-player.x, m.y-player.y);
     m.timer -= dt;
-    const chasing = d < 118 && m.region === S.region && player.iframe <= 0;
-    if(chasing){
-      m.dir = Math.atan2(player.y-m.y, player.x-m.x);
-    } else if(m.timer <= 0){
-      m.dir = Math.random()*Math.PI*2; m.timer = 1.4+Math.random()*2.2;
-    }
+    const chasing = d < 118 && player.iframe <= 0;
+    if(chasing) m.dir = Math.atan2(player.y-m.y, player.x-m.x);
+    else if(m.timer <= 0){ m.dir = Math.random()*Math.PI*2; m.timer = 1.4+Math.random()*2.2; }
     const sp = (chasing ? 44 : 20)*dt;
     const nx = m.x+Math.cos(m.dir)*sp, ny = m.y+Math.sin(m.dir)*sp;
     if(!solidAt(nx, m.y)) m.x = nx; else m.dir = Math.random()*Math.PI*2;
     if(!solidAt(m.x, ny)) m.y = ny; else m.dir = Math.random()*Math.PI*2;
-
-    if(d < 21 && player.iframe <= 0 && (m.iframe||0) <= 0 && !battle){
-      shake = 9;
-      startBattle('monster', m);
-      return;
+    if(d < 21 && player.iframe <= 0 && m.iframe <= 0 && !battle){
+      shake = 9; startBattle('monster', m); return;
     }
   }
 
-  // ---- contextual hint
   let h = '';
-  if(nearest(world.shrines, 60)) h = `<kbd>${isTouch?'ปุ่มพูด':'E'}</kbd> อ่านศิลาจารึก`;
-  else {
-    const bs = nearest(world.bosses, 82, o => !S.bossDown[o.region]);
-    if(bs) h = `<kbd>${isTouch?'ปุ่มพูด':'E'}</kbd> ท้าสู้ ${REGIONS[bs.region].bossThai}`;
-    else {
-      const gi = world.gates.findIndex(g => Math.hypot(g.tx*TILE+16-player.x, g.ty*TILE+16-player.y) < 76);
-      if(gi >= 0) h = gateOpen(gi) ? 'ประตูเปิดแล้ว — เดินผ่านได้' : `🔒 ต้องปราบ ${REGIONS[world.gates[gi].from].bossThai} ก่อน`;
-    }
-  }
+  const key = isTouch ? 'ปุ่มพูด' : 'E';
+  if(near(world.shrine, 62)) h = `<kbd>${key}</kbd> อ่านศิลาจารึก`;
+  else if(!S.cleared[zone] && near(world.boss, 84)) h = `<kbd>${key}</kbd> ท้าสู้ผู้พิทักษ์`;
   setHint(h);
 }
 
@@ -1678,7 +1949,8 @@ function landingScene(){
   const stars = Array.from({length:70}, () => ({x:Math.random(), y:Math.random()*.45, r:Math.random()*1.6+.4, p:Math.random()*6}));
   const birds = Array.from({length:5}, () => ({x:Math.random(), y:.2+Math.random()*.2, s:.01+Math.random()*.015, p:Math.random()*6}));
   (function loop(){
-    if(!$('screen-landing').classList.contains('show')) return requestAnimationFrame(loop);
+    requestAnimationFrame(loop);
+    if(!$('screen-landing').classList.contains('show')) return;
     const t = performance.now()/1000, w = c.width, h = c.height;
     x.clearRect(0,0,w,h);
     x.save();
@@ -1688,17 +1960,11 @@ function landingScene(){
       x.fillRect(s.x*w, s.y*h, s.r, s.r);
     }
     x.restore();
-    // layered hills
-    const bands = [
-      {y:.70, col:'#4d6b4a', amp:22, f:.0016, sp:.02},
-      {y:.80, col:'#3c5a3d', amp:30, f:.0012, sp:.035},
-      {y:.90, col:'#2c452f', amp:20, f:.0022, sp:.05}
-    ];
-    for(const b of bands){
+    for(const b of [{y:.70,col:'#4d6b4a',amp:22,f:.0016,sp:.02},
+                    {y:.80,col:'#3c5a3d',amp:30,f:.0012,sp:.035},
+                    {y:.90,col:'#2c452f',amp:20,f:.0022,sp:.05}]){
       x.fillStyle = b.col; x.beginPath(); x.moveTo(0,h);
-      for(let px=0; px<=w; px+=8){
-        x.lineTo(px, h*b.y + Math.sin(px*b.f + t*b.sp*6)*b.amp);
-      }
+      for(let px=0; px<=w; px+=8) x.lineTo(px, h*b.y + Math.sin(px*b.f + t*b.sp*6)*b.amp);
       x.lineTo(w,h); x.closePath(); x.fill();
     }
     for(const bd of birds){
@@ -1708,7 +1974,6 @@ function landingScene(){
       const flap = Math.sin(t*6+bd.p)*5;
       x.beginPath(); x.moveTo(bx-8, by); x.lineTo(bx, by-flap); x.lineTo(bx+8, by); x.stroke();
     }
-    requestAnimationFrame(loop);
   })();
 }
 
@@ -1723,28 +1988,23 @@ regForm.addEventListener('submit', e => {
   const profile = {name:$('in-name').value.trim(), class:$('in-class').value.trim(), number:$('in-no').value.trim()};
   profileKey = `${profile.class}|${profile.number}|${profile.name}`;
   let saved = null;
-  try{ saved = (JSON.parse(localStorage.getItem('lexicoraSaves')||'{}'))[profileKey]; }catch(err){}
+  try{ saved = (JSON.parse(localStorage.getItem('lexicoraSavesV3')||'{}'))[profileKey]; }catch(err){}
   S = saved || freshState(profile);
   S.profile = profile;
-  if(!S.words || S.words.length !== REGIONS.length) S.words = REGIONS.map(r => r.words.map(()=>false));
-
-  // restore collected crystals
-  for(const c of world.crystals) c.got = !!(S.words[c.region] && S.words[c.region][c.idx]);
-
-  if(S.px && S.py && !solidAt(S.px, S.py)){ player.x = S.px; player.y = S.py; }
-  else { const [rx,ry] = findSpawn(S.region||0); player.x = rx; player.y = ry; }
-  cam.x = player.x; cam.y = player.y;
-
-  hideOverlays();
-  $('hud').style.display = 'block';
-  seedAmbient(); refreshHUD(); save();
-  toast('🗺️','ยินดีต้อนรับสู่ Lexicora!');
-  if(!S.lessonSeen[0]) setTimeout(() => openLesson(0), 700);
+  if(!S.words || S.words.length !== ZONES.length) S.words = ZONES.map(z => z.words.map(()=>false));
+  if(!S.cleared || S.cleared.length !== ZONES.length) S.cleared = ZONES.map(()=>false);
+  if(!S.stars || S.stars.length !== ZONES.length) S.stars = ZONES.map(()=>0);
+  if(!S.lessonSeen || S.lessonSeen.length !== ZONES.length) S.lessonSeen = ZONES.map(()=>false);
+  zone = clamp(clearedCount(), 0, ZONES.length-1);
+  buildZone(zone);
+  refreshHUD();
+  openMap();
+  toast('🗺️','ยินดีต้อนรับสู่เกาะ Lexicora!');
 });
 
+setupTouch();
 loadImages().then(() => {
   resize();
-  buildWorld();
   landingScene();
   const lh = $('landing-hero').getContext('2d');
   lh.imageSmoothingEnabled = false;

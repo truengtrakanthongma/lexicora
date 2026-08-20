@@ -728,8 +728,8 @@ def make_gear_icons():
 if __name__ == "__main__":
     make_terrain()
     make_objects()
-    make_monsters()
-    make_bosses()
+    import monster_art
+    monster_art.build(OUT)
     make_player()
     make_gear_icons()
     print("ALL DONE ->", OUT)
