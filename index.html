@@ -108,7 +108,7 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
   border:2px solid var(--gold);overflow:hidden;position:relative;
   box-shadow:inset 0 -8px 14px rgba(0,0,0,.3);
 }
-#portrait{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%) scale(2.1);}
+#portrait{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%) scale(1.15);}
 .meter{
   height:11px;border-radius:6px;overflow:hidden;
   background:rgba(20,12,6,.85);border:1px solid rgba(255,220,160,.3);
@@ -226,7 +226,7 @@ kbd{
 #landing-art{position:absolute;inset:0;pointer-events:none;}
 #landing-inner{position:relative;margin:auto;text-align:center;padding:20px;max-width:640px;z-index:2;}
 #landing-hero{
-  width:99px;height:132px;image-rendering:pixelated;margin:0 auto 4px;display:block;
+  width:132px;height:132px;image-rendering:pixelated;margin:0 auto 4px;display:block;
   filter:drop-shadow(0 10px 16px rgba(0,0,0,.55));
   animation:hero-float 3.4s ease-in-out infinite;
 }
@@ -331,7 +331,7 @@ kbd{
   animation:reward-pop .6s cubic-bezier(.2,1.5,.4,1);
 }
 @keyframes reward-pop{from{transform:scale(.2) rotate(-25deg);opacity:0;}to{transform:none;opacity:1;}}
-#reward-hero{width:104px;image-rendering:pixelated;margin:8px auto 0;display:block;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4));}
+#reward-hero{width:120px;image-rendering:pixelated;margin:8px auto 0;display:block;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4));}
 
 .lesson-rules{list-style:none;margin:6px 0;}
 .lesson-rules li{
@@ -385,7 +385,7 @@ kbd{
   background:linear-gradient(180deg,#fff3d2,#f0dcab);
   box-shadow:0 3px 0 #a5825a,0 0 0 3px rgba(232,184,75,.5);
 }
-.class-card canvas{width:48px;height:64px;image-rendering:pixelated;display:block;margin:0 auto 4px;}
+.class-card canvas{width:64px;height:64px;image-rendering:pixelated;display:block;margin:0 auto 4px;}
 .class-card b{display:block;font-family:'Cinzel',serif;font-size:.86rem;color:var(--wood);}
 .class-card span{display:block;font-size:.66rem;color:var(--ink-2);line-height:1.35;margin-top:2px;}
 
@@ -493,7 +493,7 @@ kbd{
   <!-- ============================================================ HUD -->
   <div id="hud" style="display:none">
     <div id="player-banner">
-      <div id="portrait-frame"><canvas id="portrait" width="24" height="32"></canvas></div>
+      <div id="portrait-frame"><canvas id="portrait" width="64" height="64"></canvas></div>
       <div style="min-width:132px">
         <div class="stat-name" id="hud-name">—</div>
         <div class="stat-sub">ระดับ <span id="hud-level">1</span> · <span id="hud-title">ผู้ฝึกหัด</span></div>
@@ -528,7 +528,7 @@ kbd{
   <div class="overlay show" id="screen-landing">
     <canvas id="landing-art"></canvas>
     <div id="landing-inner">
-      <canvas id="landing-hero" width="24" height="32" aria-hidden="true"></canvas>
+      <canvas id="landing-hero" width="64" height="64" aria-hidden="true"></canvas>
       <h1 class="title-epic" id="landing-title">LEXICORA</h1>
       <p id="landing-sub">The Wordkeeper's Journey</p>
       <p id="landing-blurb">
@@ -643,6 +643,7 @@ kbd{
     </div>
   </div>
 </div>
+<script src="assets/props.js"></script>
 <script>
 (() => {
 'use strict';
@@ -652,7 +653,7 @@ const ZONES = [
     id:'woods', no:1, name:'Verdant Woods', thai:'ป่าเขียวขจี', topic:'Present Simple',
     map:{x:0.16, y:0.58, r:0.115, kind:'forest'},
     ground:'grass', ground2:'forest', path:'dirt', accent:'#68b45e', sky:'#a8dc9c',
-    props:[0,1,2,3,4], mon:[0,2,4], boss:0,
+    props:['tree_spring','tree_summer','plant','flower','mushroom','rock'], mon:[0,3,8], boss:0,
     rules:[
       'ใช้กับสิ่งที่ทำเป็นประจำ หรือความจริงทั่วไป',
       'ประธาน + กริยาช่อง 1 (เอกพจน์บุรุษที่ 3 เติม s/es)',
@@ -681,7 +682,7 @@ const ZONES = [
     id:'hills', no:2, name:'Grass Hills', thai:'เนินเขาหญ้า', topic:'Verb to be',
     map:{x:0.28, y:0.38, r:0.105, kind:'hills'},
     ground:'grass', ground2:'dirt', path:'dirt', accent:'#8fc95e', sky:'#cbe79a',
-    props:[2,3,4,0], mon:[1,3,6], boss:1,
+    props:['tree_spring','plant','flower','rock'], mon:[0,6,3], boss:1,
     rules:[
       'Verb to be คือ am / is / are แปลว่า "เป็น อยู่ คือ"',
       'I + am · He/She/It + is · You/We/They + are',
@@ -710,7 +711,7 @@ const ZONES = [
     id:'desert', no:3, name:'Sand Desert', thai:'ทะเลทรายแห่งทราย', topic:'Present Continuous',
     map:{x:0.2, y:0.2, r:0.115, kind:'desert'},
     ground:'sand', ground2:'dirt', path:'dirt', accent:'#e6bc63', sky:'#f2dba4',
-    props:[5,7,6], mon:[10,11,12], boss:3,
+    props:['rock','crag','plant_dry'], mon:[6,5,2], boss:3,
     rules:[
       'ใช้กับสิ่งที่กำลังเกิดขึ้นตอนนี้',
       'ประธาน + is / am / are + กริยาเติม -ing',
@@ -739,7 +740,7 @@ const ZONES = [
     id:'caves', no:4, name:'Caves & Crags', thai:'ถ้ำและหิน', topic:'Past Simple',
     map:{x:0.4, y:0.16, r:0.105, kind:'caves'},
     ground:'stone', ground2:'dirt', path:'pstone', accent:'#9a8f86', sky:'#c9bfb4',
-    props:[7,10,6], mon:[13,14,15], boss:4,
+    props:['crag','rock','mushroom'], mon:[0,4,8], boss:4,
     rules:[
       'ใช้กับเหตุการณ์ที่จบไปแล้วในอดีต',
       'ประธาน + กริยาช่อง 2 (regular เติม -ed, irregular เปลี่ยนรูป)',
@@ -768,7 +769,7 @@ const ZONES = [
     id:'snow', no:5, name:'Snow Peaks', thai:'ภูเขาหิมะ', topic:'Past Continuous',
     map:{x:0.6, y:0.18, r:0.115, kind:'snow'},
     ground:'snow', ground2:'ice', path:'stone', accent:'#8fcfe8', sky:'#d8eef8',
-    props:[8,9,10], mon:[16,17,18], boss:5,
+    props:['tree_winter','rock','crag'], mon:[4,3,8], boss:5,
     rules:[
       'ใช้กับเหตุการณ์ที่กำลังดำเนินอยู่ ณ จุดหนึ่งในอดีต',
       'ประธาน + was / were + กริยาเติม -ing',
@@ -797,7 +798,7 @@ const ZONES = [
     id:'volcano', no:6, name:'Volcano Valley', thai:'หุบเขาภูเขาไฟ', topic:'Future Simple',
     map:{x:0.72, y:0.4, r:0.115, kind:'volcano'},
     ground:'ash', ground2:'stone', path:'pstone', accent:'#ee8244', sky:'#f6b083',
-    props:[14,15,16], mon:[19,20,21], boss:6,
+    props:['crag','rock','tree_winter'], mon:[5,1,4], boss:6,
     rules:[
       'ใช้พูดถึงอนาคต การตัดสินใจ ณ ขณะพูด หรือการคาดการณ์',
       'will: ประธาน + will + กริยาช่อง 1',
@@ -826,7 +827,7 @@ const ZONES = [
     id:'ruins', no:7, name:'Ancient Ruins', thai:'ซากปรักหักพังโบราณ', topic:'Present Perfect',
     map:{x:0.56, y:0.58, r:0.11, kind:'ruins'},
     ground:'sand', ground2:'stone', path:'pstone', accent:'#c8b078', sky:'#e2d0a6',
-    props:[6,7,5], mon:[8,9,22], boss:7,
+    props:['crag','rock','plant_dry','tree_autumn'], mon:[2,7,5], boss:7,
     rules:[
       'ใช้กับอดีตที่ยังส่งผลถึงปัจจุบัน หรือประสบการณ์ที่เคย/ไม่เคยทำ',
       'ประธาน + have / has + กริยาช่อง 3',
@@ -855,7 +856,7 @@ const ZONES = [
     id:'grove', no:8, name:'Enchanted Grove', thai:'ป่าเวทมนตร์', topic:'Modal Verbs',
     map:{x:0.34, y:0.62, r:0.105, kind:'enchanted'},
     ground:'grass', ground2:'forest', path:'dirt', accent:'#5ad2b4', sky:'#a6f0dc',
-    props:[17,2,3], mon:[26,27,5], boss:8,
+    props:['tree_summer','flower','mushroom','plant'], mon:[0,8,7], boss:8,
     rules:[
       'Modal verbs: can, could, may, must, should, will',
       'ตามด้วยกริยาช่อง 1 เสมอ (ไม่เติม s / ing / ed)',
@@ -884,7 +885,7 @@ const ZONES = [
     id:'shadow', no:9, name:'Shadow Ravine', thai:'หุบเหวเงามืด', topic:'Past Perfect',
     map:{x:0.5, y:0.8, r:0.105, kind:'shadow'},
     ground:'ash', ground2:'stone', path:'pstone', accent:'#8f7fb8', sky:'#b0a2d4',
-    props:[14,18,15], mon:[23,24,7], boss:2,
+    props:['tree_winter','crag','mushroom'], mon:[7,2,1], boss:2,
     rules:[
       'ใช้กับเหตุการณ์ที่เกิด "ก่อน" อีกเหตุการณ์หนึ่งในอดีต',
       'ประธาน + had + กริยาช่อง 3 (ใช้ had ได้กับทุกประธาน)',
@@ -913,7 +914,7 @@ const ZONES = [
     id:'castle', no:10, name:'Dark Castle', thai:'ปราสาทมืด', topic:'Final Trial',
     map:{x:0.7, y:0.72, r:0.115, kind:'castle'},
     ground:'stone', ground2:'ash', path:'pstone', accent:'#7c6ea8', sky:'#a396c8',
-    props:[6,18,14], mon:[31,25,30], boss:9,
+    props:['crag','rock','tree_winter'], mon:[1,6,7], boss:9,
     rules:[
       'บททดสอบสุดท้าย — รวมทุกไวยากรณ์ที่เรียนมา',
       'สังเกตคำบอกเวลาเพื่อเลือก tense ให้ถูก',
@@ -957,9 +958,17 @@ const RANKS = ['ผู้ฝึกหัด','นักเดินทาง','�
 
 // ══════════════════════════════════════════════════════════════════ ART
 const TILE = 32, SCALE = 2;
+// ULPC character frames: 64x64 cells, 9 walk frames, rows = down/left/right/up.
+const CH = 64, CH_FRAMES = 9, CH_FOOT = 58;   // feet sit ~58px down the cell
 const TERRAIN_ROWS = {grass:0,forest:1,sand:2,snow:3,stone:4,ash:5,void:6,dirt:7,pstone:8,water:9,ice:10,lava:11};
-const OBJ = 64, OBJ_COLS = 5;
-const SOLID_PROPS = new Set([0,1,5,6,7,8,10,11,14,15,17,18,21,22,23,24]);
+// Prop metadata comes from assets/props.js, emitted by scripts/build_assets.py
+const PROPS = window.LEXICORA_PROPS || [];
+const propsNamed = pre => PROPS.map((p,i)=>[p,i]).filter(([p]) => p.n.startsWith(pre)).map(([,i]) => i);
+function propsMatching(prefixes){
+  const out = [];
+  for(const pre of prefixes) out.push(...propsNamed(pre));
+  return out.length ? out : PROPS.map((_,i)=>i);
+}
 
 const CLASSES = {
   hero:   {thai:'นักรบ',   en:'Hero',   fx:'slash', bonusHP:2, dmg:1, hint:false,
@@ -970,11 +979,12 @@ const CLASSES = {
            perk:'ใช้ “เวทเปิดเผย” ตัดตัวเลือกผิดทิ้ง 2 ข้อ ได้ 1 ครั้งต่อการต่อสู้'}
 };
 const CLASS_KEYS = Object.keys(CLASSES);
+let VIAL_PROP = 0;
 
 const IMG = {};
 function loadImages(){
   const files = {
-    terrain:'assets/terrain.png', objects:'assets/objects.png', monsters:'assets/monsters.png',
+    terrain:'assets/terrain.png', props:'assets/props.png', monsters:'assets/monsters.png',
     bosses:'assets/bosses.png', gear:'assets/gear.png',
     fx_slash:'assets/fx_slash.png', fx_arrow:'assets/fx_arrow.png', fx_bolt:'assets/fx_bolt.png'
   };
@@ -1088,6 +1098,8 @@ const tIdx = (x,y) => y*ZW + x;
 function buildZone(zi){
   const Z = ZONES[zi], T = TERRAIN_ROWS;
   const g1 = T[Z.ground], g2 = T[Z.ground2], gp = T[Z.path];
+  const zonePropPool = propsMatching(Z.props);
+  const shrineProp = propsNamed('shrine')[zi % Math.max(1, propsNamed('shrine').length)] ?? 0;
   world.props = []; world.crystals = []; world.monsters = [];
 
   for(let y=0;y<ZH;y++) for(let x=0;x<ZW;x++){
@@ -1116,9 +1128,10 @@ function buildZone(zi){
     if(world.solid[i] || world.tiles[i]===gp) continue;
     const dens = noise2(x*.09, y*.09, zi*7)*.1 + .022;
     if(hash2(x,y,zi*13+1) < dens){
-      const type = Z.props[Math.floor(hash2(x,y,zi*13+2)*Z.props.length)];
+      const pool = zonePropPool;
+      const type = pool[Math.floor(hash2(x,y,zi*13+2)*pool.length)];
       world.props.push({x:x*TILE+TILE/2, y:y*TILE+TILE, type});
-      if(SOLID_PROPS.has(type)) world.solid[i] = 1;
+      if(PROPS[type] && PROPS[type].s) world.solid[i] = 1;
     }
   }
 
@@ -1135,7 +1148,7 @@ function buildZone(zi){
   const sx = glX+3, sy = glY-4;
   world.shrine = {x:sx*TILE+TILE/2, y:sy*TILE+TILE};
   world.solid[tIdx(sx,sy)] = 1;
-  world.props.push({x:world.shrine.x, y:world.shrine.y, type:21});
+  world.props.push({x:world.shrine.x, y:world.shrine.y, type:shrineProp});
 
   // ---- word crystals
   let placed = 0, guard = 0;
@@ -1246,21 +1259,20 @@ function drawWorld(dt){
       const v = isLiquid(t) ? frame : Math.floor(hash2(x,y,3)*4);
       ctx.drawImage(IMG.terrain, v*TILE, t*TILE, TILE, TILE, x*TILE, y*TILE, TILE, TILE);
     }
-    const foam = Z.id==='volcano' ? 'rgba(255,222,150,.9)' : 'rgba(232,250,255,.88)';
-    const bank = 'rgba(34,22,12,.42)';
-    const wob = Math.sin(performance.now()/380)*1.2;
+    // A soft bank shadow where land meets water. The old bright foam line was
+    // drawn for the hand-made tiles; against LPC art it reads as a hard stripe.
+    const bank = 'rgba(28,20,12,.34)';
     for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
-      const liquid = isLiquid(world.tiles[tIdx(x,y)]);
+      if(isLiquid(world.tiles[tIdx(x,y)])) continue;
       for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0]]){
         const nx=x+dx, ny=y+dy;
         if(nx<0||ny<0||nx>=ZW||ny>=ZH) continue;
-        if(liquid === isLiquid(world.tiles[tIdx(nx,ny)])) continue;
-        ctx.fillStyle = liquid ? foam : bank;
-        const th = liquid ? 2+wob : 3;
-        if(dy===-1) ctx.fillRect(x*TILE, y*TILE, TILE, th);
-        else if(dy===1) ctx.fillRect(x*TILE, y*TILE+TILE-th, TILE, th);
-        else if(dx===-1) ctx.fillRect(x*TILE, y*TILE, th, TILE);
-        else ctx.fillRect(x*TILE+TILE-th, y*TILE, th, TILE);
+        if(!isLiquid(world.tiles[tIdx(nx,ny)])) continue;
+        ctx.fillStyle = bank;
+        if(dy===-1) ctx.fillRect(x*TILE, y*TILE, TILE, 3);
+        else if(dy===1) ctx.fillRect(x*TILE, y*TILE+TILE-3, TILE, 3);
+        else if(dx===-1) ctx.fillRect(x*TILE, y*TILE, 3, TILE);
+        else ctx.fillRect(x*TILE+TILE-3, y*TILE, 3, TILE);
       }
     }
   }
@@ -1278,27 +1290,36 @@ function drawWorld(dt){
   for(const d of draws){
     if(d.kind === 'prop'){
       const p = d.o;
-      if(IMG.objects) ctx.drawImage(IMG.objects, (p.type%OBJ_COLS)*OBJ, Math.floor(p.type/OBJ_COLS)*OBJ, OBJ, OBJ,
-        Math.round(p.x-OBJ/2), Math.round(p.y-OBJ), OBJ, OBJ);
+      const m = PROPS[p.type];
+      if(IMG.props && m) ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h,
+        Math.round(p.x-m.w/2), Math.round(p.y-m.h), m.w, m.h);
     } else if(d.kind === 'crystal'){
       const c = d.o, bob = Math.sin(t*2.4 + c.x*.01)*3;
       ctx.save(); ctx.globalAlpha = .55; ctx.fillStyle = Z.accent;
       ctx.beginPath(); ctx.ellipse(c.x, c.y+16, 11, 4, 0, 0, 7); ctx.fill(); ctx.restore();
-      if(IMG.objects) ctx.drawImage(IMG.objects, (20%OBJ_COLS)*OBJ, Math.floor(20/OBJ_COLS)*OBJ, OBJ, OBJ,
-        Math.round(c.x-OBJ/2), Math.round(c.y-OBJ/2+bob-8), OBJ, OBJ);
+      const vm = PROPS[VIAL_PROP];
+      if(IMG.props && vm) ctx.drawImage(IMG.props, vm.x, vm.y, vm.w, vm.h,
+        Math.round(c.x-vm.w/2), Math.round(c.y-vm.h/2+bob), vm.w, vm.h);
     } else if(d.kind === 'boss'){
       const b = d.o, f = Math.floor(t*2.2)%2;
       ctx.save(); ctx.globalAlpha = .4; ctx.fillStyle = '#000';
       ctx.beginPath(); ctx.ellipse(b.x, b.y-4, 30, 9, 0, 0, 7); ctx.fill(); ctx.restore();
-      if(IMG.bosses) ctx.drawImage(IMG.bosses, f*64, Z.boss*64, 64, 64, Math.round(b.x-32), Math.round(b.y-64), 64, 64);
+      if(IMG.bosses){
+        ctx.save(); ctx.translate(b.x, b.y);ctx.scale(1.5,1.5);
+        ctx.drawImage(IMG.bosses, f*CH, Z.boss*CH, CH, CH, -CH/2, -CH_FOOT, CH, CH);
+        ctx.restore();
+      }
     } else if(d.kind === 'mon'){
-      const m = d.o, f = Math.floor(t*3.4 + m.x)%2;
-      if(IMG.monsters) ctx.drawImage(IMG.monsters, f*32, m.type*32, 32, 32, Math.round(m.x-16), Math.round(m.y-28), 32, 32);
+      const m = d.o, f = Math.floor(t*2.6 + m.x)%2;
+      if(IMG.monsters) ctx.drawImage(IMG.monsters, f*CH, m.type*CH, CH, CH,
+        Math.round(m.x-CH/2), Math.round(m.y-CH_FOOT), CH, CH);
     } else {
       const im = heroImg();
-      const fr = player.moving ? Math.floor(player.anim*7)%4 : 0;
+      // frame 0 is the standing pose; the cycle runs through the other eight
+      const fr = player.moving ? 1 + Math.floor(player.anim*10)%(CH_FRAMES-1) : 0;
       const blink = player.iframe > 0 && Math.floor(player.iframe*14)%2;
-      if(im && !blink) ctx.drawImage(im, fr*24, player.dir*32, 24, 32, Math.round(player.x-12), Math.round(player.y-28), 24, 32);
+      if(im && !blink) ctx.drawImage(im, fr*CH, player.dir*CH, CH, CH,
+        Math.round(player.x-CH/2), Math.round(player.y-CH_FOOT), CH, CH);
     }
   }
 
@@ -1380,8 +1401,8 @@ function refreshHUD(){
     ? `ดินแดนนี้ปลดปล่อยแล้ว · คริสตัล ${got}/${Z.words.length}`
     : `ปราบผู้พิทักษ์<br>คริสตัลคำศัพท์ ${got}/${Z.words.length}`;
   const pc = $('portrait').getContext('2d');
-  pc.imageSmoothingEnabled = false; pc.clearRect(0,0,24,32);
-  const im = heroImg(); if(im) pc.drawImage(im, 0, 0, 24, 32, 0, 0, 24, 32);
+  pc.imageSmoothingEnabled = false; pc.clearRect(0,0,CH,CH);
+  const im = heroImg(); if(im) pc.drawImage(im, 0, 0, CH, CH, 0, 0, CH, CH);
 }
 function toast(icon, text){
   const el = document.createElement('div');
@@ -1709,11 +1730,11 @@ function startBattle(kind, target){
   $('enemy-name').textContent = isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
   $('battle-topic').textContent = Z.topic;
   const e = $('battle-enemy'); e.className = '';
-  if(isBoss){ e.src = spriteURL(IMG.bosses, 0, Z.boss*64, 64, 64); e.style.height = '118px'; }
-  else { e.src = spriteURL(IMG.monsters, 0, target.type*32, 32, 32); e.style.height = '92px'; }
+  if(isBoss){ e.src = spriteURL(IMG.bosses, 0, Z.boss*CH, CH, CH); e.style.height = '126px'; }
+  else { e.src = spriteURL(IMG.monsters, 0, target.type*CH, CH, CH); e.style.height = '104px'; }
   // the duel: your character faces the monster from the left
   const h = $('battle-hero'); h.className = '';
-  h.src = heroImg() ? spriteURL(heroImg(), 0, 2*32, 24, 32) : '';
+  h.src = heroImg() ? spriteURL(heroImg(), 0, 2*CH, CH, CH) : '';
   $('battle-fx').src = IMG['fx_'+C.fx] ? spriteURL(IMG['fx_'+C.fx], 0, 0, 28, 28) : '';
   $('battle-fx').className = '';
   $('btn-hint').style.display = C.hint ? 'inline-block' : 'none';
@@ -1816,8 +1837,8 @@ function winBattle(){
     const g = GEAR[zi], nxt = ZONES[zi+1];
     $('reward-eyebrow').textContent = 'ผู้พิทักษ์ล้มลงแล้ว';
     $('reward-title').textContent = ZONES[zi].thai;
-    $('reward-icon').src = spriteURL(IMG.gear, (zi%6)*24, 0, 24, 24);
-    $('reward-hero').src = heroImg() ? spriteURL(heroImg(), 0, 0, 24, 32) : '';
+    $('reward-icon').src = spriteURL(IMG.gear, (zi%6)*32, 0, 32, 32);
+    $('reward-hero').src = heroImg() ? spriteURL(heroImg(), 0, 0, CH, CH) : '';
     $('reward-text').innerHTML = `ได้รับ <b>${g.thai}</b><br>` +
       (nxt ? `ดินแดน <b>${nxt.thai}</b> (${nxt.topic}) เปิดแล้ว!`
            : `เจ้าได้ปลดปล่อยเกาะ Lexicora ครบทุกดินแดน! 🎉`);
@@ -2101,11 +2122,11 @@ function buildClassPicker(){
     const card = document.createElement('div');
     card.className = 'class-card' + (k===pickedClass ? ' sel' : '');
     card.title = C.perk;
-    card.innerHTML = `<canvas width="24" height="32"></canvas><b>${C.thai}</b><span>${C.perk}</span>`;
+    card.innerHTML = `<canvas width="64" height="64"></canvas><b>${C.thai}</b><span>${C.perk}</span>`;
     const cx = card.querySelector('canvas').getContext('2d');
     cx.imageSmoothingEnabled = false;
     const im = IMG[k+'1'] || IMG[k+'0'];
-    if(im) cx.drawImage(im, 0, 0, 24, 32, 0, 0, 24, 32);
+    if(im) cx.drawImage(im, 0, 0, CH, CH, 0, 0, CH, CH);
     card.onclick = () => { pickedClass = k; sfx.open(); buildClassPicker(); };
     grid.appendChild(card);
   });
@@ -2139,12 +2160,13 @@ regForm.addEventListener('submit', e => {
 });
 
 setupTouch();
+VIAL_PROP = (propsNamed('vial')[0] ?? 0);
 loadImages().then(() => {
   resize();
   landingScene();
   const lh = $('landing-hero').getContext('2d');
   lh.imageSmoothingEnabled = false;
-  if(IMG.p3) lh.drawImage(IMG.p3, 0, 0, 24, 32, 0, 0, 24, 32);
+  if(IMG.hero3) lh.drawImage(IMG.hero3, 0, 0, CH, CH, 0, 0, CH, CH);
   requestAnimationFrame(tick);
 });
 
