@@ -587,98 +587,194 @@ STAGES = 4
 
 
 def make_player():
+    """Top-down walk sheets: 3 classes x 4 gear tiers, 4 directions x 4 frames."""
     SKIN = (240, 198, 152, 255)
     SKIN_D = (198, 152, 112, 255)
     HAIR = (108, 68, 38, 255)
     HAIR_D = (76, 46, 24, 255)
 
-    kits = [
-        # tunic, tunic dark, pants, boots, has_helm, has_cape, has_sword, metal
-        dict(body=(74, 124, 92, 255), body_d=(50, 90, 68, 255), pants=(96, 72, 50, 255),
-             boots=(74, 52, 34, 255), helm=False, cape=False, sword=False, metal=None),
-        dict(body=(132, 96, 58, 255), body_d=(98, 68, 40, 255), pants=(88, 66, 46, 255),
-             boots=(66, 46, 30, 255), helm=True, cape=False, sword=True, metal=(178, 172, 180, 255)),
-        dict(body=(178, 180, 190, 255), body_d=(126, 128, 140, 255), pants=(88, 90, 102, 255),
-             boots=(70, 72, 84, 255), helm=True, cape=False, sword=True, metal=(214, 216, 226, 255)),
-        dict(body=(224, 226, 236, 255), body_d=(160, 164, 182, 255), pants=(96, 100, 118, 255),
-             boots=(76, 80, 96, 255), helm=True, cape=True, sword=True, metal=(246, 248, 255, 255)),
-    ]
+    # per-class tier kits: body colours plus which gear shows at that tier
+    CLASSES = {
+        "hero": [
+            dict(body=(112, 120, 134, 255), body_d=(78, 84, 96, 255), pants=(96, 72, 50, 255),
+                 boots=(74, 52, 34, 255), helm=False, cape=False, metal=None),
+            dict(body=(160, 166, 178, 255), body_d=(112, 118, 130, 255), pants=(88, 66, 46, 255),
+                 boots=(66, 46, 30, 255), helm=True, cape=False, metal=(190, 196, 210, 255)),
+            dict(body=(196, 202, 216, 255), body_d=(140, 146, 162, 255), pants=(88, 90, 102, 255),
+                 boots=(70, 72, 84, 255), helm=True, cape=False, metal=(222, 228, 240, 255)),
+            dict(body=(232, 236, 246, 255), body_d=(168, 174, 192, 255), pants=(96, 100, 118, 255),
+                 boots=(76, 80, 96, 255), helm=True, cape=True, metal=(250, 252, 255, 255)),
+        ],
+        "archer": [
+            dict(body=(86, 122, 92, 255), body_d=(58, 88, 66, 255), pants=(104, 78, 52, 255),
+                 boots=(76, 54, 34, 255), helm=False, cape=False, metal=None),
+            dict(body=(74, 112, 138, 255), body_d=(50, 80, 102, 255), pants=(96, 72, 48, 255),
+                 boots=(70, 50, 32, 255), helm=False, cape=False, metal=(150, 116, 72, 255)),
+            dict(body=(62, 104, 152, 255), body_d=(42, 74, 112, 255), pants=(88, 66, 44, 255),
+                 boots=(64, 46, 30, 255), helm=True, cape=False, metal=(186, 148, 92, 255)),
+            dict(body=(58, 118, 178, 255), body_d=(38, 84, 130, 255), pants=(84, 62, 42, 255),
+                 boots=(60, 42, 28, 255), helm=True, cape=True, metal=(226, 188, 118, 255)),
+        ],
+        "mage": [
+            dict(body=(84, 76, 146, 255), body_d=(58, 52, 106, 255), pants=(70, 62, 116, 255),
+                 boots=(62, 50, 40, 255), helm=False, cape=False, metal=None),
+            dict(body=(66, 82, 168, 255), body_d=(44, 56, 122, 255), pants=(58, 68, 134, 255),
+                 boots=(58, 46, 38, 255), helm=False, cape=False, metal=(232, 184, 75, 255)),
+            dict(body=(58, 92, 190, 255), body_d=(38, 62, 138, 255), pants=(52, 76, 150, 255),
+                 boots=(54, 44, 36, 255), helm=True, cape=False, metal=(240, 200, 96, 255)),
+            dict(body=(72, 104, 214, 255), body_d=(46, 70, 156, 255), pants=(58, 84, 168, 255),
+                 boots=(52, 42, 34, 255), helm=True, cape=True, metal=(252, 224, 130, 255)),
+        ],
+    }
+    CAPE = {"hero": (150, 42, 48, 255), "archer": (72, 108, 74, 255), "mage": (96, 62, 158, 255)}
 
-    for si, kit in enumerate(kits):
-        sheet = img(PW * 4, PH * 4)
-        for di, dirn in enumerate(DIRS):
-            for f in range(4):
-                c = img(PW, PH)
-                d = ImageDraw.Draw(c)
-                # walk cycle: 0,2 = neutral; 1 = left lead; 3 = right lead
-                swing = {0: 0, 1: 2, 2: 0, 3: -2}[f]
-                bob = 1 if f in (1, 3) else 0
-                top = 4 + bob
+    for cls, kits in CLASSES.items():
+        for si, kit in enumerate(kits):
+            sheet = img(PW * 4, PH * 4)
+            for di, dirn in enumerate(DIRS):
+                for f in range(4):
+                    c = img(PW, PH)
+                    d = ImageDraw.Draw(c)
+                    swing = {0: 0, 1: 2, 2: 0, 3: -2}[f]
+                    bob = 1 if f in (1, 3) else 0
+                    top = 4 + bob
 
-                # cape behind body
-                if kit["cape"] and dirn != "up":
-                    d.polygon([(6, top + 9), (18, top + 9), (20, top + 24), (4, top + 24)],
-                              fill=(150, 42, 48, 255))
-                elif kit["cape"]:
-                    d.polygon([(5, top + 8), (19, top + 8), (21, top + 26), (3, top + 26)],
-                              fill=(178, 56, 60, 255))
+                    if kit["cape"]:
+                        cc = CAPE[cls]
+                        if dirn != "up":
+                            d.polygon([(6, top + 9), (18, top + 9), (20, top + 24), (4, top + 24)], fill=cc)
+                        else:
+                            d.polygon([(5, top + 8), (19, top + 8), (21, top + 26), (3, top + 26)],
+                                      fill=lerp(cc, (255, 255, 255, 255), .12))
 
-                # legs
-                lx1, lx2 = 8, 13
-                d.rectangle([lx1, top + 18, lx1 + 3, top + 24 + swing // 2], fill=kit["pants"])
-                d.rectangle([lx2, top + 18, lx2 + 3, top + 24 - swing // 2], fill=kit["pants"])
-                d.rectangle([lx1, top + 23 + swing // 2, lx1 + 3, top + 26 + swing // 2], fill=kit["boots"])
-                d.rectangle([lx2, top + 23 - swing // 2, lx2 + 3, top + 26 - swing // 2], fill=kit["boots"])
+                    # quiver sits behind the archer
+                    if cls == "archer" and dirn in ("up", "left", "right"):
+                        d.rectangle([15, top + 6, 18, top + 16], fill=(112, 78, 48, 255))
+                        for ax in (15, 16, 17):
+                            d.line([ax, top + 3, ax, top + 7], fill=(226, 222, 208, 255))
 
-                # torso
-                d.rectangle([7, top + 9, 17, top + 19], fill=kit["body"])
-                d.rectangle([7, top + 9, 9, top + 19], fill=kit["body_d"])
-                if kit["metal"]:
-                    d.rectangle([10, top + 10, 14, top + 12], fill=kit["metal"])
-                    d.line([12, top + 12, 12, top + 18], fill=GOLD)
+                    # legs (the mage's robe hides them)
+                    if cls == "mage":
+                        d.polygon([(6, top + 17), (18, top + 17), (20, top + 26), (4, top + 26)], fill=kit["pants"])
+                        d.polygon([(6, top + 17), (12, top + 17), (12, top + 26), (4, top + 26)], fill=kit["body_d"])
+                        d.rectangle([8, top + 25, 11, top + 27], fill=kit["boots"])
+                        d.rectangle([13, top + 25, 16, top + 27], fill=kit["boots"])
+                    else:
+                        lx1, lx2 = 8, 13
+                        d.rectangle([lx1, top + 18, lx1 + 3, top + 24 + swing // 2], fill=kit["pants"])
+                        d.rectangle([lx2, top + 18, lx2 + 3, top + 24 - swing // 2], fill=kit["pants"])
+                        d.rectangle([lx1, top + 23 + swing // 2, lx1 + 3, top + 26 + swing // 2], fill=kit["boots"])
+                        d.rectangle([lx2, top + 23 - swing // 2, lx2 + 3, top + 26 - swing // 2], fill=kit["boots"])
 
-                # arms
-                arm_off = swing // 2
-                d.rectangle([4, top + 10 - arm_off, 6, top + 17 - arm_off], fill=kit["body_d"])
-                d.rectangle([18, top + 10 + arm_off, 20, top + 17 + arm_off], fill=kit["body_d"])
-                d.rectangle([4, top + 16 - arm_off, 6, top + 18 - arm_off], fill=SKIN)
-                d.rectangle([18, top + 16 + arm_off, 20, top + 18 + arm_off], fill=SKIN)
+                    # torso
+                    d.rectangle([7, top + 9, 17, top + 19], fill=kit["body"])
+                    d.rectangle([7, top + 9, 9, top + 19], fill=kit["body_d"])
+                    if kit["metal"]:
+                        if cls == "hero":
+                            d.rectangle([10, top + 10, 14, top + 12], fill=kit["metal"])
+                            d.line([12, top + 12, 12, top + 18], fill=GOLD)
+                        elif cls == "archer":
+                            d.line([8, top + 10, 16, top + 16], fill=kit["metal"])   # baldric
+                        else:
+                            d.line([12, top + 10, 12, top + 18], fill=kit["metal"])  # robe trim
 
-                # head
-                d.rectangle([8, top, 16, top + 8], fill=SKIN)
-                d.rectangle([8, top, 9, top + 8], fill=SKIN_D)
-                if kit["helm"]:
-                    d.rectangle([7, top - 2, 17, top + 3], fill=kit["metal"])
-                    d.rectangle([7, top + 3, 17, top + 4], fill=GOLD_D)
+                    # arms
+                    arm_off = swing // 2
+                    d.rectangle([4, top + 10 - arm_off, 6, top + 17 - arm_off], fill=kit["body_d"])
+                    d.rectangle([18, top + 10 + arm_off, 20, top + 17 + arm_off], fill=kit["body_d"])
+                    d.rectangle([4, top + 16 - arm_off, 6, top + 18 - arm_off], fill=SKIN)
+                    d.rectangle([18, top + 16 + arm_off, 20, top + 18 + arm_off], fill=SKIN)
+
+                    # head
+                    d.rectangle([8, top, 16, top + 8], fill=SKIN)
+                    d.rectangle([8, top, 9, top + 8], fill=SKIN_D)
+                    if cls == "mage" and kit["helm"]:
+                        d.polygon([(6, top + 3), (12, top - 7), (18, top + 3)], fill=kit["body"])
+                        d.polygon([(6, top + 3), (12, top - 7), (12, top + 3)], fill=kit["body_d"])
+                        d.ellipse([10, top - 8, 14, top - 4], fill=kit["metal"])
+                    elif kit["helm"] and cls == "hero":
+                        d.rectangle([7, top - 2, 17, top + 3], fill=kit["metal"])
+                        d.rectangle([7, top + 3, 17, top + 4], fill=GOLD_D)
+                        if dirn == "down":
+                            d.rectangle([10, top + 4, 14, top + 5], fill=(40, 36, 48, 255))
+                    elif kit["helm"] and cls == "archer":
+                        d.rectangle([6, top - 2, 18, top + 2], fill=(96, 122, 88, 255))   # hood brim
+                        d.polygon([(8, top - 2), (12, top - 6), (16, top - 2)], fill=(112, 140, 100, 255))
+                    else:
+                        d.rectangle([7, top - 2, 17, top + 3], fill=HAIR)
+                        d.rectangle([7, top + 2, 8, top + 5], fill=HAIR_D)
+                        d.rectangle([16, top + 2, 17, top + 5], fill=HAIR_D)
+
                     if dirn == "down":
-                        d.rectangle([10, top + 4, 14, top + 5], fill=(40, 36, 48, 255))
-                else:
-                    d.rectangle([7, top - 2, 17, top + 3], fill=HAIR)
-                    d.rectangle([7, top + 2, 8, top + 5], fill=HAIR_D)
-                    d.rectangle([16, top + 2, 17, top + 5], fill=HAIR_D)
+                        d.point((10, top + 4), fill=(40, 34, 44, 255))
+                        d.point((14, top + 4), fill=(40, 34, 44, 255))
+                    elif dirn == "left":
+                        d.point((10, top + 4), fill=(40, 34, 44, 255))
+                    elif dirn == "right":
+                        d.point((14, top + 4), fill=(40, 34, 44, 255))
 
-                # face
-                if dirn == "down":
-                    d.point((10, top + 4), fill=(40, 34, 44, 255))
-                    d.point((14, top + 4), fill=(40, 34, 44, 255))
-                elif dirn == "left":
-                    d.point((10, top + 4), fill=(40, 34, 44, 255))
-                elif dirn == "right":
-                    d.point((14, top + 4), fill=(40, 34, 44, 255))
+                    # class weapon
+                    wx = 20 if dirn != "left" else 3
+                    if cls == "hero":
+                        blade = kit["metal"] or (200, 200, 210, 255)
+                        d.line([wx, top + 6, wx, top + 17], fill=blade)
+                        d.line([wx - 1, top + 17, wx + 1, top + 17], fill=GOLD_D)
+                        if si == 3:
+                            d.line([wx, top + 6, wx, top + 10], fill=(180, 240, 255, 255))
+                    elif cls == "archer":
+                        bow = (146, 104, 60, 255) if si < 2 else (196, 152, 84, 255)
+                        d.arc([wx - 3, top + 4, wx + 3, top + 20], 270, 90, fill=bow, width=2)
+                        d.line([wx, top + 5, wx, top + 19], fill=(232, 226, 210, 255))
+                    else:
+                        d.line([wx, top + 2, wx, top + 20], fill=(112, 78, 48, 255))
+                        orb = (120, 226, 240, 255) if si < 2 else (168, 224, 255, 255)
+                        d.ellipse([wx - 2, top - 2, wx + 2, top + 2], fill=orb)
+                        if si == 3:
+                            d.point((wx, top - 3), fill=(255, 255, 255, 255))
 
-                # sword
-                if kit["sword"]:
-                    sx = 20 if dirn != "left" else 3
-                    d.line([sx, top + 6, sx, top + 17], fill=kit["metal"] or (200, 200, 210, 255))
-                    d.line([sx - 1, top + 17, sx + 1, top + 17], fill=GOLD_D)
-                    if si == 3:  # champion blade glows
-                        d.line([sx, top + 6, sx, top + 10], fill=(180, 240, 255, 255))
+                    c = shadow(c, 12, 30, 16, 5, 70)
+                    c = outline(c)
+                    sheet.paste(c, (f * PW, di * PH), c)
+            sheet.save(f"{OUT}/player_{cls}_s{si}.png")
+        print(f"player_{cls}_s0..3.png", (PW * 4, PH * 4))
 
-                c = shadow(c, 12, 30, 16, 5, 70)
-                c = outline(c)
-                sheet.paste(c, (f * PW, di * PH), c)
-        sheet.save(f"{OUT}/player_s{si}.png")
-        print(f"player_s{si}.png", sheet.size)
+
+# ================================================================ BATTLE FX
+def make_battle_fx():
+    """4-frame effect strips fired across the battle stage on a correct answer."""
+    F, N = 28, 4
+    specs = {
+        "slash": [(210, 250, 220, 255), (140, 230, 170, 255)],
+        "arrow": [(226, 240, 252, 255), (120, 200, 246, 255)],
+        "bolt":  [(206, 226, 255, 255), (120, 160, 250, 255)],
+    }
+    for name, (hi, lo) in specs.items():
+        sheet = img(F * N, F)
+        for i in range(N):
+            c = img(F, F)
+            d = ImageDraw.Draw(c)
+            if name == "slash":
+                a0, a1 = 300 - i * 18, 60 - i * 18
+                for w, col in ((5, lo), (2, hi)):
+                    d.arc([4 + i, 3, F - 5 + i, F - 4], a0, a1, fill=col, width=w)
+            elif name == "arrow":
+                y = F // 2
+                d.line([2, y, F - 8, y], fill=lo, width=3)
+                d.line([2, y, F - 10, y], fill=hi, width=1)
+                d.polygon([(F - 9, y - 4), (F - 2, y), (F - 9, y + 4)], fill=hi)
+                for t in range(i + 1):                       # motion trail
+                    d.line([2 + t * 2, y - 3, 7 + t * 2, y - 3], fill=lo)
+            else:
+                r = 5 + i * 2
+                cx = cy = F // 2
+                d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=lo)
+                d.ellipse([cx - r + 3, cy - r + 3, cx + r - 3, cy + r - 3], fill=hi)
+                for a in range(0, 360, 45):
+                    rad = math.radians(a + i * 22)
+                    d.point((cx + int(math.cos(rad) * (r + 3)), cy + int(math.sin(rad) * (r + 3))), fill=hi)
+            sheet.paste(c, (i * F, 0), c)
+        sheet.save(f"{OUT}/fx_{name}.png")
+    print("fx_slash / fx_arrow / fx_bolt.png", (F * N, F))
 
 
 # ================================================================ GEAR ICONS
@@ -731,5 +827,6 @@ if __name__ == "__main__":
     import monster_art
     monster_art.build(OUT)
     make_player()
+    make_battle_fx()
     make_gear_icons()
     print("ALL DONE ->", OUT)

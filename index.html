@@ -371,6 +371,56 @@ kbd{
   *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
 }
 
+/* --------------------------------------------------------- class picker */
+.class-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:4px 0 6px;}
+.class-card{
+  padding:10px 6px 8px;border-radius:9px;cursor:pointer;text-align:center;
+  background:linear-gradient(180deg,#fffaef,#e8d8b6);
+  border:2px solid var(--wood-3);box-shadow:0 3px 0 #a5825a;
+  transition:transform .1s,box-shadow .1s,border-color .15s;
+}
+.class-card:hover{transform:translateY(-2px);}
+.class-card.sel{
+  border-color:var(--gold-dk);
+  background:linear-gradient(180deg,#fff3d2,#f0dcab);
+  box-shadow:0 3px 0 #a5825a,0 0 0 3px rgba(232,184,75,.5);
+}
+.class-card canvas{width:48px;height:64px;image-rendering:pixelated;display:block;margin:0 auto 4px;}
+.class-card b{display:block;font-family:'Cinzel',serif;font-size:.86rem;color:var(--wood);}
+.class-card span{display:block;font-size:.66rem;color:var(--ink-2);line-height:1.35;margin-top:2px;}
+
+/* ------------------------------------------------------------ duel stage */
+#battle-hero{
+  position:absolute;left:15%;bottom:14px;transform:translateX(-50%);
+  width:auto;height:92px;image-rendering:pixelated;
+  filter:drop-shadow(0 8px 12px rgba(0,0,0,.55));
+}
+#battle-hero.lunge{animation:hero-lunge .42s cubic-bezier(.3,1.4,.5,1);}
+@keyframes hero-lunge{
+  0%{transform:translateX(-50%);}
+  35%{transform:translateX(-20%) scale(1.06);}
+  100%{transform:translateX(-50%);}
+}
+#battle-hero.recoil{animation:hero-recoil .38s;}
+@keyframes hero-recoil{
+  0%,100%{transform:translateX(-50%);filter:drop-shadow(0 8px 12px rgba(0,0,0,.55));}
+  30%{transform:translateX(-84%);filter:brightness(2.4) sepia(1) saturate(6) hue-rotate(-20deg);}
+}
+#battle-fx{
+  position:absolute;left:15%;bottom:56px;width:56px;height:56px;
+  image-rendering:pixelated;opacity:0;pointer-events:none;
+}
+#battle-fx.fire{animation:fx-fly .46s linear;}
+@keyframes fx-fly{
+  0%{opacity:1;left:20%;} 100%{opacity:0;left:52%;}
+}
+#battle-enemy.charge{animation:enemy-charge .42s;}
+@keyframes enemy-charge{
+  0%,100%{transform:translateX(-50%);}
+  40%{transform:translateX(-96%) scale(1.05);}
+}
+#btn-hint{margin-left:8px;}
+
 /* ------------------------------------------------------------ world map */
 #screen-worldmap{padding:0;}
 #map-wrap{position:relative;width:100%;height:100%;overflow:hidden;}
@@ -500,6 +550,8 @@ kbd{
         <div class="field"><label for="in-name">ชื่อ</label><input id="in-name" required maxlength="24" autocomplete="off"></div>
         <div class="field"><label for="in-class">ชั้น</label><input id="in-class" required maxlength="12" autocomplete="off"></div>
         <div class="field"><label for="in-no">เลขที่</label><input id="in-no" required maxlength="4" inputmode="numeric" autocomplete="off"></div>
+        <label style="display:block;font-weight:600;font-size:.86rem;color:var(--wood);margin-bottom:4px">เลือกอาชีพ</label>
+        <div class="class-grid" id="class-grid"></div>
         <button class="btn btn-gold" id="btn-embark" type="submit" style="width:100%;margin-top:6px" disabled>ออกเดินทาง</button>
       </form>
     </div>
@@ -530,6 +582,8 @@ kbd{
           <div id="enemy-name">—</div>
           <div class="meter" style="height:9px"><i id="enemy-hp" style="width:100%;background:linear-gradient(180deg,#e5695c,#b33a32 60%,#7d211c)"></i></div>
         </div>
+        <img id="battle-hero" src="" alt="">
+        <img id="battle-fx" src="" alt="">
         <img id="battle-enemy" src="" alt="">
       </div>
       <div class="label-eyebrow" style="text-align:center" id="battle-topic">—</div>
@@ -539,6 +593,7 @@ kbd{
       <div class="pip-row" id="battle-pips"></div>
       <div style="text-align:center;margin-top:10px">
         <button class="btn" id="btn-flee" style="font-size:.86rem;padding:.42rem 1.1rem">หนี</button>
+        <button class="btn btn-gold" id="btn-hint" style="font-size:.86rem;padding:.42rem 1.1rem;display:none">✨ เวทเปิดเผย</button>
       </div>
     </div>
   </div>
@@ -906,13 +961,24 @@ const TERRAIN_ROWS = {grass:0,forest:1,sand:2,snow:3,stone:4,ash:5,void:6,dirt:7
 const OBJ = 64, OBJ_COLS = 5;
 const SOLID_PROPS = new Set([0,1,5,6,7,8,10,11,14,15,17,18,21,22,23,24]);
 
+const CLASSES = {
+  hero:   {thai:'นักรบ',   en:'Hero',   fx:'slash', bonusHP:2, dmg:1, hint:false,
+           perk:'พลังชีวิต +2 · ทนทานที่สุด เหมาะกับผู้เริ่มต้น'},
+  archer: {thai:'นักธนู',  en:'Archer', fx:'arrow', bonusHP:0, dmg:2, hint:false,
+           perk:'ตอบถูกสร้างความเสียหาย 2 เท่า · จบศึกไว'},
+  mage:   {thai:'จอมเวท',  en:'Mage',   fx:'bolt',  bonusHP:1, dmg:1, hint:true,
+           perk:'ใช้ “เวทเปิดเผย” ตัดตัวเลือกผิดทิ้ง 2 ข้อ ได้ 1 ครั้งต่อการต่อสู้'}
+};
+const CLASS_KEYS = Object.keys(CLASSES);
+
 const IMG = {};
 function loadImages(){
   const files = {
     terrain:'assets/terrain.png', objects:'assets/objects.png', monsters:'assets/monsters.png',
     bosses:'assets/bosses.png', gear:'assets/gear.png',
-    p0:'assets/player_s0.png', p1:'assets/player_s1.png', p2:'assets/player_s2.png', p3:'assets/player_s3.png'
+    fx_slash:'assets/fx_slash.png', fx_arrow:'assets/fx_arrow.png', fx_bolt:'assets/fx_bolt.png'
   };
+  for(const k of CLASS_KEYS) for(let i=0;i<4;i++) files[k+i] = `assets/player_${k}_s${i}.png`;
   return Promise.all(Object.entries(files).map(([k,src]) => new Promise(res => {
     const im = new Image();
     im.onload = () => { IMG[k] = im; res(); };
@@ -976,9 +1042,11 @@ let S = null, profileKey = null;
 let mode = 'menu';           // 'menu' | 'map' | 'play'
 let zone = 0;                // index of the zone currently loaded
 
-function freshState(profile){
+function freshState(profile, cls){
+  const c = CLASSES[cls] || CLASSES.hero;
+  const hp = 5 + c.bonusHP;
   return {
-    profile, xp:0, level:1, hp:5, hpMax:5, gear:0, kills:0,
+    profile, cls, xp:0, level:1, hp, hpMax:hp, gear:0, kills:0,
     cleared:ZONES.map(()=>false),
     stars:ZONES.map(()=>0),
     words:ZONES.map(z => z.words.map(()=>false)),
@@ -986,7 +1054,8 @@ function freshState(profile){
   };
 }
 function heroStage(){ const g = S.gear; return g===0?0 : g<=3?1 : g<=6?2 : 3; }
-function heroImg(){ return IMG['p'+heroStage()] || IMG.p0; }
+function heroCls(){ return CLASSES[S.cls] ? S.cls : 'hero'; }
+function heroImg(){ return IMG[heroCls()+heroStage()] || IMG.hero0; }
 function xpNeed(){ return S.level*120; }
 function wordsFound(){ return S.words.reduce((a,r)=>a+r.filter(Boolean).length,0); }
 function wordsTotal(){ return ZONES.reduce((a,z)=>a+z.words.length,0); }
@@ -1302,7 +1371,7 @@ function refreshHUD(){
   const Z = ZONES[zone];
   $('hud-name').textContent = S.profile.name;
   $('hud-level').textContent = S.level;
-  $('hud-title').textContent = RANKS[clamp(S.gear,0,RANKS.length-1)];
+  $('hud-title').textContent = CLASSES[heroCls()].thai + ' · ' + RANKS[clamp(S.gear,0,RANKS.length-1)];
   $('hp-fill').style.width = (S.hp/S.hpMax*100)+'%';
   $('xp-fill').style.width = clamp(S.xp/xpNeed()*100,0,100)+'%';
   $('region-name').textContent = Z.no+'. '+Z.name;
@@ -1633,18 +1702,54 @@ function paintBattleBG(){
   x.fillStyle = rg; x.fillRect(0,0,w,h);
 }
 function startBattle(kind, target){
-  const Z = ZONES[zone], isBoss = kind === 'boss';
-  battle = {kind, target, hp:isBoss?6:3, hpMax:isBoss?6:3, pool:shuffle(Z.quiz), qi:0, locked:false, wrong:0};
+  const Z = ZONES[zone], isBoss = kind === 'boss', C = CLASSES[heroCls()];
+  const maxHP = isBoss ? 8 : 4;
+  battle = {kind, target, hp:maxHP, hpMax:maxHP, pool:shuffle(Z.quiz), qi:0, locked:false,
+            wrong:0, hintLeft: C.hint ? 1 : 0};
   $('enemy-name').textContent = isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
   $('battle-topic').textContent = Z.topic;
   const e = $('battle-enemy'); e.className = '';
   if(isBoss){ e.src = spriteURL(IMG.bosses, 0, Z.boss*64, 64, 64); e.style.height = '118px'; }
   else { e.src = spriteURL(IMG.monsters, 0, target.type*32, 32, 32); e.style.height = '92px'; }
+  // the duel: your character faces the monster from the left
+  const h = $('battle-hero'); h.className = '';
+  h.src = heroImg() ? spriteURL(heroImg(), 0, 2*32, 24, 32) : '';
+  $('battle-fx').src = IMG['fx_'+C.fx] ? spriteURL(IMG['fx_'+C.fx], 0, 0, 28, 28) : '';
+  $('battle-fx').className = '';
+  $('btn-hint').style.display = C.hint ? 'inline-block' : 'none';
+  $('btn-hint').disabled = false;
   paintBattleBG();
   renderBattleQ();
   showOverlay('screen-battle');
   sfx.open();
 }
+$('btn-hint').onclick = () => {
+  const b = battle;
+  if(!b || b.locked || b.hintLeft <= 0) return;
+  const opts = [...$('battle-options').children];
+  const ans = b.pool[b.qi][2];
+  const wrongOnes = opts.map((o,i)=>i).filter(i => i !== ans && !opts[i].disabled);
+  shuffle(wrongOnes).slice(0,2).forEach(i => {
+    opts[i].disabled = true;
+    opts[i].style.opacity = '.28';
+    opts[i].style.textDecoration = 'line-through';
+  });
+  b.hintLeft--;
+  $('btn-hint').disabled = true;
+  sfx.pickup();
+};
+function animateFX(name){
+  const img = IMG['fx_'+name]; if(!img) return;
+  const el = $('battle-fx');
+  let f = 0;
+  const iv = setInterval(() => {
+    f++;
+    if(f > 3){ clearInterval(iv); return; }
+    el.src = spriteURL(img, f*28, 0, 28, 28);
+  }, 105);
+  setTimeout(() => { el.src = spriteURL(img, 0, 0, 28, 28); }, 480);
+}
+
 function renderBattleQ(){
   const b = battle;
   if(b.qi >= b.pool.length){ b.pool = shuffle(b.pool); b.qi = 0; }
@@ -1666,24 +1771,34 @@ function renderBattleQ(){
     pips.appendChild(d);
   }
   b.locked = false;
+  if(b.hintLeft > 0) $('btn-hint').disabled = false;
 }
 function answerBattle(sel, ans, btn){
   const b = battle; if(!b || b.locked) return;
   b.locked = true;
   [...$('battle-options').children].forEach(c => c.disabled = true);
-  const e = $('battle-enemy');
+  const e = $('battle-enemy'), h = $('battle-hero'), fx = $('battle-fx');
+  const C = CLASSES[heroCls()];
   if(sel === ans){
-    btn.classList.add('right'); b.hp--; sfx.hit();
-    $('enemy-hp').style.width = Math.max(0,b.hp/b.hpMax*100)+'%';
-    e.classList.remove('struck'); void e.offsetWidth; e.classList.add('struck');
-    $('battle-feedback').innerHTML = '<span style="color:#2f6b28">⚔ โจมตีสำเร็จ!</span>';
-    if(b.hp <= 0){ e.classList.add('slain'); setTimeout(winBattle, 620); return; }
+    btn.classList.add('right');
+    b.hp -= C.dmg; sfx.hit();
+    h.classList.remove('lunge'); void h.offsetWidth; h.classList.add('lunge');
+    fx.classList.remove('fire'); void fx.offsetWidth; fx.classList.add('fire');
+    animateFX(C.fx);
+    setTimeout(() => {
+      $('enemy-hp').style.width = Math.max(0,b.hp/b.hpMax*100)+'%';
+      e.classList.remove('struck'); void e.offsetWidth; e.classList.add('struck');
+    }, 300);
+    $('battle-feedback').innerHTML = `<span style="color:#2f6b28">⚔ โจมตีสำเร็จ! -${C.dmg}</span>`;
+    if(b.hp <= 0){ setTimeout(()=>e.classList.add('slain'), 320); setTimeout(winBattle, 940); return; }
   } else {
     btn.classList.add('wrong'); b.wrong++;
     [...$('battle-options').children][ans].classList.add('right');
     S.hp--; sfx.hurt(); refreshHUD();
+    e.classList.remove('charge'); void e.offsetWidth; e.classList.add('charge');
+    setTimeout(() => { h.classList.remove('recoil'); void h.offsetWidth; h.classList.add('recoil'); }, 160);
     $('battle-feedback').innerHTML = `<span style="color:#96271f">✖ พลาด! คำตอบคือ <b>${b.pool[b.qi][1][ans]}</b></span>`;
-    if(S.hp <= 0){ setTimeout(loseBattle, 900); return; }
+    if(S.hp <= 0){ setTimeout(loseBattle, 1000); return; }
   }
   b.qi++;
   setTimeout(() => { if(battle) renderBattleQ(); }, 1150);
@@ -1978,7 +2093,27 @@ function landingScene(){
 }
 
 // ═════════════════════════════════════════════════════════════════ BOOT
-$('btn-begin').onclick = () => { audio(); showOverlay('screen-register'); $('in-name').focus(); sfx.open(); };
+let pickedClass = 'hero';
+function buildClassPicker(){
+  const grid = $('class-grid'); grid.innerHTML = '';
+  CLASS_KEYS.forEach(k => {
+    const C = CLASSES[k];
+    const card = document.createElement('div');
+    card.className = 'class-card' + (k===pickedClass ? ' sel' : '');
+    card.title = C.perk;
+    card.innerHTML = `<canvas width="24" height="32"></canvas><b>${C.thai}</b><span>${C.perk}</span>`;
+    const cx = card.querySelector('canvas').getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    const im = IMG[k+'1'] || IMG[k+'0'];
+    if(im) cx.drawImage(im, 0, 0, 24, 32, 0, 0, 24, 32);
+    card.onclick = () => { pickedClass = k; sfx.open(); buildClassPicker(); };
+    grid.appendChild(card);
+  });
+}
+
+$('btn-begin').onclick = () => {
+  audio(); showOverlay('screen-register'); buildClassPicker(); $('in-name').focus(); sfx.open();
+};
 const regForm = $('form-register');
 regForm.addEventListener('input', () => {
   $('btn-embark').disabled = !['in-name','in-class','in-no'].every(i => $(i).value.trim());
@@ -1989,8 +2124,9 @@ regForm.addEventListener('submit', e => {
   profileKey = `${profile.class}|${profile.number}|${profile.name}`;
   let saved = null;
   try{ saved = (JSON.parse(localStorage.getItem('lexicoraSavesV3')||'{}'))[profileKey]; }catch(err){}
-  S = saved || freshState(profile);
+  S = saved || freshState(profile, pickedClass);
   S.profile = profile;
+  if(!S.cls || !CLASSES[S.cls]) S.cls = pickedClass;
   if(!S.words || S.words.length !== ZONES.length) S.words = ZONES.map(z => z.words.map(()=>false));
   if(!S.cleared || S.cleared.length !== ZONES.length) S.cleared = ZONES.map(()=>false);
   if(!S.stars || S.stars.length !== ZONES.length) S.stars = ZONES.map(()=>0);
