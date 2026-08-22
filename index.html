@@ -980,6 +980,7 @@ function loadImages(){
   };
   files.battle_mon = 'assets/battle_mon.png';
   files.villagers = 'assets/villagers.png';
+  files.campfire = 'assets/campfire.png';
   files.battle_boss = 'assets/battle_boss.png';
   for(const k of CLASS_KEYS) for(let i=0;i<4;i++){
     files[k+i] = `assets/player_${k}_s${i}.png`;
@@ -1088,7 +1089,8 @@ const ZW = 56, ZH = 42;                 // tiles in one zone
 const WPX = ZW*TILE, HPX = ZH*TILE;
 const world = {
   tiles:new Uint8Array(ZW*ZH), solid:new Uint8Array(ZW*ZH),
-  props:[], crystals:[], shrine:null, boss:null, monsters:[], npcs:[], village:null
+  props:[], crystals:[], shrine:null, boss:null, monsters:[],
+  npcs:[], village:null, campfire:null, drops:[]
 };
 const tIdx = (x,y) => y*ZW + x;
 
@@ -1097,7 +1099,7 @@ function buildZone(zi){
   const g1 = T[Z.ground], g2 = T[Z.ground2], gp = T[Z.path];
   const zonePropPool = propsMatching(Z.props);
   const shrineProp = propsNamed('shrine')[zi % Math.max(1, propsNamed('shrine').length)] ?? 0;
-  world.props = []; world.crystals = []; world.monsters = [];
+  world.props = []; world.crystals = []; world.monsters = []; world.drops = [];
   mmZone = -1;                  // the cached minimap belongs to the old layout
 
   for(let y=0;y<ZH;y++) for(let x=0;x<ZW;x++){
@@ -1235,6 +1237,7 @@ function buildVillage(zi, glX, glY, pathTile){
   place('barrel', vx+4, vy+1);
   place('crate', vx-4, vy+1);
   place('sign', vx, vy-4);
+  world.campfire = {x:(vx+2)*TILE+TILE/2, y:(vy+3)*TILE+TILE};
 
   NPC_KINDS.forEach((k, i) => {
     // spread around the square, clear of the fountain in the middle
@@ -1567,6 +1570,9 @@ function drawWorld(dt){
   if(!S.cleared[zone] && vis(world.boss.x, world.boss.y, 128)) draws.push({y:world.boss.y, kind:'boss', o:world.boss});
   for(const m of world.monsters) if(!m.dead && vis(m.x,m.y)) draws.push({y:m.y, kind:'mon', o:m});
   for(const n of world.npcs) if(vis(n.x,n.y)) draws.push({y:n.y, kind:'npc', o:n});
+  for(const d of world.drops) if(vis(d.x,d.y)) draws.push({y:d.y, kind:'drop', o:d});
+  if(world.campfire && vis(world.campfire.x, world.campfire.y))
+    draws.push({y:world.campfire.y, kind:'fire', o:world.campfire});
   draws.push({y:player.y, kind:'player'});
   draws.sort((a,b) => a.y - b.y);
 
@@ -1606,6 +1612,16 @@ function drawWorld(dt){
         ctx.drawImage(IMG.bosses, fr*CH, monRow(Z.boss, 0)*CH, CH, CH, -CH/2, -CH_FOOT, CH, CH);
         ctx.restore();
       }
+    } else if(d.kind === 'fire'){
+      const f = REDUCED ? 0 : Math.floor(t*8)%4;
+      if(IMG.campfire) ctx.drawImage(IMG.campfire, f*TILE, 0, TILE, TILE,
+        Math.round(d.o.x-TILE/2), Math.round(d.o.y-TILE), TILE, TILE);
+    } else if(d.kind === 'drop'){
+      const dr = d.o, bob = Math.sin(t*3 + dr.x*.02)*2;
+      const vm = PROPS[VIAL_PROP];
+      shadow(dr.x, dr.y, 7, .28);
+      if(IMG.props && vm) ctx.drawImage(IMG.props, vm.x, vm.y, vm.w, vm.h,
+        Math.round(dr.x-vm.w/2), Math.round(dr.y-vm.h+bob), vm.w, vm.h);
     } else if(d.kind === 'npc'){
       const n = d.o;
       const fr = n.walking ? 1 + Math.floor(n.anim)%(CH_FRAMES-1) : 0;
@@ -1694,6 +1710,26 @@ function drawWorld(dt){
   ctx.globalAlpha = 1;
   ctx.restore();
 
+  // Fireflies, after dark and only in clear or foggy weather. These are motes
+  // of light rather than sprites — there is no critter art in the LPC sets
+  // this game draws from, and nothing here is hand-drawn.
+  const night = skyAt(clock).dark;
+  if(night > .25 && !REDUCED && (weather === 'clear' || weather === 'fog')){
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    // screen space: the world transform has already been restored above
+    for(let i=0;i<26;i++){
+      const px = noise2(t*.12 + i*3.1, i*.7, 31)*VW;
+      const py = noise2(i*.7, t*.11 + i*2.3, 32)*VH;
+      const blink = Math.sin(t*2.6 + i*1.7);
+      if(blink < .1) continue;
+      ctx.globalAlpha = (blink-.1)/.9 * clamp((night-.25)/.4, 0, 1) * .85;
+      ctx.fillStyle = '#eaff9a';
+      ctx.fillRect(Math.round(px), Math.round(py), 3, 3);
+    }
+    ctx.restore();
+  }
+
   drawWeather(dt, t, Z);
 
   // ── lighting ─────────────────────────────────────────────────────────────
@@ -1730,16 +1766,20 @@ function drawWorld(dt){
     glow.addColorStop(0, `rgba(255,206,132,${(sky.dark*.34).toFixed(3)})`);
     glow.addColorStop(1, 'rgba(255,180,90,0)');
     ctx.fillStyle = glow; ctx.fillRect(0,0,VW,VH);
-    // The hamlet's lamps light up after dark — the reason to walk back to it.
-    for(const p of world.props){
-      if(!lampTypes.has(p.type)) continue;
-      const lx = (p.x - camX)*SCALE, ly = (p.y - 66 - camY)*SCALE;
-      if(lx < -180 || lx > VW+180 || ly < -180 || ly > VH+180) continue;
-      const flick = REDUCED ? 1 : .9 + .1*noise2(nowMs/260, p.x*.01, 9);
-      const lg = ctx.createRadialGradient(lx, ly, 0, lx, ly, 132*flick);
-      lg.addColorStop(0, `rgba(255,206,138,${(sky.dark*.6*flick).toFixed(3)})`);
-      lg.addColorStop(.45, `rgba(255,178,96,${(sky.dark*.2*flick).toFixed(3)})`);
-      lg.addColorStop(1, 'rgba(255,160,70,0)');
+    // The hamlet's lamps and its fire light up after dark — the reason to
+    // walk back to it.
+    // (light source, how high above its base the flame sits, radius, strength)
+    const lights = world.props.filter(p => lampTypes.has(p.type))
+                              .map(p => [p.x, p.y - 66, 165, .85]);
+    if(world.campfire) lights.push([world.campfire.x, world.campfire.y - 14, 200, 1.1]);
+    for(const [wx, wy, radius, power] of lights){
+      const lx = (wx - camX)*SCALE, ly = (wy - camY)*SCALE;
+      if(lx < -260 || lx > VW+260 || ly < -260 || ly > VH+260) continue;
+      const flick = REDUCED ? 1 : .88 + .12*noise2(nowMs/240, wx*.01, 9);
+      const lg = ctx.createRadialGradient(lx, ly, 0, lx, ly, radius*flick);
+      lg.addColorStop(0,   `rgba(255,214,150,${(sky.dark*power*flick).toFixed(3)})`);
+      lg.addColorStop(.42, `rgba(255,178,96,${(sky.dark*power*.34*flick).toFixed(3)})`);
+      lg.addColorStop(1,   'rgba(255,160,70,0)');
       ctx.fillStyle = lg; ctx.fillRect(0,0,VW,VH);
     }
     ctx.restore();
@@ -2457,6 +2497,10 @@ function winBattle(){
     sfx.win(); hideOverlays();
     toast('⚔','ชนะแล้ว +22 XP');
     puff(b.target.x, b.target.y-14, ZONES[zone].accent, 14, 60);
+    // A potion about a third of the time, and always when you are nearly out:
+    // a child who keeps losing should get a way back in, not a wall.
+    if(S.hp < S.hpMax && (S.hp <= 1 || Math.random() < .34))
+      world.drops.push({x:b.target.x, y:b.target.y});
   }
   refreshHUD(); save();
 }
@@ -2725,6 +2769,16 @@ function update(dt){
       toast('💎', `<b>${w[0]}</b> — ${w[1]}`);
       refreshHUD(); save();
     }
+  }
+
+  for(let i=world.drops.length-1;i>=0;i--){
+    const d = world.drops[i];
+    if(Math.hypot(d.x-player.x, d.y-player.y) > 26) continue;
+    world.drops.splice(i,1);
+    S.hp = Math.min(S.hpMax, S.hp+2);
+    sfx.pickup(); puff(d.x, d.y-8, '#8fe38a', 10, 44);
+    toast('🧪','ยาฟื้นพลัง +2');
+    refreshHUD(); save();
   }
 
   for(const m of world.monsters){

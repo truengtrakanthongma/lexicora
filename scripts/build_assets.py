@@ -710,6 +710,15 @@ def build_water_fx():
     strip.save(os.path.join(OUT, "splash.png"))
     print("water_fx.png (6 rows x 4) + splash.png (6 frames) <- LPC FX sheets")
 
+    # The campfire ships as an unlit pile on row 0 and four burning frames on
+    # row 1; the village only ever wants the fire.
+    camp = Image.open(os.path.join(SRC, "village", "Fire__Camp.png")).convert("RGBA")
+    fire = Image.new("RGBA", (TILE * 4, TILE), (0, 0, 0, 0))
+    for f in range(4):
+        fire.paste(tile_at(camp, f, 1), (f * TILE, 0))
+    fire.save(os.path.join(OUT, "campfire.png"))
+    print("campfire.png (4 frames) <- LPC Objects/Small Items/Fire, Camp")
+
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
