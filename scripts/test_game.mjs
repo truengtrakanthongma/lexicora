@@ -83,6 +83,48 @@ const delta = (a, b) => {
   return n;
 };
 console.log('zone', ZONE, 'frame byte deltas', delta(frames[0], frames[1]), delta(frames[1], frames[2]));
+
+// Wander until a monster catches us, then fight a full exchange so the duel
+// canvas, both attack animations and the hurt reaction all get exercised.
+// Ten monsters roam each zone from random tiles, so there is no fixed route to
+// one. Head first for the boss lair (a fixed corner per zone), then quarter the
+// map on long legs until something engages. Trees and cliffs stop a leg early,
+// hence the many changes of heading rather than one long diagonal.
+let fought = false;
+const engaged = () => page.locator('#screen-battle.show').isVisible();
+const leg = async (keys, seconds) => {
+  for (const k of keys) await page.keyboard.down(k);
+  for (let t = 0; t < seconds*4 && !fought; t++) {
+    await page.waitForTimeout(250);
+    fought = await engaged();
+  }
+  for (const k of keys) await page.keyboard.up(k);
+  if (!fought) { await page.keyboard.press('e'); await page.waitForTimeout(150); fought = await engaged(); }
+};
+const V = ZONE < 5 ? 'ArrowUp' : 'ArrowDown';
+const H = ZONE % 2 === 0 ? 'ArrowRight' : 'ArrowLeft';
+const ROUTE = [[[V, H], 9], [[V], 5], [[H], 5],
+               [['ArrowDown'], 7], [['ArrowLeft'], 7],
+               [['ArrowUp'], 7], [['ArrowRight'], 7],
+               [['ArrowDown', 'ArrowRight'], 7], [['ArrowUp', 'ArrowLeft'], 7]];
+for (const [keys, secs] of ROUTE) {
+  if (fought) break;
+  await leg(keys, secs);
+}
+if (!fought) await page.screenshot({ path: `${OUT}/z${ZONE}_nofight.png` });
+if (fought) {
+  for (let round = 0; round < 3; round++) {
+    const opts = page.locator('#battle-options .opt:not([disabled])');
+    if (!(await opts.count())) break;
+    await opts.first().click();
+    await page.waitForTimeout(240);
+    await page.locator('#battle-cv').screenshot({ path: `${OUT}/z${ZONE}_duel${round}.png` });
+    await page.waitForTimeout(1400);
+  }
+  console.log('fought a battle: duel screenshots written');
+} else {
+  console.log('WARNING: no monster engaged, duel not exercised');
+}
 console.log(errors.length ? 'CONSOLE ERRORS:\n' + errors.join('\n') : 'no console errors');
 await browser.close();
 process.exit(errors.length ? 1 : 0);

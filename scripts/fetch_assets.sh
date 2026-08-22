@@ -50,6 +50,17 @@ grab "$LPC" "Structure/Pillars/Stone Pillar A.png" "$ROOT/assets/src/lpc/Stone_P
 grab "$LPC" "Objects/Small Items/Flowers.png"      "$ROOT/assets/src/lpc/Small_Flowers.png"
 grab "$LPC" "README.md"                            "$ROOT/assets/src/lpc/README-LPC-Revised.md"
 
+echo "water and splash FX (LPC Revised)"
+mkdir -p "$ROOT/assets/src/lpc/fx"
+grab "$LPC" "FX/WaterRipple.png"        "$ROOT/assets/src/lpc/fx/WaterRipple.png"
+grab "$LPC" "FX/WaterRipple_Back.png"   "$ROOT/assets/src/lpc/fx/WaterRipple_Back.png"
+grab "$LPC" "FX/Water Reflections.png"  "$ROOT/assets/src/lpc/fx/Water_Reflections.png"
+grab "$LPC" "FX/Splash.png"             "$ROOT/assets/src/lpc/fx/Splash.png"
+grab "$LPC" "FX/Splash_Back.png"        "$ROOT/assets/src/lpc/fx/Splash_Back.png"
+grab "$LPC" "FX/Credits.txt"            "$ROOT/assets/src/lpc/fx/Credits.txt"
+grab "$LPC" "Terrain/Waterfall.png"     "$ROOT/assets/src/lpc/fx/Waterfall.png"
+grab "$LPC" "Terrain/ice-shallows.png"  "$ROOT/assets/src/lpc/fx/ice-shallows.png"
+
 echo "character layers (ULPC)"
 grab "$ULPC" "spritesheets/body/bodies/male/light.png"                  "$ROOT/assets/src/ulpc/body.png"
 grab "$ULPC" "spritesheets/head/heads/human/male/light.png"             "$ROOT/assets/src/ulpc/head.png"

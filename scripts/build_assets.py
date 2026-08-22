@@ -358,6 +358,34 @@ CLASS_KITS = {
 }
 
 
+# ------------------------------------------------------------ battle sheets
+# The duel used to be two static <img> tags shoved around with CSS. ULPC
+# characters already carry proper attack and hurt animations, so the battle
+# uses those instead: everything below is a straight cut from the same layers
+# the overworld sprites come from. Rows are the standard 21-row layout, in
+# up/left/down/right order per action.
+BATTLE_ACTIONS = {          # engine name -> (ULPC row facing right, frames)
+    "slash":     (15, 6),
+    "shoot":     (19, 13),
+    "spellcast": (3, 7),
+    "walk":      (11, 9),
+    "hurt":      (20, 6),
+}
+CLASS_ATTACK = {"hero": "slash", "archer": "shoot", "mage": "spellcast"}
+BATTLE_ROWS = ["attack", "hurt", "idle"]
+BATTLE_COLS = max(n for _, n in BATTLE_ACTIONS.values())
+
+
+def _battle_sheet(compose, attack):
+    """One sheet: attack, hurt and idle strips, each padded to BATTLE_COLS."""
+    sheet = Image.new("RGBA", (FRAME * BATTLE_COLS, FRAME * len(BATTLE_ROWS)), (0, 0, 0, 0))
+    for ri, action in enumerate((attack, "hurt", "walk")):
+        row, frames = BATTLE_ACTIONS[action]
+        for f in range(frames):
+            sheet.paste(compose(row, f), (f * FRAME, ri * FRAME))
+    return sheet
+
+
 def build_characters():
     cache = {}
 
@@ -368,6 +396,25 @@ def build_characters():
                 sys.exit(f"missing ULPC layer: {p}")
             cache[name] = Image.open(p).convert("RGBA")
         return cache[name]
+
+    def stacked(stack):
+        def compose(row, f):
+            cell = Image.new("RGBA", (FRAME, FRAME), (0, 0, 0, 0))
+            for lname in stack:
+                src = layer(lname)
+                if src.height < (row + 1) * FRAME:
+                    continue
+                cell = Image.alpha_composite(
+                    cell, src.crop((f * FRAME, row * FRAME, (f + 1) * FRAME, (row + 1) * FRAME)))
+            return cell
+        return compose
+
+    for cls, tiers in CLASS_KITS.items():
+        for ti, stack in enumerate(tiers):
+            _battle_sheet(stacked(stack), CLASS_ATTACK[cls]).save(
+                os.path.join(OUT, f"battle_{cls}_s{ti}.png"))
+        print(f"battle_{cls}_s0..3.png  {FRAME*BATTLE_COLS}x{FRAME*len(BATTLE_ROWS)} "
+              f"({CLASS_ATTACK[cls]} / hurt / idle, from ULPC layers)")
 
     for cls, tiers in CLASS_KITS.items():
         for ti, stack in enumerate(tiers):
@@ -459,6 +506,22 @@ def build_monsters():
         sheet.save(os.path.join(OUT, out_name))
         print(f"{out_name}  {sheet.size}  ({len(roster)} kinds x 4 directions "
               f"x {WALK_FRAMES} frames from ULPC bodies)")
+
+    # Battle sheets: the enemy stands on the right of the duel, so it needs the
+    # left-facing variants — three rows below each right-facing row in ULPC.
+    for out_name, roster in (("battle_mon.png", MONSTERS), ("battle_boss.png", BOSSES)):
+        sheet = Image.new("RGBA",
+                          (FRAME * BATTLE_COLS, FRAME * len(BATTLE_ROWS) * len(roster)),
+                          (0, 0, 0, 0))
+        for i, (name, body_file, head_file, gear) in enumerate(roster):
+            def compose(row, f, b=body_file, h=head_file, g=gear):
+                # row 20 (hurt) has a single direction; the action rows do not
+                return _mon_cell(b, h, g, row if row == 20 else row - 2, f)
+            sheet.paste(_battle_sheet(compose, "slash"),
+                        (0, i * len(BATTLE_ROWS) * FRAME))
+        sheet.save(os.path.join(OUT, out_name))
+        print(f"{out_name}  {sheet.size}  ({len(roster)} kinds x "
+              f"{len(BATTLE_ROWS)} rows, facing left)")
 
 
 

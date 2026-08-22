@@ -72,6 +72,12 @@ Layers used, with the authors listed upstream:
 | Recurve bow | Daniel Eddeland (daneeklu), gr3yh47, Johannes Sjölund (wulax), Pierre |
 | Gnarled staff | bluecarrot16 |
 
+The duel uses the same layers' attack and hurt animations (ULPC rows 0–20:
+spellcast, slash, shoot and hurt). The arming sword layer only covers the walk
+rows upstream — its swing ships as a separate 128px animation that does not
+composite onto the 64px body sheet — so the hero swings with the body animation
+and the sword is drawn as the flying strike sprite instead.
+
 ---
 
 ## Everything else

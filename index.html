@@ -262,21 +262,9 @@ kbd{
   position:relative;height:190px;margin:-6px -8px 6px;border-radius:10px;overflow:hidden;
   border:2px solid var(--wood);box-shadow:inset 0 0 34px rgba(40,20,8,.5);
 }
-#battle-bg{position:absolute;inset:0;}
-#battle-enemy{
-  position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
-  width:auto;image-rendering:pixelated;filter:drop-shadow(0 8px 12px rgba(0,0,0,.55));
-  animation:enemy-idle 1.9s ease-in-out infinite;
-}
-@keyframes enemy-idle{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(-7px);}}
-#battle-enemy.struck{animation:enemy-struck .38s;}
-@keyframes enemy-struck{
-  0%,100%{transform:translateX(-50%);filter:none;}
-  22%{transform:translateX(-64%) ;filter:brightness(3) saturate(0);}
-  62%{transform:translateX(-36%);filter:brightness(3) saturate(0);}
-}
-#battle-enemy.slain{animation:enemy-slain .6s forwards;}
-@keyframes enemy-slain{to{opacity:0;transform:translateX(-50%) scale(.55) rotate(14deg);}}
+/* width/height:100% matter: an absolutely positioned canvas with only inset:0
+   still lays out at its intrinsic size, so it would paint a strip, not a stage */
+#battle-bg{position:absolute;inset:0;width:100%;height:100%;}
 #enemy-plate{
   position:absolute;top:10px;left:50%;transform:translateX(-50%);
   width:min(300px,80%);padding:5px 10px 7px;border-radius:8px;
@@ -305,6 +293,13 @@ kbd{
 .opt:hover:not(:disabled){background:linear-gradient(180deg,#fff6e0,#e6d2ab);transform:translateY(-1px);}
 .opt:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #a5825a;}
 .opt:focus-visible{outline:3px solid var(--gold);outline-offset:2px;}
+/* the keyboard shortcut, shown only where there is a keyboard to press */
+.opt .key{
+  display:none;font-size:.72rem;font-weight:700;color:var(--wood-2);
+  border:1px solid var(--wood-3);border-radius:4px;padding:0 4px;margin-right:7px;
+  vertical-align:2px;background:rgba(255,255,255,.5);
+}
+@media (pointer:fine){.opt .key{display:inline-block;}}
 .opt.right{background:linear-gradient(180deg,#bde8b0,#7fc472);border-color:#3f7a35;box-shadow:0 3px 0 #3f7a35;color:#1c3d16;}
 .opt.wrong{background:linear-gradient(180deg,#f0a89e,#d4655a);border-color:#8d2e26;box-shadow:0 3px 0 #8d2e26;color:#41100c;}
 #battle-feedback{text-align:center;font-weight:600;min-height:1.6rem;margin-top:11px;font-size:.96rem;}
@@ -390,35 +385,10 @@ kbd{
 .class-card span{display:block;font-size:.66rem;color:var(--ink-2);line-height:1.35;margin-top:2px;}
 
 /* ------------------------------------------------------------ duel stage */
-#battle-hero{
-  position:absolute;left:15%;bottom:14px;transform:translateX(-50%);
-  width:auto;height:92px;image-rendering:pixelated;
-  filter:drop-shadow(0 8px 12px rgba(0,0,0,.55));
-}
-#battle-hero.lunge{animation:hero-lunge .42s cubic-bezier(.3,1.4,.5,1);}
-@keyframes hero-lunge{
-  0%{transform:translateX(-50%);}
-  35%{transform:translateX(-20%) scale(1.06);}
-  100%{transform:translateX(-50%);}
-}
-#battle-hero.recoil{animation:hero-recoil .38s;}
-@keyframes hero-recoil{
-  0%,100%{transform:translateX(-50%);filter:drop-shadow(0 8px 12px rgba(0,0,0,.55));}
-  30%{transform:translateX(-84%);filter:brightness(2.4) sepia(1) saturate(6) hue-rotate(-20deg);}
-}
-#battle-fx{
-  position:absolute;left:15%;bottom:56px;width:56px;height:56px;
-  image-rendering:pixelated;opacity:0;pointer-events:none;
-}
-#battle-fx.fire{animation:fx-fly .46s linear;}
-@keyframes fx-fly{
-  0%{opacity:1;left:20%;} 100%{opacity:0;left:52%;}
-}
-#battle-enemy.charge{animation:enemy-charge .42s;}
-@keyframes enemy-charge{
-  0%,100%{transform:translateX(-50%);}
-  40%{transform:translateX(-96%) scale(1.05);}
-}
+/* The duel is drawn on one canvas rather than shoved around with CSS: the
+   fighters play their real ULPC attack and hurt animations on a single
+   timeline, so nothing can drift out of step with anything else. */
+#battle-cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;}
 #btn-hint{margin-left:8px;}
 
 /* ------------------------------------------------------------ world map */
@@ -582,9 +552,7 @@ kbd{
           <div id="enemy-name">—</div>
           <div class="meter" style="height:9px"><i id="enemy-hp" style="width:100%;background:linear-gradient(180deg,#e5695c,#b33a32 60%,#7d211c)"></i></div>
         </div>
-        <img id="battle-hero" src="" alt="">
-        <img id="battle-fx" src="" alt="">
-        <img id="battle-enemy" src="" alt="">
+        <canvas id="battle-cv"></canvas>
       </div>
       <div class="label-eyebrow" style="text-align:center" id="battle-topic">—</div>
       <p class="q-prompt" id="battle-question">—</p>
@@ -999,7 +967,12 @@ function loadImages(){
     waterfx:'assets/water_fx.png', splash:'assets/splash.png',
     fx_slash:'assets/fx_slash.png', fx_arrow:'assets/fx_arrow.png', fx_bolt:'assets/fx_bolt.png'
   };
-  for(const k of CLASS_KEYS) for(let i=0;i<4;i++) files[k+i] = `assets/player_${k}_s${i}.png`;
+  files.battle_mon = 'assets/battle_mon.png';
+  files.battle_boss = 'assets/battle_boss.png';
+  for(const k of CLASS_KEYS) for(let i=0;i<4;i++){
+    files[k+i] = `assets/player_${k}_s${i}.png`;
+    files['battle_'+k+i] = `assets/battle_${k}_s${i}.png`;
+  }
   return Promise.all(Object.entries(files).map(([k,src]) => new Promise(res => {
     const im = new Image();
     im.onload = () => { IMG[k] = im; res(); };
@@ -1112,6 +1085,7 @@ function buildZone(zi){
   const zonePropPool = propsMatching(Z.props);
   const shrineProp = propsNamed('shrine')[zi % Math.max(1, propsNamed('shrine').length)] ?? 0;
   world.props = []; world.crystals = []; world.monsters = [];
+  mmZone = -1;                  // the cached minimap belongs to the old layout
 
   for(let y=0;y<ZH;y++) for(let x=0;x<ZW;x++){
     const i = tIdx(x,y);
@@ -1309,21 +1283,27 @@ const flashCv = document.createElement('canvas');
 flashCv.width = flashCv.height = CH;
 const flashCx = flashCv.getContext('2d');
 flashCx.imageSmoothingEnabled = false;
-function drawFlashed(img, sx, sy, dx, dy, amount, colour){
-  ctx.drawImage(img, sx, sy, CH, CH, dx, dy, CH, CH);
-  if(amount <= 0) return;
-  // Pulse so a long invulnerability window still reads as repeated impacts.
-  const a = Math.min(.85, amount) * (REDUCED ? .5 : .5 + .5*Math.abs(Math.sin(amount*13)));
-  if(a < .02) return;
+// A solid-colour silhouette of one sprite cell, on a scratch canvas. Tinting
+// this way keeps the composite local; doing it in place would need a
+// destination-in pass, which clips the entire target canvas.
+function tintSprite(img, sx, sy, colour){
   flashCx.clearRect(0, 0, CH, CH);
   flashCx.drawImage(img, sx, sy, CH, CH, 0, 0, CH, CH);
   flashCx.globalCompositeOperation = 'source-atop';
   flashCx.fillStyle = colour;
   flashCx.fillRect(0, 0, CH, CH);
   flashCx.globalCompositeOperation = 'source-over';
+  return flashCv;
+}
+function drawFlashed(img, sx, sy, dx, dy, amount, colour){
+  ctx.drawImage(img, sx, sy, CH, CH, dx, dy, CH, CH);
+  if(amount <= 0) return;
+  // Pulse so a long invulnerability window still reads as repeated impacts.
+  const a = Math.min(.85, amount) * (REDUCED ? .5 : .5 + .5*Math.abs(Math.sin(amount*13)));
+  if(a < .02) return;
   ctx.save();
   ctx.globalAlpha = a;
-  ctx.drawImage(flashCv, dx, dy);
+  ctx.drawImage(tintSprite(img, sx, sy, colour), dx, dy);
   ctx.restore();
 }
 
@@ -1527,9 +1507,11 @@ function drawWorld(dt){
   ctx.save();
   ctx.globalAlpha = .5; ctx.fillStyle = Z.sky;
   for(const a of ambient){
-    a.y += a.s*10*dt*(Z.id==='snow'?3:1);
-    a.x += Math.sin(t + a.p)*8*dt;
-    if(a.y > VH){ a.y = -6; a.x = Math.random()*VW; }
+    if(!REDUCED){
+      a.y += a.s*10*dt*(Z.id==='snow'?3:1);
+      a.x += Math.sin(t + a.p)*8*dt;
+      if(a.y > VH){ a.y = -6; a.x = Math.random()*VW; }
+    }
     ctx.fillRect(a.x|0, a.y|0, a.r, a.r);
   }
   ctx.restore();
@@ -1552,21 +1534,32 @@ function drawWorld(dt){
 
 // ═════════════════════════════════════════════════════════════ MINIMAP
 const mm = $('minimap'), mmx = mm.getContext('2d');
+// The terrain layer is 2352 tiles and never changes while you are in a zone,
+// so it is painted once into an offscreen canvas and blitted after that.
+const mmTerrain = document.createElement('canvas');
+let mmZone = -1;
+function paintMinimapTerrain(){
+  mmTerrain.width = mm.width; mmTerrain.height = mm.height;
+  const g = mmTerrain.getContext('2d');
+  const sx = mm.width/ZW, sy = mm.height/ZH;
+  g.globalAlpha = .85;
+  for(let y=0;y<ZH;y++) for(let x=0;x<ZW;x++){
+    const t = world.tiles[tIdx(x,y)];
+    g.fillStyle = t===TERRAIN_ROWS.water ? '#3b7fbf'
+                : t===TERRAIN_ROWS.lava ? '#d4551f'
+                : world.solid[tIdx(x,y)] ? '#5a4a3a'
+                : t===TERRAIN_ROWS[ZONES[zone].path] ? '#a98455'
+                : ZONES[zone].accent;
+    g.fillRect(x*sx, y*sy, sx+.6, sy+.6);
+  }
+  mmZone = zone;
+}
 function drawMinimap(){
   const W = mm.width, H = mm.height;
-  mmx.clearRect(0,0,W,H);
   const sx = W/ZW, sy = H/ZH;
-  for(let y=0;y<ZH;y+=1) for(let x=0;x<ZW;x+=1){
-    const t = world.tiles[tIdx(x,y)];
-    mmx.fillStyle = t===TERRAIN_ROWS.water ? '#3b7fbf'
-                  : t===TERRAIN_ROWS.lava ? '#d4551f'
-                  : world.solid[tIdx(x,y)] ? '#5a4a3a'
-                  : t===TERRAIN_ROWS[ZONES[zone].path] ? '#a98455'
-                  : ZONES[zone].accent;
-    mmx.globalAlpha = .85;
-    mmx.fillRect(x*sx, y*sy, sx+.6, sy+.6);
-  }
-  mmx.globalAlpha = 1;
+  if(mmZone !== zone) paintMinimapTerrain();
+  mmx.clearRect(0,0,W,H);
+  mmx.drawImage(mmTerrain, 0, 0);
   for(const c of world.crystals){ if(c.got) continue;
     mmx.fillStyle='#eafcff'; mmx.fillRect(c.x/TILE*sx-1, c.y/TILE*sy-1, 3, 3); }
   if(!S.cleared[zone]){ mmx.fillStyle='#ff5a4a';
@@ -1899,7 +1892,9 @@ function spriteURL(img, sx, sy, sw, sh){
   return spriteCache[key] = c.toDataURL();
 }
 function paintBattleBG(){
-  const c = $('battle-bg'), w = c.clientWidth||600, h = c.clientHeight||190;
+  // measure the stage, not the canvas: the canvas's own size is what we set
+  const c = $('battle-bg'), stage = $('battle-stage');
+  const w = stage.clientWidth||600, h = stage.clientHeight||190;
   c.width = w; c.height = h;
   const x = c.getContext('2d'), Z = ZONES[zone];
   const g = x.createLinearGradient(0,0,0,h);
@@ -1912,6 +1907,111 @@ function paintBattleBG(){
   rg.addColorStop(0,'rgba(255,240,200,.28)'); rg.addColorStop(1,'rgba(20,12,6,.55)');
   x.fillStyle = rg; x.fillRect(0,0,w,h);
 }
+// ── the duel stage ─────────────────────────────────────────────────────────
+// battle_*.png rows, in order, are: attack, hurt, idle. The frame counts come
+// from the ULPC animations themselves, so nothing here is invented timing.
+const BATTLE_ROWS = {attack:0, hurt:1, idle:2};
+const BATTLE_FRAMES = {
+  hero:   {attack:6,  hurt:6, idle:9},
+  archer: {attack:13, hurt:6, idle:9},
+  mage:   {attack:7,  hurt:6, idle:9},
+  mon:    {attack:6,  hurt:6, idle:9},
+};
+// The hero's arming sword only exists on the ULPC walk rows, so the swing is
+// bodywork plus the weapon arcing across the stage as its own sprite.
+const BATTLE_SPEED = {attack:15, hurt:11, idle:6};
+const duel = {t:0, hero:null, foe:null, fx:null, raf:0, over:false};
+
+function duelSprite(who, action, elapsed, loop){
+  const set = BATTLE_FRAMES[who.kit];
+  const n = set[action];
+  let f = Math.floor(elapsed*BATTLE_SPEED[action]);
+  if(loop) f %= n; else f = Math.min(n-1, f);
+  return {row: who.rowBase + BATTLE_ROWS[action], frame: f, done: f >= n-1};
+}
+
+function drawDuel(){
+  const c = $('battle-cv');
+  const w = c.clientWidth||600, h = c.clientHeight||190;
+  if(c.width !== w || c.height !== h){ c.width = w; c.height = h; }
+  const x = c.getContext('2d');
+  x.imageSmoothingEnabled = false;
+  x.clearRect(0,0,w,h);
+
+  const now = performance.now()/1000;
+  const ground = h - 16;
+  for(const who of [duel.hero, duel.foe]){
+    if(!who || !who.img) continue;
+    const act = who.until > now ? who.action : 'idle';
+    if(who.until <= now && who.action !== 'idle'){ who.action = 'idle'; who.start = now; }
+    const s = duelSprite(who, act, now - who.start, act === 'idle');
+    // Lunge: a smooth in-and-back over the attack, not a CSS keyframe race.
+    let push = 0;
+    if(act === 'attack'){
+      const k = clamp((now - who.start)/(BATTLE_FRAMES[who.kit].attack/BATTLE_SPEED.attack), 0, 1);
+      push = Math.sin(k*Math.PI) * 26 * who.dir;
+    } else if(act === 'hurt'){
+      const k = clamp((now - who.start)/.55, 0, 1);
+      push = -Math.sin(k*Math.PI) * 18 * who.dir;
+    }
+    const bob = (act === 'idle' && !REDUCED) ? Math.round(Math.sin(now*2.2 + who.dir)*2) : 0;
+    const px = Math.round(w*who.at + push - who.size/2);
+    const py = Math.round(ground - who.size*(CH_FOOT/CH) + bob);
+
+    x.save();
+    x.globalAlpha = .38; x.fillStyle = '#000';
+    x.beginPath(); x.ellipse(px + who.size/2, ground, who.size*.24, who.size*.08, 0, 0, 7);
+    x.fill(); x.restore();
+
+    x.drawImage(who.img, s.frame*CH, s.row*CH, CH, CH, px, py, who.size, who.size);
+    if(who.flash > now){
+      // Tint on the scratch canvas: a destination-in pass here would clip the
+      // whole stage to this one sprite and erase the other fighter.
+      x.save();
+      x.globalAlpha = .6*(who.flash - now)/.3;
+      x.drawImage(tintSprite(who.img, s.frame*CH, s.row*CH, '#ff6a55'),
+                  px, py, who.size, who.size);
+      x.restore();
+    }
+    if(who.fade){
+      // fading out is part of the same timeline, so a slain foe cannot linger
+      const k = clamp((now - who.fade)/.6, 0, 1);
+      x.save(); x.globalCompositeOperation = 'destination-out';
+      x.globalAlpha = k; x.fillRect(px-8, py-8, who.size+16, who.size+16);
+      x.restore();
+    }
+  }
+
+  // The class weapon flies across the gap between the two fighters.
+  const fx = duel.fx;
+  if(fx && IMG['fx_'+fx.name]){
+    const k = (now - fx.start)/.42;
+    if(k >= 1) duel.fx = null;
+    else {
+      const fr = Math.min(3, Math.floor(k*4));
+      const fromX = w*duel.hero.at, toX = w*duel.foe.at;
+      x.save();
+      x.globalAlpha = 1 - k*k;
+      x.drawImage(IMG['fx_'+fx.name], fr*28, 0, 28, 28,
+                  Math.round(lerp(fromX, toX, k) - 22), Math.round(ground - 84), 44, 44);
+      x.restore();
+    }
+  }
+
+  duel.raf = requestAnimationFrame(drawDuel);
+}
+function duelAct(who, action, seconds){
+  if(!who) return;
+  who.action = action;
+  who.start = performance.now()/1000;
+  who.until = who.start + seconds;
+}
+function duelHit(who){ if(who) who.flash = performance.now()/1000 + .3; }
+function stopDuel(){
+  if(duel.raf) cancelAnimationFrame(duel.raf);
+  duel.raf = 0; duel.hero = duel.foe = duel.fx = null;
+}
+
 function startBattle(kind, target){
   const Z = ZONES[zone], isBoss = kind === 'boss', C = CLASSES[heroCls()];
   const maxHP = isBoss ? 8 : 4;
@@ -1919,20 +2019,24 @@ function startBattle(kind, target){
             wrong:0, hintLeft: C.hint ? 1 : 0};
   $('enemy-name').textContent = isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
   $('battle-topic').textContent = Z.topic;
-  const e = $('battle-enemy'); e.className = '';
-  // face 1 = left, so the enemy looks back across the duel at your hero
-  if(isBoss){ e.src = spriteURL(IMG.bosses, 0, monRow(Z.boss,1)*CH, CH, CH); e.style.height = '126px'; }
-  else { e.src = spriteURL(IMG.monsters, 0, monRow(target.type,1)*CH, CH, CH); e.style.height = '104px'; }
-  // the duel: your character faces the monster from the left
-  const h = $('battle-hero'); h.className = '';
-  h.src = heroImg() ? spriteURL(heroImg(), 0, 2*CH, CH, CH) : '';
-  $('battle-fx').src = IMG['fx_'+C.fx] ? spriteURL(IMG['fx_'+C.fx], 0, 0, 28, 28) : '';
-  $('battle-fx').className = '';
+
+  const t0 = performance.now()/1000;
+  const kit = heroCls();
+  duel.hero = {kit, img:IMG['battle_'+kit+heroStage()], rowBase:0, at:.24, dir:1,
+               size:104, action:'idle', start:t0, until:0, flash:0, fade:0};
+  duel.foe = {kit:'mon', img: isBoss ? IMG.battle_boss : IMG.battle_mon,
+              rowBase: (isBoss ? Z.boss : target.type)*3, at:.74, dir:-1,
+              size: isBoss ? 128 : 108, action:'idle', start:t0, until:0, flash:0, fade:0};
+  duel.fx = null;
+  if(!duel.raf) drawDuel();
+
   $('btn-hint').style.display = C.hint ? 'inline-block' : 'none';
   $('btn-hint').disabled = false;
-  paintBattleBG();
   renderBattleQ();
   showOverlay('screen-battle');
+  // after the overlay is up, so the stage has a real width to measure — sized
+  // while hidden it fell back to a guess and left a bare strip down one side
+  paintBattleBG();
   sfx.open();
 }
 $('btn-hint').onclick = () => {
@@ -1950,18 +2054,6 @@ $('btn-hint').onclick = () => {
   $('btn-hint').disabled = true;
   sfx.pickup();
 };
-function animateFX(name){
-  const img = IMG['fx_'+name]; if(!img) return;
-  const el = $('battle-fx');
-  let f = 0;
-  const iv = setInterval(() => {
-    f++;
-    if(f > 3){ clearInterval(iv); return; }
-    el.src = spriteURL(img, f*28, 0, 28, 28);
-  }, 105);
-  setTimeout(() => { el.src = spriteURL(img, 0, 0, 28, 28); }, 480);
-}
-
 function renderBattleQ(){
   const b = battle;
   if(b.qi >= b.pool.length){ b.pool = shuffle(b.pool); b.qi = 0; }
@@ -1970,7 +2062,9 @@ function renderBattleQ(){
   const box = $('battle-options'); box.innerHTML = '';
   opts.forEach((o,i) => {
     const btn = document.createElement('button');
-    btn.className = 'opt'; btn.type = 'button'; btn.textContent = o;
+    btn.className = 'opt'; btn.type = 'button';
+    btn.innerHTML = `<span class="key">${i+1}</span>`;
+    btn.appendChild(document.createTextNode(o));
     btn.onclick = () => answerBattle(i, ans, btn);
     box.appendChild(btn);
   });
@@ -1989,34 +2083,45 @@ function answerBattle(sel, ans, btn){
   const b = battle; if(!b || b.locked) return;
   b.locked = true;
   [...$('battle-options').children].forEach(c => c.disabled = true);
-  const e = $('battle-enemy'), h = $('battle-hero'), fx = $('battle-fx');
   const C = CLASSES[heroCls()];
+  // One exchange: the attacker swings, the weapon crosses, the target reels.
+  // Every beat below is a delay into that swing, not a separate animation.
+  const SWING = .42, LAND = .30;
   if(sel === ans){
     btn.classList.add('right');
     b.hp -= C.dmg; sfx.hit();
-    h.classList.remove('lunge'); void h.offsetWidth; h.classList.add('lunge');
-    fx.classList.remove('fire'); void fx.offsetWidth; fx.classList.add('fire');
-    animateFX(C.fx);
+    duelAct(duel.hero, 'attack', SWING);
+    duel.fx = {name:C.fx, start:performance.now()/1000};
     setTimeout(() => {
+      if(!battle) return;
       $('enemy-hp').style.width = Math.max(0,b.hp/b.hpMax*100)+'%';
-      e.classList.remove('struck'); void e.offsetWidth; e.classList.add('struck');
-    }, 300);
+      duelHit(duel.foe);
+      duelAct(duel.foe, 'hurt', .5);
+    }, LAND*1000);
     $('battle-feedback').innerHTML = `<span style="color:#2f6b28">⚔ โจมตีสำเร็จ! -${C.dmg}</span>`;
-    if(b.hp <= 0){ setTimeout(()=>e.classList.add('slain'), 320); setTimeout(winBattle, 940); return; }
+    if(b.hp <= 0){
+      setTimeout(() => { if(duel.foe) duel.foe.fade = performance.now()/1000; }, 700);
+      setTimeout(winBattle, 1300);
+      return;
+    }
   } else {
     btn.classList.add('wrong'); b.wrong++;
     [...$('battle-options').children][ans].classList.add('right');
     S.hp--; sfx.hurt(); refreshHUD();
-    e.classList.remove('charge'); void e.offsetWidth; e.classList.add('charge');
-    setTimeout(() => { h.classList.remove('recoil'); void h.offsetWidth; h.classList.add('recoil'); }, 160);
+    duelAct(duel.foe, 'attack', SWING);
+    setTimeout(() => {
+      if(!battle) return;
+      duelHit(duel.hero);
+      duelAct(duel.hero, 'hurt', .5);
+    }, LAND*1000);
     $('battle-feedback').innerHTML = `<span style="color:#96271f">✖ พลาด! คำตอบคือ <b>${b.pool[b.qi][1][ans]}</b></span>`;
-    if(S.hp <= 0){ setTimeout(loseBattle, 1000); return; }
+    if(S.hp <= 0){ setTimeout(loseBattle, 1200); return; }
   }
   b.qi++;
   setTimeout(() => { if(battle) renderBattleQ(); }, 1150);
 }
 function winBattle(){
-  const b = battle; battle = null;
+  const b = battle; battle = null; stopDuel();
   if(b.kind === 'boss'){
     const zi = zone;
     S.cleared[zi] = true;
@@ -2046,7 +2151,7 @@ function winBattle(){
   refreshHUD(); save();
 }
 function loseBattle(){
-  battle = null;
+  battle = null; stopDuel();
   S.hp = S.hpMax;
   const [px,py] = findSpawn();
   player.x = px; player.y = py; player.iframe = 2.4;
@@ -2057,7 +2162,7 @@ function loseBattle(){
 $('btn-flee').onclick = () => {
   if(!battle) return;
   if(battle.kind === 'boss'){ toast('🚫','หนีจากผู้พิทักษ์ไม่ได้!'); sfx.deny(); return; }
-  battle.target.iframe = 1.4; battle = null;
+  battle.target.iframe = 1.4; battle = null; stopDuel();
   hideOverlays(); player.iframe = 1.4;
 };
 
@@ -2087,6 +2192,12 @@ const keys = {};
 addEventListener('keydown', e => {
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
   keys[e.key.toLowerCase()] = true;
+  // In a duel, 1-4 answer the question — nobody should have to reach for the
+  // mouse mid-fight, and the number matches the option's position on screen.
+  if(battle && !battle.locked && e.key >= '1' && e.key <= '4'){
+    const opt = $('battle-options').children[+e.key - 1];
+    if(opt && !opt.disabled){ opt.click(); return; }
+  }
   if(e.key === 'e' || e.key === 'E' || e.key === ' ') interact();
   if(e.key === 'm' || e.key === 'M') toggleCodex();
   if(e.key === 'Escape' && mode === 'play' && !battle) openMap();
