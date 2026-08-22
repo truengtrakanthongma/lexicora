@@ -130,6 +130,11 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
   font-family:'Cinzel',serif;font-weight:700;font-size:.78rem;color:#ffeec4;
   text-align:center;margin-top:5px;letter-spacing:.06em;
 }
+#region-sky{
+  display:flex;justify-content:center;align-items:center;gap:7px;
+  font-size:.74rem;color:#f0d7a6;margin-top:2px;
+}
+#sky-clock{font-variant-numeric:tabular-nums;letter-spacing:.08em;}
 
 #quest-strip{
   position:absolute;left:12px;top:78px;max-width:min(300px,52vw);
@@ -155,7 +160,9 @@ kbd{
   box-shadow:0 2px 0 #8a6113;
 }
 
-#toast-stack{position:absolute;top:78px;right:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
+/* below the minimap panel, not across it — the panel grew when the sky row
+   was added and the toasts were landing on top of the region name */
+#toast-stack{position:absolute;top:214px;right:12px;display:flex;flex-direction:column;gap:8px;align-items:flex-end;}
 .toast{
   display:flex;gap:9px;align-items:center;padding:8px 14px;border-radius:10px;
   background:linear-gradient(180deg,var(--parch),var(--parch-2));
@@ -357,6 +364,7 @@ kbd{
   #player-banner{padding:6px 12px 6px 6px;gap:8px;}
   #portrait-frame{width:42px;height:42px;}
   #minimap{width:118px;height:70px;}
+  #toast-stack{top:182px;}
   #quest-strip{top:64px;max-width:46vw;padding:7px 11px;}
   #quest-text{font-size:.76rem;}
   .sheet{padding:20px 18px 24px;}
@@ -480,6 +488,7 @@ kbd{
     <div id="minimap-wrap">
       <canvas id="minimap" width="168" height="108"></canvas>
       <div id="region-name">—</div>
+      <div id="region-sky"><span id="sky-clock">08:00</span><span id="sky-weather">☀</span></div>
       <button class="btn" id="btn-to-map" style="width:100%;margin-top:6px;font-size:.74rem;padding:.34rem .5rem">🗺 แผนที่โลก</button>
     </div>
 
@@ -1245,10 +1254,75 @@ function splash(x, y){
   if(REDUCED || !IMG.splash) return;
   splashes.push({x, y, t:0});
 }
+// ── time of day ────────────────────────────────────────────────────────────
+// One in-game day per DAY_LENGTH seconds of play. The phases are wide and the
+// HUD carries a clock, so the time of day is something you can read at a
+// glance rather than a mood you have to guess at.
+const DAY_LENGTH = 600;
+let clock = 8/24;                       // the adventure starts mid-morning
+// stop, sky colour (overlaid), how dark the world gets
+const SKY_KEYS = [
+  [.00, [16, 22, 54], .62], [.20, [26, 30, 68], .58],
+  [.26, [92, 78, 128], .40], [.30, [255, 148, 106], .18],
+  [.36, [255, 226, 170], .04], [.55, [255, 244, 214], .00],
+  [.70, [255, 216, 156], .05], [.79, [255, 146, 92], .18],
+  [.85, [124, 82, 128], .38], [.92, [34, 34, 78], .56],
+  [1.0, [16, 22, 54], .62],
+];
+function skyAt(f){
+  let i = 0;
+  while(i < SKY_KEYS.length-2 && SKY_KEYS[i+1][0] <= f) i++;
+  const [f0, c0, d0] = SKY_KEYS[i], [f1, c1, d1] = SKY_KEYS[i+1];
+  const k = f1 === f0 ? 0 : (f - f0)/(f1 - f0);
+  return {r:Math.round(lerp(c0[0],c1[0],k)), g:Math.round(lerp(c0[1],c1[1],k)),
+          b:Math.round(lerp(c0[2],c1[2],k)), dark:lerp(d0,d1,k)};
+}
+function clockText(){
+  const mins = Math.floor(clock*24*60);
+  return String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
+}
+
+// ── weather and wind ───────────────────────────────────────────────────────
+// Each zone draws from its own plausible set, re-rolled every few minutes, so
+// the same place feels different on a second visit without ever being wrong
+// for that place (no snow in the volcano).
+const WEATHER_BY_ZONE = {
+  woods:  ['clear','clear','rain'],   hills:   ['clear','clear','rain'],
+  desert: ['clear','sand','sand'],    caves:   ['clear','fog'],
+  snow:   ['snow','snow','clear'],    volcano: ['ember','ember','clear'],
+  ruins:  ['clear','sand','fog'],     grove:   ['clear','clear','rain'],
+  shadow: ['fog','fog','rain'],       castle:  ['fog','rain','clear'],
+};
+const WEATHER = {
+  clear: {n:34, fall:6,   drift:10, size:2, colour:null, thai:'ท้องฟ้าแจ่มใส', icon:'☀'},
+  rain:  {n:220, fall:620, drift:70, size:1, colour:'#d6e8ff', thai:'ฝนตก',      icon:'🌧'},
+  snow:  {n:120, fall:44,  drift:34, size:2, colour:'#ffffff', thai:'หิมะตก',    icon:'❄'},
+  sand:  {n:130, fall:26,  drift:230,size:1, colour:'#e8cf9a', thai:'พายุทราย',  icon:'🌪'},
+  ember: {n:70,  fall:-42, drift:26, size:2, colour:'#ff9a4d', thai:'เถ้าถ่านลอย',icon:'🔥'},
+  fog:   {n:26,  fall:4,   drift:26, size:3, colour:'#c9d2e4', thai:'หมอกหนา',   icon:'🌫'},
+};
+let weather = 'clear', weatherTimer = 0, wind = 0;
+// A lesson on weather words wants rain on demand, not rain in ten minutes, so
+// ?w=rain pins the weather and ?hour=21 sets the time of day. Both are for
+// teaching and testing; without them the sky runs on its own.
+const params = new URLSearchParams(location.search);
+const pinnedWeather = WEATHER[params.get('w')] ? params.get('w') : null;
+if(params.has('hour')) clock = clamp(parseFloat(params.get('hour')), 0, 24)/24;
+function rollWeather(){
+  if(pinnedWeather){ weather = pinnedWeather; weatherTimer = Infinity; return; }
+  const pool = WEATHER_BY_ZONE[ZONES[zone].id] || ['clear'];
+  weather = pool[Math.floor(Math.random()*pool.length)];
+  weatherTimer = 110 + Math.random()*120;
+}
+
 const ambient = [];
 function seedAmbient(){
   ambient.length = 0;
-  for(let i=0;i<70;i++) ambient.push({x:Math.random()*VW, y:Math.random()*VH, s:.3+Math.random(), r:1+Math.random()*2, p:Math.random()*Math.PI*2});
+  const W = WEATHER[weather] || WEATHER.clear;
+  for(let i=0;i<W.n;i++) ambient.push({
+    x:Math.random()*VW, y:Math.random()*VH,
+    s:.5+Math.random(), r:1+Math.random()*W.size, p:Math.random()*Math.PI*2
+  });
 }
 // Trauma-based shake. White noise scaled by a linear decay reads as a
 // rendering glitch; trauma squared, driven by smooth noise, reads as a jolt
@@ -1431,8 +1505,19 @@ function drawWorld(dt){
       const m = PROPS[p.type];
       if(!IMG.props || !m) continue;
       shadow(p.x, p.y, m.w*.34, .30);
-      ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h,
-        Math.round(p.x-m.w/2), Math.round(p.y-m.h), m.w, m.h);
+      // Foliage leans with the wind, hinged at its base. Each plant runs on
+      // its own phase so a hedgerow ripples instead of moving as one board.
+      const sway = REDUCED ? 0 : wind*(m.h > 60 ? 2.2 : 3.4)*(.6 + .4*Math.sin(t*1.5 + p.x*.07));
+      if(sway){
+        ctx.save();
+        ctx.translate(Math.round(p.x), Math.round(p.y));
+        ctx.transform(1, 0, -sway/m.h, 1, 0, 0);
+        ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h, -m.w/2, -m.h, m.w, m.h);
+        ctx.restore();
+      } else {
+        ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h,
+          Math.round(p.x-m.w/2), Math.round(p.y-m.h), m.w, m.h);
+      }
     } else if(d.kind === 'crystal'){
       const c = d.o, bob = Math.sin(t*2.4 + c.x*.01)*3;
       ctx.save(); ctx.globalAlpha = .55; ctx.fillStyle = Z.accent;
@@ -1470,6 +1555,22 @@ function drawWorld(dt){
     }
   }
 
+  // Rain that never lands is just streaks on glass, so it leaves impact rings
+  // on the ground — the LPC droplet frames, scattered around the hero.
+  if(weather === 'rain' && !REDUCED && IMG.waterfx){
+    ctx.save();
+    ctx.globalAlpha = .5;
+    for(let i=0;i<14;i++){
+      const seed = Math.floor(nowMs/140) + i*97;
+      const rx = camX + hash2(seed, i, 21)*(VW/SCALE);
+      const ry = camY + hash2(i, seed, 22)*(VH/SCALE);
+      const f = (seed + i) % 4;
+      ctx.drawImage(IMG.waterfx, f*TILE, FXROW.drop*TILE, TILE, TILE,
+                    Math.round(rx), Math.round(ry), TILE, TILE);
+    }
+    ctx.restore();
+  }
+
   for(let i=splashes.length-1;i>=0;i--){
     const s = splashes[i];
     s.t += dt;
@@ -1504,32 +1605,110 @@ function drawWorld(dt){
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  ctx.save();
-  ctx.globalAlpha = .5; ctx.fillStyle = Z.sky;
-  for(const a of ambient){
-    if(!REDUCED){
-      a.y += a.s*10*dt*(Z.id==='snow'?3:1);
-      a.x += Math.sin(t + a.p)*8*dt;
-      if(a.y > VH){ a.y = -6; a.x = Math.random()*VW; }
-    }
-    ctx.fillRect(a.x|0, a.y|0, a.r, a.r);
-  }
-  ctx.restore();
+  drawWeather(dt, t, Z);
 
+  // ── lighting ─────────────────────────────────────────────────────────────
+  const sky = skyAt(clock);
   ctx.save();
   ctx.globalCompositeOperation = 'overlay';
-  const sun = ctx.createLinearGradient(0,0,VW*.85,VH);
-  sun.addColorStop(0,'rgba(255,226,166,.30)');
-  sun.addColorStop(.5,'rgba(255,208,150,.07)');
-  sun.addColorStop(1,'rgba(30,20,60,.22)');
-  ctx.fillStyle = sun; ctx.fillRect(0,0,VW,VH);
+  ctx.fillStyle = `rgba(${sky.r},${sky.g},${sky.b},.34)`;
+  ctx.fillRect(0,0,VW,VH);
   ctx.restore();
 
+  // Night also drains the warm channels. Without this the world stays as green
+  // at 2am as at noon, only dimmer, which reads as a broken brightness slider.
+  if(sky.dark > .02){
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply';
+    const k = sky.dark;
+    ctx.fillStyle = `rgb(${Math.round(255-118*k)},${Math.round(255-96*k)},${Math.round(255-34*k)})`;
+    ctx.fillRect(0,0,VW,VH);
+    ctx.restore();
+  }
+
+  // Night falls as a darkness sheet with a warm hole around the hero, so you
+  // can always see where you are standing however late it gets.
+  if(sky.dark > .02){
+    const hx = (player.x - camX)*SCALE, hy = (player.y - camY - 18)*SCALE;
+    const lamp = ctx.createRadialGradient(hx, hy, 24, hx, hy, Math.max(VW,VH)*.5);
+    lamp.addColorStop(0, 'rgba(10,8,26,0)');
+    lamp.addColorStop(.3, `rgba(12,10,30,${(sky.dark*.5).toFixed(3)})`);
+    lamp.addColorStop(1, `rgba(8,6,22,${sky.dark.toFixed(3)})`);
+    ctx.fillStyle = lamp; ctx.fillRect(0,0,VW,VH);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const glow = ctx.createRadialGradient(hx, hy, 0, hx, hy, 108);
+    glow.addColorStop(0, `rgba(255,206,132,${(sky.dark*.34).toFixed(3)})`);
+    glow.addColorStop(1, 'rgba(255,180,90,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0,0,VW,VH);
+    ctx.restore();
+  }
+
   const g = ctx.createRadialGradient(VW/2, VH/2, Math.min(VW,VH)*.32, VW/2, VH/2, Math.max(VW,VH)*.78);
-  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(18,10,26,.62)');
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(18,10,26,.5)');
   ctx.fillStyle = g; ctx.fillRect(0,0,VW,VH);
 
   if(trauma > 0) trauma = Math.max(0, trauma - dt*1.9);
+}
+
+// One soft blob, built once and reused for every fog bank.
+let fogCv = null;
+function fogBlob(){
+  if(fogCv) return fogCv;
+  fogCv = document.createElement('canvas');
+  fogCv.width = 128; fogCv.height = 64;
+  const g = fogCv.getContext('2d');
+  const r = g.createRadialGradient(64, 32, 0, 64, 32, 64);
+  r.addColorStop(0, 'rgba(214,225,240,1)');
+  r.addColorStop(.55, 'rgba(206,218,236,.45)');
+  r.addColorStop(1, 'rgba(200,212,232,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 128, 64);
+  return fogCv;
+}
+
+// Weather is drawn in screen space: it is meant to sit between you and the
+// world, and tying it to world coordinates would make it swim as you walk.
+function drawWeather(dt, t, Z){
+  const W = WEATHER[weather] || WEATHER.clear;
+  const gust = wind*W.drift;
+  ctx.save();
+  if(weather === 'fog'){
+    // Fog is soft drifting banks. Specks at fog density look like dirt on the
+    // screen, and hard-edged bars look like a rendering fault, so each bank is
+    // a pre-blurred blob stretched to width.
+    for(const a of ambient){
+      if(!REDUCED){
+        a.x += (gust*.5 + a.s*8)*dt;
+        if(a.x > VW+260) a.x = -260;
+        else if(a.x < -260) a.x = VW+260;
+      }
+      const w = 200 + a.r*90, h = 40 + a.r*22;
+      ctx.globalAlpha = .16;
+      ctx.drawImage(fogBlob(), a.x-w/2, a.y-h/2, w, h);
+    }
+    ctx.restore();
+    return;
+  }
+  ctx.globalAlpha = weather === 'clear' ? .5 : .68;
+  ctx.fillStyle = W.colour || Z.sky;
+  for(const a of ambient){
+    if(!REDUCED){
+      a.y += a.s*W.fall*dt;
+      a.x += (gust + Math.sin(t*.7 + a.p)*10)*dt;
+      if(a.y > VH+8){ a.y = -8; a.x = Math.random()*VW; }
+      if(a.y < -8){ a.y = VH+8; a.x = Math.random()*VW; }
+      if(a.x > VW+8) a.x = -8; else if(a.x < -8) a.x = VW+8;
+    }
+    // Fast weather draws as a streak along its own direction of travel, which
+    // is what makes rain read as rain and not as falling dots.
+    if(W.fall > 200 || Math.abs(gust) > 90){
+      const len = clamp(Math.hypot(gust, a.s*W.fall)*.026, 3, 16);
+      ctx.fillRect(a.x|0, a.y|0, Math.max(1, Math.abs(gust)*.02)|0 || 1, len);
+    } else {
+      ctx.fillRect(a.x|0, a.y|0, a.r, a.r);
+    }
+  }
+  ctx.restore();
 }
 
 // ═════════════════════════════════════════════════════════════ MINIMAP
@@ -1586,6 +1765,20 @@ function refreshHUD(){
   const pc = $('portrait').getContext('2d');
   pc.imageSmoothingEnabled = false; pc.clearRect(0,0,CH,CH);
   const im = heroImg(); if(im) pc.drawImage(im, 0, 0, CH, CH, 0, 0, CH, CH);
+  refreshSky();
+}
+// Called every frame, so only touch the DOM when the displayed text changes —
+// writing textContent unconditionally would relayout the HUD sixty times a
+// second for a clock that ticks once a minute.
+let skyShown = '';
+function refreshSky(){
+  const W = WEATHER[weather] || WEATHER.clear;
+  const s = clockText()+'|'+W.icon+'|'+W.thai;
+  if(s === skyShown) return;
+  skyShown = s;
+  $('sky-clock').textContent = clockText();
+  $('sky-weather').textContent = W.icon;
+  $('sky-weather').title = W.thai;
 }
 function toast(icon, text){
   const el = document.createElement('div');
@@ -1871,7 +2064,7 @@ function enterZone(zi){
   mode = 'play';
   hideOverlays();
   $('hud').style.display = 'block';
-  seedAmbient(); refreshHUD();
+  rollWeather(); seedAmbient(); refreshHUD();
   toast('🚩', 'เข้าสู่ '+ZONES[zi].thai);
   if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 650);
 }
@@ -2301,10 +2494,25 @@ function tick(now){
     if(!paused()) update(dt);
     drawWorld(dt);
     drawMinimap();
+    refreshSky();
   }
 }
 
 function update(dt){
+  clock = (clock + dt/DAY_LENGTH) % 1;
+  // Wind wanders on smooth noise rather than jumping, so gusts build and ease
+  // instead of switching direction between one frame and the next.
+  wind = (noise2(performance.now()/9000, 0, 7)*2 - 1);
+  weatherTimer -= dt;
+  if(weatherTimer <= 0){
+    const was = weather;
+    rollWeather();
+    if(weather !== was){
+      seedAmbient();
+      const W = WEATHER[weather];
+      toast(W.icon, 'สภาพอากาศเปลี่ยน: ' + W.thai);
+    }
+  }
   let mx = 0, my = 0;
   if(keys['arrowleft']||keys['a']) mx -= 1;
   if(keys['arrowright']||keys['d']) mx += 1;
