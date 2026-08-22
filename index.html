@@ -961,6 +961,16 @@ const TILE = 32, SCALE = 2;
 // ULPC character frames: 64x64 cells, 9 walk frames, rows = down/left/right/up.
 const CH = 64, CH_FRAMES = 9, CH_FOOT = 58;   // feet sit ~58px down the cell
 const TERRAIN_ROWS = {grass:0,forest:1,sand:2,snow:3,stone:4,ash:5,void:6,dirt:7,pstone:8,water:9,ice:10,lava:11};
+// Which terrain feathers over which at a boundary. Higher bleeds onto lower,
+// so grass softens a dirt road and sand forms a beach against water.
+const TERRAIN_PRIORITY = [11,10,7,9,6,4,3,8,5,1,2,0];   // indexed by terrain id
+// terrain_edges.png column order, and the piece to draw when a neighbour lies
+// in a given direction (the neighbour bleeds toward us, so we take its opposite)
+const EDGE_COL = {n:0, ne:1, e:2, se:3, s:4, sw:5, w:6, nw:7};
+const EDGE_NEIGHBOURS = [
+  [ 0,-1,'s' ], [ 1, 0,'w' ], [ 0, 1,'n' ], [-1, 0,'e' ],
+  [ 1,-1,'sw'], [ 1, 1,'nw'], [-1, 1,'ne'], [-1,-1,'se'],
+];
 // Prop metadata comes from assets/props.js, emitted by scripts/build_assets.py
 const PROPS = window.LEXICORA_PROPS || [];
 const propsNamed = pre => PROPS.map((p,i)=>[p,i]).filter(([p]) => p.n.startsWith(pre)).map(([,i]) => i);
@@ -984,8 +994,9 @@ let VIAL_PROP = 0;
 const IMG = {};
 function loadImages(){
   const files = {
-    terrain:'assets/terrain.png', props:'assets/props.png', monsters:'assets/monsters.png',
+    terrain:'assets/terrain.png', edges:'assets/terrain_edges.png', props:'assets/props.png', monsters:'assets/monsters.png',
     bosses:'assets/bosses.png', gear:'assets/gear.png',
+    waterfx:'assets/water_fx.png', splash:'assets/splash.png',
     fx_slash:'assets/fx_slash.png', fx_arrow:'assets/fx_arrow.png', fx_bolt:'assets/fx_bolt.png'
   };
   for(const k of CLASS_KEYS) for(let i=0;i<4;i++) files[k+i] = `assets/player_${k}_s${i}.png`;
@@ -1237,6 +1248,67 @@ function seedAmbient(){
 }
 let shake = 0;
 
+// ── liquid surface ─────────────────────────────────────────────────────────
+// water_fx.png rows: 0 caustics, 1 sparkles, 2 embers, 3 dim embers,
+// 4 droplet rings, 5 foot ripple — four frames each.
+const FXROW = {caustic:0, sparkle:1, ember:2, emberDim:3, drop:4, foot:5};
+const patCache = new Map();
+function liquidPattern(row, frame){
+  const key = row*4 + frame;
+  if(patCache.has(key)) return patCache.get(key);
+  if(!IMG.waterfx) return null;
+  const c = document.createElement('canvas');
+  c.width = c.height = TILE;
+  const g = c.getContext('2d');
+  g.imageSmoothingEnabled = false;
+  g.drawImage(IMG.waterfx, frame*TILE, row*TILE, TILE, TILE, 0, 0, TILE, TILE);
+  const p = ctx.createPattern(c, 'repeat');
+  patCache.set(key, p);
+  return p;
+}
+// row for water / row for lava, ms per frame, drift px per second, opacity
+const LIQUID_LAYERS = [
+  {w:FXROW.caustic, l:FXROW.ember,    ms:190, dx: 5, dy: 3, a:.55},
+  {w:FXROW.sparkle, l:FXROW.emberDim, ms:270, dx:-8, dy: 2, a:.42},
+];
+function drawLiquidMotion(x0, y0, x1, y1, nowMs){
+  if(!IMG.waterfx) return;
+  for(const liquid of [TERRAIN_ROWS.water, TERRAIN_ROWS.lava]){
+    // Clip to every visible tile of this liquid at once, then let the caustics
+    // scroll across the whole shape: a lake then reads as one moving surface
+    // rather than 32px cells each animating on their own.
+    let any = false;
+    ctx.save();
+    ctx.beginPath();
+    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
+      if(world.tiles[tIdx(x,y)] !== liquid) continue;
+      ctx.rect(x*TILE, y*TILE, TILE, TILE);
+      any = true;
+    }
+    if(!any){ ctx.restore(); continue; }
+    ctx.clip();
+    ctx.globalCompositeOperation = 'lighter';
+    const bx = (x0-1)*TILE, by = (y0-1)*TILE;
+    const bw = (x1-x0+3)*TILE, bh = (y1-y0+3)*TILE;
+    for(const L of LIQUID_LAYERS){
+      const frame = REDUCED ? 0 : Math.floor(nowMs/L.ms) % 4;
+      const pat = liquidPattern(liquid===TERRAIN_ROWS.lava ? L.l : L.w, frame);
+      if(!pat) continue;
+      // Whole-pixel drift only — a fractional offset would resample the
+      // caustics and blur them against the crisp terrain underneath.
+      const ox = REDUCED ? 0 : Math.round(nowMs*L.dx/1000) % TILE;
+      const oy = REDUCED ? 0 : Math.round(nowMs*L.dy/1000) % TILE;
+      ctx.globalAlpha = L.a;
+      ctx.save();
+      ctx.translate(ox, oy);
+      ctx.fillStyle = pat;
+      ctx.fillRect(bx-ox, by-oy, bw, bh);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+}
+
 function drawWorld(dt){
   const Z = ZONES[zone];
   ctx.fillStyle = '#10222f'; ctx.fillRect(0,0,VW,VH);
@@ -1251,28 +1323,32 @@ function drawWorld(dt){
   const x0 = Math.max(0, Math.floor(camX/TILE)), y0 = Math.max(0, Math.floor(camY/TILE));
   const x1 = Math.min(ZW-1, Math.ceil((camX+VW/SCALE)/TILE)), y1 = Math.min(ZH-1, Math.ceil((camY+VH/SCALE)/TILE));
 
-  const frame = Math.floor(performance.now()/220)%4;
-  const isLiquid = t => t===TERRAIN_ROWS.water || t===TERRAIN_ROWS.lava;
+  const nowMs = performance.now();
   if(IMG.terrain){
     for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
       const t = world.tiles[tIdx(x,y)];
-      const v = isLiquid(t) ? frame : Math.floor(hash2(x,y,3)*4);
+      const v = Math.floor(hash2(x,y,3)*4);
       ctx.drawImage(IMG.terrain, v*TILE, t*TILE, TILE, TILE, x*TILE, y*TILE, TILE, TILE);
     }
-    // A soft bank shadow where land meets water. The old bright foam line was
-    // drawn for the hand-made tiles; against LPC art it reads as a hard stripe.
-    const bank = 'rgba(28,20,12,.34)';
-    for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
-      if(isLiquid(world.tiles[tIdx(x,y)])) continue;
-      for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0]]){
-        const nx=x+dx, ny=y+dy;
-        if(nx<0||ny<0||nx>=ZW||ny>=ZH) continue;
-        if(!isLiquid(world.tiles[tIdx(nx,ny)])) continue;
-        ctx.fillStyle = bank;
-        if(dy===-1) ctx.fillRect(x*TILE, y*TILE, TILE, 3);
-        else if(dy===1) ctx.fillRect(x*TILE, y*TILE+TILE-3, TILE, 3);
-        else if(dx===-1) ctx.fillRect(x*TILE, y*TILE, 3, TILE);
-        else ctx.fillRect(x*TILE+TILE-3, y*TILE, 3, TILE);
+    // Liquids get their motion from a scrolling ripple pass rather than from
+    // the atlas: the LPC interior cells we sample are near-identical, so
+    // flipping between them produced no visible flow at all.
+    drawLiquidMotion(x0, y0, x1, y1, nowMs);
+
+    // Boundaries: draw the higher-priority neighbour's soft edge over this
+    // tile so terrains feather into each other instead of butting at 32px.
+    if(IMG.edges){
+      for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
+        const t = world.tiles[tIdx(x,y)];
+        const p = TERRAIN_PRIORITY[t];
+        for(const [dx,dy,piece] of EDGE_NEIGHBOURS){
+          const nx=x+dx, ny=y+dy;
+          if(nx<0||ny<0||nx>=ZW||ny>=ZH) continue;
+          const nt = world.tiles[tIdx(nx,ny)];
+          if(nt===t || TERRAIN_PRIORITY[nt] <= p) continue;
+          ctx.drawImage(IMG.edges, EDGE_COL[piece]*TILE, nt*TILE, TILE, TILE,
+                        x*TILE, y*TILE, TILE, TILE);
+        }
       }
     }
   }

@@ -114,6 +114,29 @@ def pick_fill(sheet, target, name, spread=14.0, count=TVARIANTS):
     return [t["img"] for t in near[:count]]
 
 
+def mean_rgb(im):
+    px = [p for p in im.getdata() if p[3] > 0] or [(0, 0, 0, 0)]
+    return [sum(p[i] for p in px) / len(px) for i in range(3)]
+
+
+def harmonise(variants, strength=.82):
+    """Pull every variant's overall tone onto the first one's.
+
+    Stone, ash and paved stone come off sheets that carry several distinct rock
+    colours. Scattered one per 32px tile, those read as a checkerboard rather
+    than as ground. Matching the tone leaves only the texture varying, which is
+    what actually makes a surface look continuous.
+    """
+    base = mean_rgb(variants[0])
+    out = [variants[0]]
+    for v in variants[1:]:
+        m = mean_rgb(v)
+        mul = tuple((base[i] * strength + m[i] * (1 - strength)) / max(1.0, m[i])
+                    for i in range(3))
+        out.append(tint(v, mul))
+    return out
+
+
 def tint(im, mul, add=(0, 0, 0)):
     """Recolour a real tile (still an LPC derivative — credited the same way)."""
     out = im.copy()
@@ -129,6 +152,39 @@ def tint(im, mul, add=(0, 0, 0)):
     return out
 
 
+# --------------------------------------------------------------- autotiling
+# Each seasonal sheet carries a 3x3 "ring": the eight border tiles of a patch,
+# with a soft alpha edge facing outward. Those alpha edges are the shape of a
+# real LPC boundary, so we reuse them as stencils: mask a terrain's own fill
+# texture through a ring cell and you get an authentic edge in that terrain's
+# colour, for terrains LPC never drew a boundary for (stone, ash, lava, void).
+EDGE_DIRS = ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
+_RING_OFFSET = {          # position of each direction inside the 3x3 ring
+    "nw": (0, 0), "n": (1, 0), "ne": (2, 0),
+    "w":  (0, 1),               "e":  (2, 1),
+    "sw": (0, 2), "s": (1, 2), "se": (2, 2),
+}
+
+
+def ring_masks(sheet, ox, oy):
+    """The eight ring cells' alpha channels, keyed by direction."""
+    out = {}
+    for d, (dx, dy) in _RING_OFFSET.items():
+        out[d] = tile_at(sheet, ox + dx, oy + dy).getchannel("A")
+    return out
+
+
+def edge_tiles(fill, masks):
+    """Stencil one fill tile through each ring mask."""
+    out = {}
+    for d, m in masks.items():
+        cell = fill.copy()
+        cell.putalpha(m)
+        out[d] = cell
+    return out
+
+
+
 def build_terrain():
     spring = load("terrain_spring.png")
     summer = load("terrain_summer.png")
@@ -141,17 +197,19 @@ def build_terrain():
     grit   = load("Gritty_Dirt.png")
 
     print("  picking interior fill tiles:")
-    grass  = pick_fill(spring, (92, 154, 42),   "grass")
-    forest = pick_fill(summer, (70, 130, 50),   "forest")
-    sand   = pick_fill(summer, (244, 215, 160), "sand")
-    snow   = pick_fill(winter, (224, 242, 243), "snow")
-    stone  = pick_fill(floor,  (150, 150, 155), "stone", spread=40)
+    # Organic ground is harmonised gently — some tonal drift there reads as
+    # patchy growth. Rock is harmonised hard, where drift reads as a grid.
+    grass  = harmonise(pick_fill(spring, (92, 154, 42),   "grass"),  .55)
+    forest = harmonise(pick_fill(summer, (70, 130, 50),   "forest"), .55)
+    sand   = harmonise(pick_fill(summer, (244, 215, 160), "sand"),   .60)
+    snow   = harmonise(pick_fill(winter, (224, 242, 243), "snow"),   .60)
+    stone  = harmonise(pick_fill(floor, (150, 150, 155), "stone", spread=40))
     brick  = stone
-    dirt   = pick_fill(grit,   (150, 112, 70),  "dirt",  spread=44)
+    dirt   = harmonise(pick_fill(grit,  (150, 112, 70),  "dirt",  spread=44))
     pstone = brick
     water  = pick_fill(summer, (42, 133, 152),  "water")
-    ice    = pick_fill(ice_sh, (150, 205, 220), "ice",   spread=26)
-    deep   = pick_fill(summer, (23, 58, 85),    "deep")
+    ice    = harmonise(pick_fill(ice_sh, (150, 205, 220), "ice", spread=26), .60)
+    deep   = harmonise(pick_fill(summer, (23, 58, 85),    "deep"), .85)
 
     rows = {
         "grass": grass, "forest": forest, "sand": sand, "snow": snow,
@@ -170,6 +228,35 @@ def build_terrain():
             sheet.paste(v[ci % len(v)], (ci * TILE, ri * TILE))
     sheet.save(os.path.join(OUT, "terrain.png"))
     print("terrain.png", sheet.size, "from LPC Revised terrain sheets")
+
+    # --- the boundary atlas: 8 directions per terrain -----------------------
+    # Organic ground borrows the grass ring; liquids and stone borrow the
+    # softer soil ring, whose edge is less feathery and suits hard materials.
+    organic = ring_masks(summer, 0, 0)
+    soilish = ring_masks(soil, 0, 0)
+    RING_FOR = {
+        "grass": organic, "forest": organic, "snow": organic, "sand": organic,
+        "dirt": soilish, "stone": soilish, "pstone": soilish, "ash": soilish,
+        "void": soilish, "water": organic, "ice": organic, "lava": soilish,
+    }
+    edges = Image.new("RGBA", (TILE * len(EDGE_DIRS), TILE * len(TERRAIN_ROWS)), (0, 0, 0, 0))
+    for ri, name in enumerate(TERRAIN_ROWS):
+        cells = edge_tiles(rows[name][0], RING_FOR[name])
+        for di, d in enumerate(EDGE_DIRS):
+            edges.paste(cells[d], (di * TILE, ri * TILE))
+    edges.save(os.path.join(OUT, "terrain_edges.png"))
+    print("terrain_edges.png", edges.size,
+          f"({len(EDGE_DIRS)} directions x {len(TERRAIN_ROWS)} terrains, "
+          "stencilled through real LPC ring edges)")
+
+    # guard the bug that made water look frozen: a terrain whose variants are
+    # all the same tile has no visible shimmer, and liquids must actually move
+    for name in TERRAIN_ROWS:
+        v = rows[name]
+        uniq = {t.tobytes() for t in v}
+        if name in ("water", "lava") and len(uniq) < 2:
+            print(f"    ! {name}: all {TVARIANTS} animation frames are identical "
+                  f"— it will look frozen (handled at runtime by the ripple layer)")
 
 
 # ============================================================== PROP ATLAS
@@ -447,9 +534,78 @@ def build_icons():
     print("fx_slash / fx_arrow / fx_bolt.png  cut from ULPC weapon layers")
 
 
+# ------------------------------------------------------------- liquid motion
+# The terrain atlas cannot animate water: the LPC water cells we sample are
+# near-identical, so cycling them shows nothing. Eliza Wyatt's FX sheets carry
+# the real surface animation instead - caustic sparkles that tile seamlessly,
+# a foot ripple and a splash - so the liquids get their movement from those.
+FXSRC = os.path.join(SRC, "fx")
+
+
+def _fx(name):
+    return Image.open(os.path.join(FXSRC, name)).convert("RGBA")
+
+
+def ember(im):
+    """Recolour a water caustic into lava ember light, keeping its shape."""
+    out = im.copy()
+    px = out.load()
+    for y in range(out.height):
+        for x in range(out.width):
+            r, g, b, a = px[x, y]
+            if a == 0:
+                continue
+            lum = (r * 0.30 + g * 0.59 + b * 0.11) / 255.0
+            px[x, y] = (255,
+                        int(60 + 150 * lum),
+                        int(20 * lum),
+                        a)
+    return out
+
+
+def build_water_fx():
+    refl = _fx("Water_Reflections.png")     # 4 frames x 3 rows of 32px
+    ripple = _fx("WaterRipple.png")         # 4 frames, foot ripple
+    splash = _fx("Splash.png")              # 6 frames of 64x32
+
+    dense = [tile_at(refl, f, 0) for f in range(4)]
+    sparse = [tile_at(refl, f, 1) for f in range(4)]
+    drops = [tile_at(refl, f, 2) for f in range(4)]
+    feet = [tile_at(ripple, f, 0) for f in range(4)]
+
+    rows = [dense, sparse,
+            [ember(c) for c in dense], [ember(c) for c in sparse],
+            drops, feet]
+    sheet = Image.new("RGBA", (TILE * 4, TILE * len(rows)), (0, 0, 0, 0))
+    for ri, row in enumerate(rows):
+        for f, cell in enumerate(row):
+            sheet.paste(cell, (f * TILE, ri * TILE))
+    sheet.save(os.path.join(OUT, "water_fx.png"))
+
+    # The caustics must differ frame to frame or the surface reads as frozen -
+    # the exact failure the terrain atlas had. Check it rather than assume it.
+    for label, row in (("caustic-dense", dense), ("caustic-sparse", sparse)):
+        deltas = []
+        for f in range(4):
+            a, b = row[f], row[(f + 1) % 4]
+            deltas.append(sum(abs(p - q) for p, q in
+                              zip(a.tobytes(), b.tobytes())) / (TILE * TILE * 4))
+        worst = min(deltas)
+        flag = "" if worst > 1.0 else "   << TOO STATIC"
+        print(f"    {label} frame deltas "
+              f"{[round(d, 2) for d in deltas]}{flag}")
+
+    strip = Image.new("RGBA", (64 * 6, 32), (0, 0, 0, 0))
+    for f in range(6):
+        strip.paste(splash.crop((f * 64, 0, f * 64 + 64, 32)), (f * 64, 0))
+    strip.save(os.path.join(OUT, "splash.png"))
+    print("water_fx.png (6 rows x 4) + splash.png (6 frames) <- LPC FX sheets")
+
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
     build_terrain()
+    build_water_fx()
     build_props()
     build_characters()
     build_monsters()

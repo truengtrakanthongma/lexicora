@@ -27,6 +27,13 @@ Licence: **CC-BY 3.0 / OGA-BY 3.0** (attribution required, no share-alike)
 | Grass tufts, flowers, mushrooms | `plants_summer/autumn.png`, `flowers.png`, `mushrooms.png` |
 | Shrines (stone pillars) | `Structure/Pillars/Stone Pillar A.png` |
 | Word vials | `Objects/Small Items/Flowers.png` |
+| Water and lava surface caustics, raindrop rings | `FX/Water Reflections.png` |
+| Ripple around feet in water | `FX/WaterRipple.png` |
+| Splash | `FX/Splash.png` |
+
+The four water FX sheets are by **Eliza Wyatt (DeathsDarling)** under
+**OGA-BY 3.0** (`assets/src/lpc/fx/Credits.txt`). The lava surface uses the
+same caustics recoloured to ember light.
 
 Artists credited in the upstream per-folder `Credits.txt` (copied to
 `assets/src/lpc/Credits.txt`) include **Eliza Wyatt (DeathsDarling)**,
