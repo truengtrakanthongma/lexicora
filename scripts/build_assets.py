@@ -394,9 +394,6 @@ def build_characters():
 # Monsters reuse the ULPC body variants (goblin-green child, orc muscular,
 # skeleton, fur bodies...) plus a gear layer, so they match the player art.
 MON_SRC = os.path.join(ULPC, "mon")
-MON_FRAMES = 2          # a two-frame idle bob, taken from the walk cycle
-MON_ROW = WALK_ROW["down"]
-
 # (name, body, head, gear layers) — the head is its own ULPC layer, so a
 # headless body is what you get if you forget it.
 MONSTERS = [
@@ -425,37 +422,43 @@ BOSSES = [
 ]
 
 
-def _crop(path, frame):
+def _crop(path, row, frame):
     if not os.path.exists(path):
         return None
     im = Image.open(path).convert("RGBA")
-    if im.height < (MON_ROW + 1) * FRAME:
+    if im.height < (row + 1) * FRAME:
         return None
-    return im.crop((frame * FRAME, MON_ROW * FRAME, (frame + 1) * FRAME, (MON_ROW + 1) * FRAME))
+    return im.crop((frame * FRAME, row * FRAME, (frame + 1) * FRAME, (row + 1) * FRAME))
 
 
-def _mon_cell(body_file, head_file, gear, frame):
-    base = _crop(os.path.join(MON_SRC, body_file), frame)
+def _mon_cell(body_file, head_file, gear, row, frame):
+    base = _crop(os.path.join(MON_SRC, body_file), row, frame)
     if base is None:
         sys.exit(f"missing monster body: {body_file}")
     for layer_path in ([os.path.join(MON_SRC, head_file)] +
                        [os.path.join(ULPC, g + ".png") for g in gear]):
-        piece = _crop(layer_path, frame)
+        piece = _crop(layer_path, row, frame)
         if piece is not None:
             base = Image.alpha_composite(base, piece)
     return base
 
 
 def build_monsters():
+    # Same layout as the player sheets: 9 walk frames across, four directions
+    # down, so a monster faces where it is actually heading instead of always
+    # staring at the camera through a two-frame bob.
     for out_name, roster in (("monsters.png", MONSTERS), ("bosses.png", BOSSES)):
-        sheet = Image.new("RGBA", (FRAME * MON_FRAMES, FRAME * len(roster)), (0, 0, 0, 0))
+        sheet = Image.new("RGBA",
+                          (FRAME * WALK_FRAMES, FRAME * len(ENGINE_DIRS) * len(roster)),
+                          (0, 0, 0, 0))
         for i, (name, body_file, head_file, gear) in enumerate(roster):
-            for f in range(MON_FRAMES):
-                # walk frames 0 and 4 read as a gentle idle sway
-                cell = _mon_cell(body_file, head_file, gear, 0 if f == 0 else 4)
-                sheet.paste(cell, (f * FRAME, i * FRAME))
+            for di, d in enumerate(ENGINE_DIRS):
+                for f in range(WALK_FRAMES):
+                    cell = _mon_cell(body_file, head_file, gear, WALK_ROW[d], f)
+                    sheet.paste(cell, (f * FRAME, (i * len(ENGINE_DIRS) + di) * FRAME))
         sheet.save(os.path.join(OUT, out_name))
-        print(f"{out_name}  {sheet.size}  ({len(roster)} kinds from ULPC bodies)")
+        print(f"{out_name}  {sheet.size}  ({len(roster)} kinds x 4 directions "
+              f"x {WALK_FRAMES} frames from ULPC bodies)")
 
 
 

@@ -60,11 +60,22 @@ const lesson = page.locator('#btn-lesson-close');
 if (await lesson.isVisible()) await lesson.click();
 await page.waitForTimeout(600);
 
-// Frames one second apart: if the liquids animate, the pixels must differ.
+// Walk for a while so movement, footfalls and collision all actually run.
+const DIRS = ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'];
+for (const k of DIRS) {
+  await page.keyboard.down(k);
+  await page.waitForTimeout(700);
+  await page.keyboard.up(k);
+}
+
 const frames = [];
 for (let i = 0; i < 3; i++) {
+  // Half the shots are taken mid-stride, so the walk cycle and its dust show.
+  if (i > 0) await page.keyboard.down('ArrowDown');
+  await page.waitForTimeout(400);
   frames.push(await page.locator('#world').screenshot({ path: `${OUT}/z${ZONE}_f${i}.png` }));
-  await page.waitForTimeout(500);
+  await page.keyboard.up('ArrowDown');
+  await page.waitForTimeout(200);
 }
 const delta = (a, b) => {
   let n = 0;

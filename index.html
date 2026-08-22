@@ -1216,7 +1216,7 @@ function findSpawn(){
 }
 
 // ═══════════════════════════════════════════════════════════════ PLAYER
-const player = {x:0, y:0, dir:0, anim:0, moving:false, speed:132, iframe:0};
+const player = {x:0, y:0, dir:0, anim:0, moving:false, speed:132, iframe:0, lastStep:-1};
 const cam = {x:0, y:0};
 
 const cv = $('world'), ctx = cv.getContext('2d', {alpha:false});
@@ -1238,15 +1238,97 @@ function puff(x,y,color,n=8,spd=40){
   for(let i=0;i<n;i++){
     const a = Math.random()*Math.PI*2;
     particles.push({x,y,vx:Math.cos(a)*spd*(.4+Math.random()),vy:Math.sin(a)*spd*(.4+Math.random())-20,
-                    life:.6+Math.random()*.4, max:1, color, r:1.5+Math.random()*2});
+                    life:.6+Math.random()*.4, max:1, color, r:1.5+Math.random()*2, glow:true});
   }
+}
+// Ground scuff: a couple of low, slow, gravity-bound flecks in the colour of
+// whatever is underfoot. Kicked off once per footfall, not once per frame.
+function scuff(x, y, color){
+  if(REDUCED) return;
+  for(let i=0;i<3;i++){
+    particles.push({x:x+(Math.random()-.5)*8, y:y-1,
+                    vx:(Math.random()-.5)*20, vy:-12-Math.random()*14,
+                    life:.34+Math.random()*.22, max:.56, color,
+                    r:1+Math.random()*1.4, grav:150});
+  }
+}
+// What a footstep kicks up, indexed the same way as the terrain atlas rows.
+const FOOT_DUST = ['#b6d47e','#8fbc6c','#efd9a6','#ffffff','#b9c2c8','#8e7f76',
+                   '#a988c4','#c0996a','#c3cad0','#bfe6f2','#e6f7ff','#ffb347'];
+function footfall(){
+  const tx = Math.floor(player.x/TILE), ty = Math.floor(player.y/TILE);
+  if(tx<0||ty<0||tx>=ZW||ty>=ZH) return;
+  const t = world.tiles[tIdx(tx,ty)];
+  if(t === TERRAIN_ROWS.water){ splash(player.x, player.y); }
+  else if(t === TERRAIN_ROWS.lava){ puff(player.x, player.y-2, '#ffb347', 3, 22); }
+  else scuff(player.x, player.y, FOOT_DUST[t] || '#c8c8c8');
+  sfx.step();
+}
+
+// Splash frames from the LPC FX sheet, played where a foot meets water.
+const splashes = [];
+function splash(x, y){
+  if(REDUCED || !IMG.splash) return;
+  splashes.push({x, y, t:0});
 }
 const ambient = [];
 function seedAmbient(){
   ambient.length = 0;
   for(let i=0;i<70;i++) ambient.push({x:Math.random()*VW, y:Math.random()*VH, s:.3+Math.random(), r:1+Math.random()*2, p:Math.random()*Math.PI*2});
 }
-let shake = 0;
+// Trauma-based shake. White noise scaled by a linear decay reads as a
+// rendering glitch; trauma squared, driven by smooth noise, reads as a jolt
+// that settles. The offset is quantised to whole device pixels, because a
+// fractional camera resamples every sprite and turns the pixel art to mush.
+let trauma = 0;
+const addTrauma = v => { trauma = Math.min(1, trauma + v); };
+function shakeOffset(t){
+  if(REDUCED || trauma <= 0) return [0, 0];
+  const s = trauma*trauma*7, q = 1/SCALE;
+  return [Math.round(s*(noise2(t*24, 0, 11)*2-1)/q)*q,
+          Math.round(s*(noise2(0, t*24, 12)*2-1)/q)*q];
+}
+
+// ── grounding and damage feedback ──────────────────────────────────────────
+// Without a contact shadow every sprite looks pasted onto the tiles rather
+// than standing on them; it is the single cheapest thing that sells depth.
+function shadow(x, y, rx, alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(Math.round(x), Math.round(y)-1, rx, Math.max(3, rx*.36), 0, 0, 7);
+  ctx.fill();
+  ctx.restore();
+}
+
+// A hurt sprite used to blink out of existence every other frame, which reads
+// as a rendering fault. Tinting it instead keeps the character on screen and
+// still says "that hurt".
+const flashCv = document.createElement('canvas');
+flashCv.width = flashCv.height = CH;
+const flashCx = flashCv.getContext('2d');
+flashCx.imageSmoothingEnabled = false;
+function drawFlashed(img, sx, sy, dx, dy, amount, colour){
+  ctx.drawImage(img, sx, sy, CH, CH, dx, dy, CH, CH);
+  if(amount <= 0) return;
+  // Pulse so a long invulnerability window still reads as repeated impacts.
+  const a = Math.min(.85, amount) * (REDUCED ? .5 : .5 + .5*Math.abs(Math.sin(amount*13)));
+  if(a < .02) return;
+  flashCx.clearRect(0, 0, CH, CH);
+  flashCx.drawImage(img, sx, sy, CH, CH, 0, 0, CH, CH);
+  flashCx.globalCompositeOperation = 'source-atop';
+  flashCx.fillStyle = colour;
+  flashCx.fillRect(0, 0, CH, CH);
+  flashCx.globalCompositeOperation = 'source-over';
+  ctx.save();
+  ctx.globalAlpha = a;
+  ctx.drawImage(flashCv, dx, dy);
+  ctx.restore();
+}
+
+// monsters.png / bosses.png: nine walk frames across, four facings per kind.
+const monRow = (type, face) => type*4 + face;
 
 // ── liquid surface ─────────────────────────────────────────────────────────
 // water_fx.png rows: 0 caustics, 1 sparkles, 2 embers, 3 dim embers,
@@ -1313,7 +1395,7 @@ function drawWorld(dt){
   const Z = ZONES[zone];
   ctx.fillStyle = '#10222f'; ctx.fillRect(0,0,VW,VH);
 
-  const sx = shake ? (Math.random()-.5)*shake : 0, sy = shake ? (Math.random()-.5)*shake : 0;
+  const [sx, sy] = shakeOffset(performance.now()/1000);
   const camX = Math.round(cam.x - VW/(2*SCALE)) + sx, camY = Math.round(cam.y - VH/(2*SCALE)) + sy;
 
   ctx.save();
@@ -1367,7 +1449,9 @@ function drawWorld(dt){
     if(d.kind === 'prop'){
       const p = d.o;
       const m = PROPS[p.type];
-      if(IMG.props && m) ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h,
+      if(!IMG.props || !m) continue;
+      shadow(p.x, p.y, m.w*.34, .30);
+      ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h,
         Math.round(p.x-m.w/2), Math.round(p.y-m.h), m.w, m.h);
     } else if(d.kind === 'crystal'){
       const c = d.o, bob = Math.sin(t*2.4 + c.x*.01)*3;
@@ -1377,35 +1461,65 @@ function drawWorld(dt){
       if(IMG.props && vm) ctx.drawImage(IMG.props, vm.x, vm.y, vm.w, vm.h,
         Math.round(c.x-vm.w/2), Math.round(c.y-vm.h/2+bob), vm.w, vm.h);
     } else if(d.kind === 'boss'){
-      const b = d.o, f = Math.floor(t*2.2)%2;
-      ctx.save(); ctx.globalAlpha = .4; ctx.fillStyle = '#000';
-      ctx.beginPath(); ctx.ellipse(b.x, b.y-4, 30, 9, 0, 0, 7); ctx.fill(); ctx.restore();
+      const b = d.o;
+      const fr = 1 + Math.floor(t*6)%(CH_FRAMES-1);   // bosses pace on the spot
+      shadow(b.x, b.y-4, 30, .42);
       if(IMG.bosses){
-        ctx.save(); ctx.translate(b.x, b.y);ctx.scale(1.5,1.5);
-        ctx.drawImage(IMG.bosses, f*CH, Z.boss*CH, CH, CH, -CH/2, -CH_FOOT, CH, CH);
+        ctx.save(); ctx.translate(b.x, b.y); ctx.scale(1.5,1.5);
+        ctx.drawImage(IMG.bosses, fr*CH, monRow(Z.boss, 0)*CH, CH, CH, -CH/2, -CH_FOOT, CH, CH);
         ctx.restore();
       }
     } else if(d.kind === 'mon'){
-      const m = d.o, f = Math.floor(t*2.6 + m.x)%2;
-      if(IMG.monsters) ctx.drawImage(IMG.monsters, f*CH, m.type*CH, CH, CH,
-        Math.round(m.x-CH/2), Math.round(m.y-CH_FOOT), CH, CH);
+      const m = d.o;
+      const fr = m.walking ? 1 + Math.floor(m.anim)%(CH_FRAMES-1) : 0;
+      shadow(m.x, m.y, 15, .34);
+      // A monster you just fled flashes pale while it is too dazed to re-engage
+      if(IMG.monsters) drawFlashed(IMG.monsters, fr*CH, monRow(m.type, m.face||0)*CH,
+        Math.round(m.x-CH/2), Math.round(m.y-CH_FOOT),
+        m.iframe > 0 ? Math.min(1, m.iframe) : 0, '#cfe4ff');
     } else {
       const im = heroImg();
       // frame 0 is the standing pose; the cycle runs through the other eight
       const fr = player.moving ? 1 + Math.floor(player.anim*10)%(CH_FRAMES-1) : 0;
-      const blink = player.iframe > 0 && Math.floor(player.iframe*14)%2;
-      if(im && !blink) ctx.drawImage(im, fr*CH, player.dir*CH, CH, CH,
-        Math.round(player.x-CH/2), Math.round(player.y-CH_FOOT), CH, CH);
+      // Standing still, the hero breathes rather than freezing mid-pose.
+      const breath = (player.moving || REDUCED) ? 0 : (Math.sin(t*2.1) > .6 ? -1 : 0);
+      shadow(player.x, player.y, 13, .36);
+      if(im) drawFlashed(im, fr*CH, player.dir*CH,
+        Math.round(player.x-CH/2), Math.round(player.y-CH_FOOT+breath),
+        player.iframe > 0 ? Math.min(1, player.iframe) : 0, '#ff5a4a');
     }
   }
 
-  for(let i=particles.length-1;i>=0;i--){
-    const p = particles[i];
-    p.life -= dt; if(p.life<=0){ particles.splice(i,1); continue; }
-    p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 90*dt;
-    ctx.globalAlpha = Math.max(0,p.life/p.max);
-    ctx.fillStyle = p.color;
-    ctx.fillRect(Math.round(p.x-p.r), Math.round(p.y-p.r), p.r*2, p.r*2);
+  for(let i=splashes.length-1;i>=0;i--){
+    const s = splashes[i];
+    s.t += dt;
+    const f = Math.floor(s.t*16);
+    if(f > 5){ splashes.splice(i,1); continue; }
+    ctx.drawImage(IMG.splash, f*64, 0, 64, 32,
+                  Math.round(s.x-32), Math.round(s.y-24), 64, 32);
+  }
+
+  // Sparks glow, ground scuff does not — additive dust over dark rock just
+  // looked like fireflies. Fade out on a curve so nothing pops off screen.
+  for(const glow of [false, true]){
+    let drew = false;
+    for(let i=particles.length-1;i>=0;i--){
+      const p = particles[i];
+      if(!!p.glow !== glow) continue;
+      if(!drew){
+        ctx.save();
+        if(glow) ctx.globalCompositeOperation = 'lighter';
+        drew = true;
+      }
+      p.life -= dt; if(p.life<=0){ particles.splice(i,1); continue; }
+      p.x += p.vx*dt; p.y += p.vy*dt; p.vy += (p.grav||90)*dt;
+      const k = Math.max(0, p.life/p.max);
+      ctx.globalAlpha = k*k;
+      ctx.fillStyle = p.color;
+      const r = Math.max(1, Math.round(p.r*(.5+.5*k)));
+      ctx.fillRect(Math.round(p.x-r), Math.round(p.y-r), r*2, r*2);
+    }
+    if(drew) ctx.restore();
   }
   ctx.globalAlpha = 1;
   ctx.restore();
@@ -1433,7 +1547,7 @@ function drawWorld(dt){
   g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(18,10,26,.62)');
   ctx.fillStyle = g; ctx.fillRect(0,0,VW,VH);
 
-  if(shake > 0) shake = Math.max(0, shake - dt*46);
+  if(trauma > 0) trauma = Math.max(0, trauma - dt*1.9);
 }
 
 // ═════════════════════════════════════════════════════════════ MINIMAP
@@ -1806,8 +1920,9 @@ function startBattle(kind, target){
   $('enemy-name').textContent = isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
   $('battle-topic').textContent = Z.topic;
   const e = $('battle-enemy'); e.className = '';
-  if(isBoss){ e.src = spriteURL(IMG.bosses, 0, Z.boss*CH, CH, CH); e.style.height = '126px'; }
-  else { e.src = spriteURL(IMG.monsters, 0, target.type*CH, CH, CH); e.style.height = '104px'; }
+  // face 1 = left, so the enemy looks back across the duel at your hero
+  if(isBoss){ e.src = spriteURL(IMG.bosses, 0, monRow(Z.boss,1)*CH, CH, CH); e.style.height = '126px'; }
+  else { e.src = spriteURL(IMG.monsters, 0, monRow(target.type,1)*CH, CH, CH); e.style.height = '104px'; }
   // the duel: your character faces the monster from the left
   const h = $('battle-hero'); h.className = '';
   h.src = heroImg() ? spriteURL(heroImg(), 0, 2*CH, CH, CH) : '';
@@ -2100,7 +2215,13 @@ function update(dt){
     player.x = clamp(player.x, TILE, WPX-TILE);
     player.y = clamp(player.y, TILE, HPX-TILE);
     player.anim += dt;
-    if(Math.floor(player.anim*7)%4 === 1 && Math.random() < .12) sfx.step();
+    // Two contacts per eight-frame cycle. Firing on the frame change rather
+    // than on a random roll means the sound and the dust land on the step.
+    const step = Math.floor(player.anim*10);
+    if(step !== player.lastStep){
+      player.lastStep = step;
+      if(step % 4 === 1) footfall();
+    }
   }
   if(player.iframe > 0) player.iframe -= dt;
 
@@ -2137,11 +2258,18 @@ function update(dt){
     if(chasing) m.dir = Math.atan2(player.y-m.y, player.x-m.x);
     else if(m.timer <= 0){ m.dir = Math.random()*Math.PI*2; m.timer = 1.4+Math.random()*2.2; }
     const sp = (chasing ? 44 : 20)*dt;
-    const nx = m.x+Math.cos(m.dir)*sp, ny = m.y+Math.sin(m.dir)*sp;
+    const dx = Math.cos(m.dir), dy = Math.sin(m.dir);
+    const nx = m.x+dx*sp, ny = m.y+dy*sp;
+    const px = m.x, py = m.y;
     if(!solidAt(nx, m.y)) m.x = nx; else m.dir = Math.random()*Math.PI*2;
     if(!solidAt(m.x, ny)) m.y = ny; else m.dir = Math.random()*Math.PI*2;
+    // Facing row and cycle phase, so a monster walks the way it is heading.
+    m.face = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0);
+    const moved = Math.hypot(m.x-px, m.y-py);
+    m.anim = (m.anim || 0) + moved*.09;
+    m.walking = moved > .01;
     if(d < 21 && player.iframe <= 0 && m.iframe <= 0 && !battle){
-      shake = 9; startBattle('monster', m); return;
+      addTrauma(.6); startBattle('monster', m); return;
     }
   }
 
