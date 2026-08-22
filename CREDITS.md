@@ -27,6 +27,9 @@ Licence: **CC-BY 3.0 / OGA-BY 3.0** (attribution required, no share-alike)
 | Grass tufts, flowers, mushrooms | `plants_summer/autumn.png`, `flowers.png`, `mushrooms.png` |
 | Shrines (stone pillars) | `Structure/Pillars/Stone Pillar A.png` |
 | Word vials | `Objects/Small Items/Flowers.png` |
+| Village huts | `Structure/Structures/Brick House A/B.png`, `Paneled House A.png` |
+| Fountain, fences, signposts | `Structure/Misc/Fountain A.png`, `Structure/Fences/Plain Fence A.png`, `Structure/Signs/Sign Backgrounds A.png` |
+| Street lamps, barrels, crates | `Objects/Furniture/Lighting, Outdoors.png`, `Barrel.png`, `Crate.png` |
 | Water and lava surface caustics, raindrop rings | `FX/Water Reflections.png` |
 | Ripple around feet in water | `FX/WaterRipple.png` |
 | Splash | `FX/Splash.png` |
@@ -71,6 +74,7 @@ Layers used, with the authors listed upstream:
 | Arming sword | ElizaWy; walk and down frames by JaidynReiman |
 | Recurve bow | Daniel Eddeland (daneeklu), gr3yh47, Johannes Sjölund (wulax), Pierre |
 | Gnarled staff | bluecarrot16 |
+| Villager bodies, heads, hair, robes, skirt, vest | as above — the sage, healer and scout are the same layer stack in different kits |
 
 The duel uses the same layers' attack and hurt animations (ULPC rows 0–20:
 spellcast, slash, shoot and hurt). The arming sword layer only covers the walk

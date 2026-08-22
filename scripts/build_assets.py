@@ -298,6 +298,26 @@ def build_props():
     for i, col in enumerate((0, 1)):             # row 2 holds the glass vials
         picks.append((f"vial{i}", vases.crop((col * TILE, 2 * TILE, (col + 1) * TILE, 3 * TILE)), False))
 
+    # ---- village: LPC ships whole buildings, so the huts are single cutouts
+    def take_village(sheet_name, label, count, solid, min_px=200, skip=0):
+        sheet = Image.open(os.path.join(SRC, "village", sheet_name)).convert("RGBA")
+        cuts = cutouts(sheet, min_px=min_px)[skip:skip + count]
+        for i, c in enumerate(cuts):
+            picks.append((f"{label}{i}", c, solid))
+        if not cuts:
+            print(f"    ! no cutouts from village/{sheet_name}")
+
+    take_village("Brick_House_A.png",   "house_a", 1, True, min_px=3000)
+    take_village("Brick_House_B.png",   "house_b", 1, True, min_px=3000)
+    take_village("Paneled_House_A.png", "house_c", 1, True, min_px=3000)
+    take_village("Fountain_A.png",      "fountain", 1, True, min_px=600)
+    # the fence sheet's first cutout is a full panel; the rest are posts
+    take_village("Plain_Fence_A.png",   "fence", 1, True, min_px=1200)
+    take_village("Lighting__Outdoors.png", "lamp", 2, True, min_px=250)
+    take_village("Barrel.png",          "barrel", 3, True, min_px=250)
+    take_village("Crate.png",           "crate", 2, True, min_px=250, skip=1)
+    take_village("Sign_Backgrounds_A.png", "sign", 1, True, min_px=250)
+
     if not picks:
         sys.exit("no props extracted")
 
@@ -386,6 +406,15 @@ def _battle_sheet(compose, attack):
     return sheet
 
 
+# The people who live in the hamlets, in the order the engine indexes them:
+# sage, healer, scout.
+VILLAGER_KITS = [
+    ("sage",   ["body", "legs_leggings", "feet_boots", "torso_robe", "head", "hair_elder"]),
+    ("healer", ["body_f", "legs_skirt", "feet_boots", "torso_robe_f", "head_f", "hair_f"]),
+    ("scout",  ["body", "legs_pants", "feet_boots", "torso_vest", "head", "hair"]),
+]
+
+
 def build_characters():
     cache = {}
 
@@ -415,6 +444,20 @@ def build_characters():
                 os.path.join(OUT, f"battle_{cls}_s{ti}.png"))
         print(f"battle_{cls}_s0..3.png  {FRAME*BATTLE_COLS}x{FRAME*len(BATTLE_ROWS)} "
               f"({CLASS_ATTACK[cls]} / hurt / idle, from ULPC layers)")
+
+    # Villagers share the pipeline: the same layers, different kits, so the
+    # people you meet in a hamlet match the hero standing next to them.
+    sheet = Image.new("RGBA",
+                      (FRAME * WALK_FRAMES, FRAME * len(ENGINE_DIRS) * len(VILLAGER_KITS)),
+                      (0, 0, 0, 0))
+    for vi, (vname, stack) in enumerate(VILLAGER_KITS):
+        compose = stacked(stack)
+        for di, dname in enumerate(ENGINE_DIRS):
+            for f in range(WALK_FRAMES):
+                sheet.paste(compose(WALK_ROW[dname], f),
+                            (f * FRAME, (vi * len(ENGINE_DIRS) + di) * FRAME))
+    sheet.save(os.path.join(OUT, "villagers.png"))
+    print(f"villagers.png  {sheet.size}  ({len(VILLAGER_KITS)} villagers x 4 directions)")
 
     for cls, tiers in CLASS_KITS.items():
         for ti, stack in enumerate(tiers):

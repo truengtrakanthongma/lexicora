@@ -967,6 +967,8 @@ const CLASSES = {
 };
 const CLASS_KEYS = Object.keys(CLASSES);
 let VIAL_PROP = 0;
+// prop indices that emit light after dark, resolved once the atlas is loaded
+let lampTypes = new Set();
 
 const IMG = {};
 function loadImages(){
@@ -977,6 +979,7 @@ function loadImages(){
     fx_slash:'assets/fx_slash.png', fx_arrow:'assets/fx_arrow.png', fx_bolt:'assets/fx_bolt.png'
   };
   files.battle_mon = 'assets/battle_mon.png';
+  files.villagers = 'assets/villagers.png';
   files.battle_boss = 'assets/battle_boss.png';
   for(const k of CLASS_KEYS) for(let i=0;i<4;i++){
     files[k+i] = `assets/player_${k}_s${i}.png`;
@@ -1050,6 +1053,7 @@ function freshState(profile, cls){
   const hp = 5 + c.bonusHP;
   return {
     profile, cls, xp:0, level:1, hp, hpMax:hp, gear:0, kills:0,
+    dayCount:0, healedOn:-1,
     cleared:ZONES.map(()=>false),
     stars:ZONES.map(()=>0),
     words:ZONES.map(z => z.words.map(()=>false)),
@@ -1084,7 +1088,7 @@ const ZW = 56, ZH = 42;                 // tiles in one zone
 const WPX = ZW*TILE, HPX = ZH*TILE;
 const world = {
   tiles:new Uint8Array(ZW*ZH), solid:new Uint8Array(ZW*ZH),
-  props:[], crystals:[], shrine:null, boss:null, monsters:[]
+  props:[], crystals:[], shrine:null, boss:null, monsters:[], npcs:[], village:null
 };
 const tIdx = (x,y) => y*ZW + x;
 
@@ -1156,6 +1160,8 @@ function buildZone(zi){
     placed++;
   }
 
+  buildVillage(zi, glX, glY, gp);
+
   // ---- boss lair, far from the entrance
   const bx = zi%2===0 ? ZW-8 : 7, by = zi<5 ? 6 : ZH-7;
   world.boss = {x:bx*TILE+TILE/2, y:by*TILE+TILE};
@@ -1167,12 +1173,77 @@ function buildZone(zi){
       mx = 3+Math.floor(Math.random()*(ZW-6));
       my = 3+Math.floor(Math.random()*(ZH-6));
       tries++;
-    } while((world.solid[tIdx(mx,my)] || Math.hypot(mx-glX,my-glY) < 9) && tries<120);
+      // the hamlet is a safe haven, so nothing spawns inside its square either
+    } while((world.solid[tIdx(mx,my)] || Math.hypot(mx-glX,my-glY) < 9 ||
+             Math.hypot(mx*TILE-world.village.x, my*TILE-world.village.y) < (VILLAGE_R+3)*TILE)
+            && tries<120);
     world.monsters.push({
       x:mx*TILE+TILE/2, y:my*TILE+TILE/2, dead:false, respawn:0,
       type:Z.mon[m % Z.mon.length], dir:Math.random()*Math.PI*2, timer:Math.random()*2, iframe:0
     });
   }
+}
+
+// ── the hamlet ─────────────────────────────────────────────────────────────
+// Every zone has somewhere to arrive at: a paved square a short walk from the
+// landing glade, with three huts, a fountain, lamps you can see burning at
+// night, and the three people who live there.
+const NPC_KINDS = [
+  {key:'sage',   thai:'นักปราชญ์', icon:'📜'},
+  {key:'healer', thai:'หมอยา',     icon:'💚'},
+  {key:'scout',  thai:'นักสอดแนม', icon:'🧭'},
+];
+const VILLAGE_R = 5;                // tiles from the square's centre
+function buildVillage(zi, glX, glY, pathTile){
+  world.npcs = [];
+  // Sited on the east-west road a short walk from the glade, so there is
+  // always a way to reach it — a hamlet on the far bank of an unbridged river
+  // is a hamlet nobody visits. Where the road meets the river the square paves
+  // a ford over it.
+  const vx = clamp(glX + (zi%2 ? -13 : 13), VILLAGE_R+2, ZW-VILLAGE_R-3);
+  const vy = clamp(Math.round(ZH/2 + Math.sin(vx*.055 + zi*2)*2.6),
+                   VILLAGE_R+2, ZH-VILLAGE_R-3);
+  world.village = {x:vx*TILE+TILE/2, y:vy*TILE+TILE/2};
+
+  // Pave the square and clear whatever the scenery pass had scattered there.
+  for(let y=vy-VILLAGE_R; y<=vy+VILLAGE_R; y++) for(let x=vx-VILLAGE_R; x<=vx+VILLAGE_R; x++){
+    if(x<1||y<1||x>=ZW-1||y>=ZH-1) continue;
+    if(Math.hypot(x-vx, y-vy) > VILLAGE_R) continue;
+    const i = tIdx(x,y);
+    world.tiles[i] = pathTile;
+    world.solid[i] = 0;
+  }
+  world.props = world.props.filter(p => {
+    const px = Math.floor(p.x/TILE), py = Math.floor(p.y/TILE)-1;
+    return Math.hypot(px-vx, py-vy) > VILLAGE_R;
+  });
+
+  const place = (names, tx, ty) => {
+    const pool = propsNamed(names);
+    if(!pool.length || tx<1 || ty<1 || tx>=ZW-1 || ty>=ZH-1) return;
+    const type = pool[Math.floor(hash2(tx, ty, zi*17+3)*pool.length)];
+    world.props.push({x:tx*TILE+TILE/2, y:ty*TILE+TILE, type});
+    if(PROPS[type] && PROPS[type].s) world.solid[tIdx(tx,ty)] = 1;
+  };
+  // Huts around the rim, doors facing in; the square itself stays walkable.
+  place('house_a', vx-4, vy-2);
+  place('house_b', vx+3, vy-2);
+  place('house_c', vx-1, vy+4);
+  place('fountain', vx, vy);
+  place('lamp', vx-3, vy+2);
+  place('lamp', vx+3, vy+2);
+  place('barrel', vx+4, vy+1);
+  place('crate', vx-4, vy+1);
+  place('sign', vx, vy-4);
+
+  NPC_KINDS.forEach((k, i) => {
+    // spread around the square, clear of the fountain in the middle
+    const a = (i/NPC_KINDS.length)*Math.PI*2 + zi;
+    const nx = vx + Math.cos(a)*3.4, ny = vy + Math.sin(a)*3.0 + 1;
+    world.npcs.push({kind:i, x:nx*TILE, y:ny*TILE, face:0, anim:0,
+                     home:{x:nx*TILE, y:ny*TILE}, timer:Math.random()*3,
+                     dir:Math.random()*Math.PI*2, walking:false});
+  });
 }
 
 function solidAt(px,py){
@@ -1495,6 +1566,7 @@ function drawWorld(dt){
   for(const c of world.crystals) if(!c.got && vis(c.x,c.y)) draws.push({y:c.y, kind:'crystal', o:c});
   if(!S.cleared[zone] && vis(world.boss.x, world.boss.y, 128)) draws.push({y:world.boss.y, kind:'boss', o:world.boss});
   for(const m of world.monsters) if(!m.dead && vis(m.x,m.y)) draws.push({y:m.y, kind:'mon', o:m});
+  for(const n of world.npcs) if(vis(n.x,n.y)) draws.push({y:n.y, kind:'npc', o:n});
   draws.push({y:player.y, kind:'player'});
   draws.sort((a,b) => a.y - b.y);
 
@@ -1532,6 +1604,23 @@ function drawWorld(dt){
       if(IMG.bosses){
         ctx.save(); ctx.translate(b.x, b.y); ctx.scale(1.5,1.5);
         ctx.drawImage(IMG.bosses, fr*CH, monRow(Z.boss, 0)*CH, CH, CH, -CH/2, -CH_FOOT, CH, CH);
+        ctx.restore();
+      }
+    } else if(d.kind === 'npc'){
+      const n = d.o;
+      const fr = n.walking ? 1 + Math.floor(n.anim)%(CH_FRAMES-1) : 0;
+      shadow(n.x, n.y, 13, .34);
+      if(IMG.villagers) ctx.drawImage(IMG.villagers, fr*CH, (n.kind*4 + n.face)*CH, CH, CH,
+        Math.round(n.x-CH/2), Math.round(n.y-CH_FOOT), CH, CH);
+      // A marker over anyone you can talk to, so villagers read as people to
+      // approach rather than as scenery that happens to move.
+      if(near(n, 62)){
+        const k = NPC_KINDS[n.kind];
+        ctx.save();
+        ctx.globalAlpha = .9;
+        ctx.font = '13px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(k.icon, Math.round(n.x), Math.round(n.y - 46 + Math.sin(t*3)*2));
         ctx.restore();
       }
     } else if(d.kind === 'mon'){
@@ -1641,6 +1730,18 @@ function drawWorld(dt){
     glow.addColorStop(0, `rgba(255,206,132,${(sky.dark*.34).toFixed(3)})`);
     glow.addColorStop(1, 'rgba(255,180,90,0)');
     ctx.fillStyle = glow; ctx.fillRect(0,0,VW,VH);
+    // The hamlet's lamps light up after dark — the reason to walk back to it.
+    for(const p of world.props){
+      if(!lampTypes.has(p.type)) continue;
+      const lx = (p.x - camX)*SCALE, ly = (p.y - 66 - camY)*SCALE;
+      if(lx < -180 || lx > VW+180 || ly < -180 || ly > VH+180) continue;
+      const flick = REDUCED ? 1 : .9 + .1*noise2(nowMs/260, p.x*.01, 9);
+      const lg = ctx.createRadialGradient(lx, ly, 0, lx, ly, 132*flick);
+      lg.addColorStop(0, `rgba(255,206,138,${(sky.dark*.6*flick).toFixed(3)})`);
+      lg.addColorStop(.45, `rgba(255,178,96,${(sky.dark*.2*flick).toFixed(3)})`);
+      lg.addColorStop(1, 'rgba(255,160,70,0)');
+      ctx.fillStyle = lg; ctx.fillRect(0,0,VW,VH);
+    }
     ctx.restore();
   }
 
@@ -1745,6 +1846,17 @@ function drawMinimap(){
     mmx.fillRect(world.boss.x/TILE*sx-2, world.boss.y/TILE*sy-2, 5, 5); }
   mmx.fillStyle='#ffe08a';
   mmx.fillRect(world.shrine.x/TILE*sx-2, world.shrine.y/TILE*sy-2, 4, 4);
+  // The hamlet, so it can actually be found: it is only a dozen tiles away,
+  // but a dozen tiles of trees is enough to walk straight past it.
+  if(world.village){
+    mmx.fillStyle = '#ffb35c'; mmx.strokeStyle = '#4a2f1e'; mmx.lineWidth = 1;
+    const vx = world.village.x/TILE*sx, vy = world.village.y/TILE*sy;
+    mmx.beginPath();
+    mmx.moveTo(vx, vy-4); mmx.lineTo(vx+4, vy); mmx.lineTo(vx+2, vy);
+    mmx.lineTo(vx+2, vy+4); mmx.lineTo(vx-2, vy+4); mmx.lineTo(vx-2, vy);
+    mmx.lineTo(vx-4, vy); mmx.closePath();
+    mmx.fill(); mmx.stroke();
+  }
   mmx.fillStyle = '#fff'; mmx.strokeStyle = '#3a2716'; mmx.lineWidth = 1;
   mmx.beginPath(); mmx.arc(player.x/TILE*sx, player.y/TILE*sy, 3, 0, 7); mmx.fill(); mmx.stroke();
 }
@@ -2066,6 +2178,11 @@ function enterZone(zi){
   $('hud').style.display = 'block';
   rollWeather(); seedAmbient(); refreshHUD();
   toast('🚩', 'เข้าสู่ '+ZONES[zi].thai);
+  setTimeout(() => {
+    if(mode !== 'play' || !world.village) return;
+    const side = world.village.x > player.x ? 'ตะวันออก' : 'ตะวันตก';
+    toast('🏘', `หมู่บ้านอยู่ทาง<b>${side}</b> · มีหมอยา นักปราชญ์ และนักสอดแนม`);
+  }, 2000);
   if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 650);
 }
 $('btn-to-map').onclick = () => { sfx.open(); openMap(); };
@@ -2363,12 +2480,55 @@ $('btn-flee').onclick = () => {
 function near(o, d){ return o && Math.hypot(o.x-player.x, o.y-player.y) < d; }
 function interact(){
   if(mode !== 'play' || battle) return;
+  const npc = world.npcs.find(n => near(n, 62));
+  if(npc){ talkTo(npc); return; }
   if(near(world.shrine, 58)){ openLesson(zone); return; }
   if(!S.cleared[zone] && near(world.boss, 76)){
     if(!S.lessonSeen[zone]){ toast('📜','อ่านศิลาจารึกก่อนท้าผู้พิทักษ์'); sfx.deny(); return; }
     startBattle('boss', world.boss); return;
   }
 }
+// What each villager is for. Nothing here hands out crystals — the hamlet is
+// support, so exploring still matters.
+const COMPASS = ['เหนือ','ตะวันออกเฉียงเหนือ','ตะวันออก','ตะวันออกเฉียงใต้',
+                 'ใต้','ตะวันตกเฉียงใต้','ตะวันตก','ตะวันตกเฉียงเหนือ'];
+function talkTo(n){
+  sfx.open();
+  const k = NPC_KINDS[n.kind];
+  // Face the person you are talking to; being ignored mid-sentence is rude.
+  n.face = Math.abs(player.x-n.x) > Math.abs(player.y-n.y)
+         ? (player.x < n.x ? 1 : 2) : (player.y < n.y ? 3 : 0);
+
+  if(k.key === 'sage'){ openLesson(zone); return; }
+
+  if(k.key === 'healer'){
+    const day = Math.floor(S.dayCount || 0);
+    if(S.hp >= S.hpMax){ toast(k.icon, 'หมอยา: “เจ้ายังแข็งแรงดี ไปเถอะ”'); return; }
+    if(S.healedOn === day){ toast(k.icon, 'หมอยา: “ยาหมดแล้ว พรุ่งนี้ค่อยมาใหม่”'); sfx.deny(); return; }
+    S.hp = S.hpMax; S.healedOn = day;
+    puff(n.x, n.y-20, '#8fe38a', 12, 44);
+    sfx.pickup(); refreshHUD(); save();
+    toast(k.icon, 'หมอยา: “ดื่มเสียสิ” · พลังชีวิตเต็มแล้ว');
+    return;
+  }
+
+  // scout: points at the nearest crystal you have not found yet
+  const left = world.crystals.filter(c => !c.got);
+  if(!left.length){
+    toast(k.icon, 'นักสอดแนม: “เจ้าเก็บคริสตัลครบแล้ว! ไปจัดการผู้พิทักษ์เลย”');
+    return;
+  }
+  let best = left[0], bd = Infinity;
+  for(const c of left){
+    const d = Math.hypot(c.x-player.x, c.y-player.y);
+    if(d < bd){ bd = d; best = c; }
+  }
+  const ang = Math.atan2(best.y-player.y, best.x-player.x);
+  // atan2 gives 0 at east and grows clockwise on screen; rotate so 0 is north
+  const dirName = COMPASS[(Math.round((ang*4/Math.PI) + 2) + 8) % 8];
+  toast(k.icon, `นักสอดแนม: “คริสตัลใกล้สุดอยู่ทาง<b>${dirName}</b> ราว ${Math.round(bd/TILE)} ช่อง”`);
+}
+
 function openLesson(zi){
   const Z = ZONES[zi];
   $('lesson-title').textContent = Z.topic;
@@ -2499,7 +2659,10 @@ function tick(now){
 }
 
 function update(dt){
+  const wasClock = clock;
   clock = (clock + dt/DAY_LENGTH) % 1;
+  // Midnight rolls the day over, which is what the healer's daily dose is on.
+  if(clock < wasClock && S) S.dayCount = (S.dayCount || 0) + 1;
   // Wind wanders on smooth noise rather than jumping, so gusts build and ease
   // instead of switching direction between one frame and the next.
   wind = (noise2(performance.now()/9000, 0, 7)*2 - 1);
@@ -2573,7 +2736,14 @@ function update(dt){
     if(m.iframe > 0) m.iframe -= dt;
     const d = Math.hypot(m.x-player.x, m.y-player.y);
     m.timer -= dt;
-    const chasing = d < 118 && player.iframe <= 0;
+    // Nothing follows you into the hamlet: it is the one place on the map
+    // where a child can stop and read the signs without being jumped.
+    const vd = world.village ? Math.hypot(m.x-world.village.x, m.y-world.village.y) : Infinity;
+    if(vd < (VILLAGE_R+2)*TILE){
+      m.dir = Math.atan2(m.y-world.village.y, m.x-world.village.x);
+      m.timer = 1.2;
+    }
+    const chasing = d < 118 && player.iframe <= 0 && vd > (VILLAGE_R+2)*TILE;
     if(chasing) m.dir = Math.atan2(player.y-m.y, player.x-m.x);
     else if(m.timer <= 0){ m.dir = Math.random()*Math.PI*2; m.timer = 1.4+Math.random()*2.2; }
     const sp = (chasing ? 44 : 20)*dt;
@@ -2589,6 +2759,27 @@ function update(dt){
     m.walking = moved > .01;
     if(d < 21 && player.iframe <= 0 && m.iframe <= 0 && !battle){
       addTrauma(.6); startBattle('monster', m); return;
+    }
+  }
+
+  // Villagers potter about their square. They never leave it, so you always
+  // know where to find the healer.
+  for(const n of world.npcs){
+    n.timer -= dt;
+    if(n.timer <= 0){ n.dir = Math.random()*Math.PI*2; n.timer = 1.6+Math.random()*3; }
+    const sp = 16*dt;
+    const nx = n.x + Math.cos(n.dir)*sp, ny = n.y + Math.sin(n.dir)*sp;
+    const far = Math.hypot(nx-n.home.x, ny-n.home.y) > 42;
+    if(far){ n.dir = Math.atan2(n.home.y-n.y, n.home.x-n.x); n.walking = false; continue; }
+    const px = n.x, py = n.y;
+    if(!solidAt(nx, n.y)) n.x = nx;
+    if(!solidAt(n.x, ny)) n.y = ny;
+    const moved = Math.hypot(n.x-px, n.y-py);
+    n.walking = moved > .01;
+    n.anim += moved*.09;
+    if(n.walking){
+      const dx = Math.cos(n.dir), dy = Math.sin(n.dir);
+      n.face = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0);
     }
   }
 
@@ -2684,6 +2875,7 @@ regForm.addEventListener('submit', e => {
 
 setupTouch();
 VIAL_PROP = (propsNamed('vial')[0] ?? 0);
+lampTypes = new Set(propsNamed('lamp'));
 loadImages().then(() => {
   resize();
   landingScene();
