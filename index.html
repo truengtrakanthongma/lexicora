@@ -1089,6 +1089,8 @@ const ZW = 56, ZH = 42;                 // tiles in one zone
 const WPX = ZW*TILE, HPX = ZH*TILE;
 const world = {
   tiles:new Uint8Array(ZW*ZH), solid:new Uint8Array(ZW*ZH),
+  // what the terrain blocks, before any prop is stamped on top of it
+  baseSolid:new Uint8Array(ZW*ZH),
   props:[], crystals:[], shrine:null, boss:null, monsters:[],
   npcs:[], village:null, campfire:null, drops:[]
 };
@@ -1121,6 +1123,7 @@ function buildZone(zi){
     world.solid[i] = blocked;
     if(x===0||y===0||x===ZW-1||y===ZH-1) world.solid[i] = 1;
   }
+  world.baseSolid.set(world.solid);
 
   // ---- scenery
   for(let y=2;y<ZH-2;y++) for(let x=2;x<ZW-2;x++){
@@ -1131,7 +1134,6 @@ function buildZone(zi){
       const pool = zonePropPool;
       const type = pool[Math.floor(hash2(x,y,zi*13+2)*pool.length)];
       world.props.push({x:x*TILE+TILE/2, y:y*TILE+TILE, type});
-      if(PROPS[type] && PROPS[type].s) world.solid[i] = 1;
     }
   }
 
@@ -1139,34 +1141,39 @@ function buildZone(zi){
   const glX = Math.floor(ZW/2), glY = Math.floor(ZH/2);
   world.props = world.props.filter(p => {
     const px = Math.floor(p.x/TILE), py = Math.floor(p.y/TILE)-1;
-    if(Math.hypot(px-glX, py-glY) > 3.4) return true;
-    world.solid[tIdx(px,py)] = 0;
-    return false;
+    return Math.hypot(px-glX, py-glY) > 3.4;
   });
 
   // ---- shrine
   const sx = glX+3, sy = glY-4;
   world.shrine = {x:sx*TILE+TILE/2, y:sy*TILE+TILE};
-  world.solid[tIdx(sx,sy)] = 1;
   world.props.push({x:world.shrine.x, y:world.shrine.y, type:shrineProp});
-
-  // ---- word crystals
-  let placed = 0, guard = 0;
-  while(placed < Z.words.length && guard < 5000){
-    guard++;
-    const x = 2+Math.floor(hash2(guard,zi,71)*(ZW-4));
-    const y = 2+Math.floor(hash2(zi,guard,113)*(ZH-4));
-    if(world.solid[tIdx(x,y)]) continue;
-    if(world.crystals.some(c => Math.abs(c.x-x*TILE)<TILE*4 && Math.abs(c.y-y*TILE)<TILE*4)) continue;
-    world.crystals.push({x:x*TILE+TILE/2, y:y*TILE+TILE/2, idx:placed, got:S.words[zi][placed]});
-    placed++;
-  }
 
   buildVillage(zi, glX, glY, gp);
 
   // ---- boss lair, far from the entrance
   const bx = zi%2===0 ? ZW-8 : 7, by = zi<5 ? 6 : ZH-7;
   world.boss = {x:bx*TILE+TILE/2, y:by*TILE+TILE};
+
+  // Props block their ground in one pass here, once the glade and the hamlet
+  // have finished adding and removing them; then the layout is checked and
+  // opened up if anything ended up walled off.
+  stampProps();
+  const {seen} = ensureReachable(glX, glY);
+
+  // ---- word crystals, on ground you can actually walk to
+  let placed = 0, guard = 0;
+  while(placed < Z.words.length && guard < 5000){
+    guard++;
+    const x = 2+Math.floor(hash2(guard,zi,71)*(ZW-4));
+    const y = 2+Math.floor(hash2(zi,guard,113)*(ZH-4));
+    if(!seen[tIdx(x,y)]) continue;
+    if(world.crystals.some(c => Math.abs(c.x-x*TILE)<TILE*4 && Math.abs(c.y-y*TILE)<TILE*4)) continue;
+    world.crystals.push({x:x*TILE+TILE/2, y:y*TILE+TILE/2, idx:placed, got:S.words[zi][placed]});
+    placed++;
+  }
+  if(placed < Z.words.length)
+    console.warn(`lexicora: only placed ${placed}/${Z.words.length} crystals in zone ${zi}`);
 
   // ---- roaming monsters, kept clear of the arrival glade
   for(let m=0;m<10;m++){
@@ -1176,7 +1183,7 @@ function buildZone(zi){
       my = 3+Math.floor(Math.random()*(ZH-6));
       tries++;
       // the hamlet is a safe haven, so nothing spawns inside its square either
-    } while((world.solid[tIdx(mx,my)] || Math.hypot(mx-glX,my-glY) < 9 ||
+    } while((!seen[tIdx(mx,my)] || Math.hypot(mx-glX,my-glY) < 9 ||
              Math.hypot(mx*TILE-world.village.x, my*TILE-world.village.y) < (VILLAGE_R+3)*TILE)
             && tries<120);
     world.monsters.push({
@@ -1184,6 +1191,127 @@ function buildZone(zi){
       type:Z.mon[m % Z.mon.length], dir:Math.random()*Math.PI*2, timer:Math.random()*2, iframe:0
     });
   }
+}
+
+// ── walkability ────────────────────────────────────────────────────────────
+// Terrain blocking (river, map edge, the hamlet's paved ford) is kept apart
+// from prop blocking, so the props can be re-stamped from scratch whenever the
+// layout changes without the terrain drifting.
+function stampProps(){
+  world.solid.set(world.baseSolid);
+  for(const p of world.props) blockProp(p);
+}
+function floodFrom(sx, sy){
+  const seen = new Uint8Array(ZW*ZH);
+  const start = tIdx(sx, sy);
+  if(world.solid[start]) return seen;
+  const q = [start];
+  seen[start] = 1;
+  for(let h=0; h<q.length; h++){
+    const i = q[h], x = i%ZW, y = (i/ZW)|0;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx = x+dx, ny = y+dy;
+      if(nx<0||ny<0||nx>=ZW||ny>=ZH) continue;
+      const j = tIdx(nx,ny);
+      if(seen[j] || world.solid[j]) continue;
+      seen[j] = 1; q.push(j);
+    }
+  }
+  return seen;
+}
+// A landmark counts as reached if you can stand next to it — the shrine and
+// the boss lair are themselves solid.
+function reachable(seen, x, y){
+  for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
+    const nx = x+dx, ny = y+dy;
+    if(nx<0||ny<0||nx>=ZW||ny>=ZH) continue;
+    if(seen[tIdx(nx,ny)]) return true;
+  }
+  return false;
+}
+// Clear a two-tile-wide corridor by deleting whatever stands in it. A straight
+// line is cheaper and far more predictable than pathfinding, and the world is
+// open enough that a corridor never costs more than a tree or two.
+function carveCorridor(fromX, fromY, toX, toY){
+  const steps = Math.max(1, Math.abs(toX-fromX), Math.abs(toY-fromY));
+  const lane = new Set();
+  for(let s=0; s<=steps; s++){
+    const x = Math.round(lerp(fromX, toX, s/steps));
+    const y = Math.round(lerp(fromY, toY, s/steps));
+    for(let dy=0; dy<=1; dy++) for(let dx=0; dx<=1; dx++)
+      lane.add(tIdx(clamp(x+dx,1,ZW-2), clamp(y+dy,1,ZH-2)));
+  }
+  world.props = world.props.filter(p => !propTiles(p).some(i => lane.has(i)));
+  for(const i of lane){
+    world.baseSolid[i] = 0;
+    // If the corridor has to cross the river, it crosses on stone. Clearing
+    // the blocking alone would leave you walking on open water.
+    const t = world.tiles[i];
+    if(t === TERRAIN_ROWS.water || t === TERRAIN_ROWS.lava) world.tiles[i] = TERRAIN_ROWS.pstone;
+  }
+}
+// Every tile a prop's base covers.
+function propTiles(p){
+  const m = PROPS[p.type];
+  if(!m || !m.s) return [];
+  const cx = p.x + (m.fo || 0), half = (m.fw || m.w)/2, depth = m.fd || 24;
+  const out = [];
+  const x0 = Math.floor((cx - half + 3)/TILE), x1 = Math.floor((cx + half - 3)/TILE);
+  const y0 = Math.floor((p.y - depth + 3)/TILE), y1 = Math.floor((p.y - 2)/TILE);
+  for(let y=Math.max(0,y0); y<=Math.min(ZH-1,y1); y++)
+    for(let x=Math.max(0,x0); x<=Math.min(ZW-1,x1); x++)
+      out.push(tIdx(x,y));
+  return out;
+}
+// Nothing in a zone may be walled off. An unreachable crystal is a quest that
+// cannot be finished, and the layout is random, so it is checked rather than
+// assumed.
+function ensureReachable(glX, glY){
+  let carved = 0;
+  for(let pass=0; pass<5; pass++){
+    const seen = floodFrom(glX, glY);
+    const targets = [
+      ['shrine',  world.shrine], ['village', world.village], ['boss', world.boss],
+    ].filter(([, o]) => o);
+    const blockedOff = targets.filter(([, o]) =>
+      !reachable(seen, Math.floor(o.x/TILE), Math.floor(o.y/TILE)));
+    if(!blockedOff.length) return {carved, seen};
+    for(const [, o] of blockedOff){
+      carveCorridor(glX, glY, Math.floor(o.x/TILE), Math.floor(o.y/TILE));
+      carved++;
+    }
+    stampProps();
+  }
+  console.warn('lexicora: zone layout still had walled-off landmarks after 5 passes');
+  return {carved, seen: floodFrom(glX, glY)};
+}
+
+// True when this prop is drawn in front of the hero and its body covers them.
+// Only tall props qualify: a flower drawn over your boots is not a problem
+// worth dimming the scenery for.
+function hidesPlayer(p, m){
+  if(m.h < 56 || p.y <= player.y) return false;
+  const left = p.x - m.w/2;
+  return player.x > left - 8 && player.x < left + m.w + 8 &&
+         player.y - 44 > p.y - m.h && player.y - 8 < p.y;
+}
+
+// A prop blocks the ground it stands on, not the one tile it was dropped at.
+// props.js carries a base measured from the sprite itself, so a tree blocks
+// its trunk while its crown stays walk-behind, and a house blocks the whole
+// house. Blocking one tile per prop is what let you walk into a tree and then
+// stand on top of it.
+function blockProp(p){
+  const m = PROPS[p.type];
+  if(!m || !m.s) return;
+  const cx = p.x + (m.fo || 0), half = (m.fw || m.w)/2, depth = m.fd || 24;
+  // Inset by a couple of pixels so a base that lands flush on a tile boundary
+  // does not claim the whole neighbouring tile as well.
+  const x0 = Math.floor((cx - half + 3)/TILE), x1 = Math.floor((cx + half - 3)/TILE);
+  const y0 = Math.floor((p.y - depth + 3)/TILE), y1 = Math.floor((p.y - 2)/TILE);
+  for(let y=Math.max(0,y0); y<=Math.min(ZH-1,y1); y++)
+    for(let x=Math.max(0,x0); x<=Math.min(ZW-1,x1); x++)
+      world.solid[tIdx(x,y)] = 1;
 }
 
 // ── the hamlet ─────────────────────────────────────────────────────────────
@@ -1195,7 +1323,9 @@ const NPC_KINDS = [
   {key:'healer', thai:'หมอยา',     icon:'💚'},
   {key:'scout',  thai:'นักสอดแนม', icon:'🧭'},
 ];
-const VILLAGE_R = 5;                // tiles from the square's centre
+// The square has to be wide enough for buildings that really block their
+// ground: the largest hut stands on six tiles by four.
+const VILLAGE_R = 7;                // tiles from the square's centre
 function buildVillage(zi, glX, glY, pathTile){
   world.npcs = [];
   // Sited on the east-west road a short walk from the glade, so there is
@@ -1213,7 +1343,8 @@ function buildVillage(zi, glX, glY, pathTile){
     if(Math.hypot(x-vx, y-vy) > VILLAGE_R) continue;
     const i = tIdx(x,y);
     world.tiles[i] = pathTile;
-    world.solid[i] = 0;
+    // clear the terrain layer too, so the paved ford survives a re-stamp
+    world.solid[i] = world.baseSolid[i] = 0;
   }
   world.props = world.props.filter(p => {
     const px = Math.floor(p.x/TILE), py = Math.floor(p.y/TILE)-1;
@@ -1225,19 +1356,19 @@ function buildVillage(zi, glX, glY, pathTile){
     if(!pool.length || tx<1 || ty<1 || tx>=ZW-1 || ty>=ZH-1) return;
     const type = pool[Math.floor(hash2(tx, ty, zi*17+3)*pool.length)];
     world.props.push({x:tx*TILE+TILE/2, y:ty*TILE+TILE, type});
-    if(PROPS[type] && PROPS[type].s) world.solid[tIdx(tx,ty)] = 1;
   };
-  // Huts around the rim, doors facing in; the square itself stays walkable.
-  place('house_a', vx-4, vy-2);
-  place('house_b', vx+3, vy-2);
-  place('house_c', vx-1, vy+4);
+  // Huts stand along the north side with their doors facing in, so their
+  // footprints sit clear of the road running east-west through the middle.
+  place('house_a', vx-4, vy-4);
+  place('house_b', vx+4, vy-4);
+  place('house_c', vx-5, vy+6);
   place('fountain', vx, vy);
   place('lamp', vx-3, vy+2);
   place('lamp', vx+3, vy+2);
-  place('barrel', vx+4, vy+1);
-  place('crate', vx-4, vy+1);
-  place('sign', vx, vy-4);
-  world.campfire = {x:(vx+2)*TILE+TILE/2, y:(vy+3)*TILE+TILE};
+  place('barrel', vx+5, vy+2);
+  place('crate', vx-6, vy+1);
+  place('sign', vx+6, vy-1);        // by the east entrance, clear of the fountain
+  world.campfire = {x:(vx+3)*TILE+TILE/2, y:(vy+4)*TILE+TILE};
 
   NPC_KINDS.forEach((k, i) => {
     // spread around the square, clear of the fountain in the middle
@@ -1585,17 +1716,22 @@ function drawWorld(dt){
       shadow(p.x, p.y, m.w*.34, .30);
       // Foliage leans with the wind, hinged at its base. Each plant runs on
       // its own phase so a hedgerow ripples instead of moving as one board.
-      const sway = REDUCED ? 0 : wind*(m.h > 60 ? 2.2 : 3.4)*(.6 + .4*Math.sin(t*1.5 + p.x*.07));
+      const sway = (REDUCED || m.r) ? 0
+                 : wind*(m.h > 60 ? 2.2 : 3.4)*(.6 + .4*Math.sin(t*1.5 + p.x*.07));
+      ctx.save();
+      // A hut is six tiles wide and stands taller than the hero, so standing
+      // behind one hides you completely. Fading whatever you are behind keeps
+      // you findable without breaking the depth order.
+      if(hidesPlayer(p, m)) ctx.globalAlpha = .42;
       if(sway){
-        ctx.save();
         ctx.translate(Math.round(p.x), Math.round(p.y));
         ctx.transform(1, 0, -sway/m.h, 1, 0, 0);
         ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h, -m.w/2, -m.h, m.w, m.h);
-        ctx.restore();
       } else {
         ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h,
           Math.round(p.x-m.w/2), Math.round(p.y-m.h), m.w, m.h);
       }
+      ctx.restore();
     } else if(d.kind === 'crystal'){
       const c = d.o, bob = Math.sin(t*2.4 + c.x*.01)*3;
       ctx.save(); ctx.globalAlpha = .55; ctx.fillStyle = Z.accent;

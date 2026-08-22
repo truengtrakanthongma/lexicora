@@ -16,7 +16,13 @@ const errors = [];
 // Google Fonts is unreachable from this sandbox and the browser always probes
 // for a favicon; neither says anything about the game, so they are not failures.
 const noise = /Failed to load resource/;
-page.on('console', m => { if (m.type() === 'error' && !noise.test(m.text())) errors.push(m.text()); });
+page.on('console', m => {
+  const t = m.text();
+  // The game warns on its own about layouts it could not make playable —
+  // a walled-off landmark or a crystal it could not place. Those are failures.
+  if (m.type() === 'warning' && t.startsWith('lexicora:')) errors.push(t);
+  if (m.type() === 'error' && !noise.test(t)) errors.push(t);
+});
 page.on('pageerror', e => errors.push('pageerror: ' + e.message));
 page.on('response', r => {
   if (r.status() < 400) return;

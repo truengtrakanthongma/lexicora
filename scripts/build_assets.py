@@ -259,6 +259,42 @@ def build_terrain():
                   f"— it will look frozen (handled at runtime by the ripple layer)")
 
 
+# Props the wind does not move. Foliage leans in a gust; masonry does not, and
+# a swaying brick house is more distracting than no wind at all.
+RIGID = ("rock", "crag", "shrine", "house_", "fountain", "fence",
+         "lamp", "barrel", "crate", "sign")
+
+
+def footprint(im):
+    """How much ground a prop actually stands on, measured from the sprite.
+
+    The opaque width across the bottom of the image is a tree's trunk but a
+    house's full wall — exactly the distinction that matters for walking. A
+    narrow base means everything above it is canopy you should be able to walk
+    behind; a broad base means a solid mass you should not be able to enter.
+
+    Returns (width, depth, centre offset) in pixels, relative to the prop's
+    anchor at bottom-centre.
+    """
+    w, h = im.size
+    band = max(4, int(h * .25))
+    px = im.load()
+    x0, x1 = w, -1
+    for y in range(h - band, h):
+        for x in range(w):
+            if px[x, y][3] > 24:
+                x0 = min(x0, x)
+                x1 = max(x1, x)
+    if x1 < x0:                                  # nothing opaque at the base
+        return w, min(h, 24), 0
+    fw = x1 - x0 + 1
+    broad = fw / w > .6
+    # A broad-based mass blocks most of its height; the top is roof or crown
+    # you pass behind. A narrow base blocks only a shallow patch of ground.
+    fd = int(h * .62) if broad else max(14, min(40, int(h * .28)))
+    return fw, fd, (x0 + x1 + 1) // 2 - w // 2
+
+
 # ============================================================== PROP ATLAS
 # Props keep their own size and are drawn anchored at bottom-centre, so a
 # 96x128 tree and a 24x20 flower can live in the same atlas.
@@ -323,6 +359,7 @@ def build_props():
 
     pad = 2
     W = sum(p[1].width + pad for p in picks) + pad
+    # (footprint() is used below, once every prop is packed)
     H = max(p[1].height for p in picks) + pad * 2
     atlas = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     meta = []
@@ -330,7 +367,14 @@ def build_props():
     for name, im, solid in picks:
         y = H - pad - im.height          # bottom aligned in the strip
         atlas.paste(im, (x, y), im)
-        meta.append({"n": name, "x": x, "y": y, "w": im.width, "h": im.height, "s": 1 if solid else 0})
+        entry = {"n": name, "x": x, "y": y, "w": im.width, "h": im.height,
+                 "s": 1 if solid else 0}
+        if solid:
+            fw, fd, fo = footprint(im)
+            entry.update(fw=fw, fd=fd, fo=fo)
+        if name.startswith(RIGID):
+            entry["r"] = 1
+        meta.append(entry)
         x += im.width + pad
     atlas.save(os.path.join(OUT, "props.png"))
 
