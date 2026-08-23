@@ -3535,16 +3535,39 @@ $('btn-csv-copy').onclick = async () => {
   catch(e){ document.execCommand('copy'); $('btn-csv-copy').textContent = '✔ คัดลอกแล้ว'; }
   setTimeout(() => { $('btn-csv-copy').textContent = '📋 คัดลอก CSV'; }, 1800);
 };
-$('btn-csv-download').onclick = () => {
-  // Works when the file is opened locally. Inside the artifact sandbox every
-  // page-initiated download is blocked, which is why copy is the primary path.
-  const blob = new Blob(['﻿' + $('teacher-csv').value], {type:'text/csv;charset=utf-8'});
+// Two ways to hand over a file, because the page runs in two places. Opened
+// locally, an <a download> works. Published as an Artifact, page-initiated
+// downloads are inert and the host has to mediate the save instead.
+async function saveCSV(){
+  const btn = $('btn-csv-download');
+  const stamp = new Date().toISOString().slice(0,10);
+  // The BOM is what makes Excel read Thai names as UTF-8 rather than mojibake.
+  const text = '﻿' + $('teacher-csv').value;
+  const host = window.claude && window.claude.use
+    ? await window.claude.use('downloads').catch(() => null) : null;
+  if(host){
+    const say = m => { btn.textContent = m; setTimeout(() => { btn.textContent = '⬇ บันทึกเป็นไฟล์'; }, 2200); };
+    for(const ext of ['csv','txt']){
+      try{
+        await host.save({filename:`lexicora-${stamp}.${ext}`, data:text});
+        say('✔ บันทึกแล้ว'); return;
+      }catch(err){
+        if(err && err.code === 'extension_not_enabled') continue;  // try .txt
+        if(err && err.code === 'declined') return;                 // never retry
+        say('บันทึกไม่ได้ · ใช้ปุ่มคัดลอกแทน'); return;
+      }
+    }
+    say('บันทึกไม่ได้ · ใช้ปุ่มคัดลอกแทน');
+    return;
+  }
+  const blob = new Blob([text], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `lexicora-${new Date().toISOString().slice(0,10)}.csv`;
+  a.download = `lexicora-${stamp}.csv`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-};
+}
+$('btn-csv-download').onclick = saveCSV;
 // A class spread over many machines still has to end up in one table, and
 // there is no server, so a student carries their record as a pasteable code.
 function resultCode(s){
