@@ -43,11 +43,19 @@ await page.click('#class-grid > *:first-child');
 await page.click('#btn-embark');
 await page.waitForSelector('#screen-worldmap.show');
 
-// Zones unlock in order, so a test of zone 7 would otherwise only ever see the
-// locked pin. Mark everything cleared in the save and re-open the map.
+// Zones unlock in order and now also need the zone before to have been passed,
+// so a test of zone 7 would otherwise only ever see the locked pin. Mark the
+// save as cleared and passed throughout, and mark the pre-test as already sat
+// so the run lands in the world rather than in a test paper.
 await page.evaluate(() => {
   const all = JSON.parse(localStorage.getItem('lexicoraSavesV3') || '{}');
-  for (const k of Object.keys(all)) all[k].cleared = all[k].cleared.map(() => true);
+  for (const k of Object.keys(all)) {
+    const s = all[k];
+    s.cleared = s.cleared.map(() => true);
+    s.postBest = s.postBest.map(() => 10);
+    s.pre = s.pre.map(() => ({score: 5, total: 10, at: Date.now(), ms: 1}));
+    s.lessonSeen = s.lessonSeen.map(() => true);
+  }
   localStorage.setItem('lexicoraSavesV3', JSON.stringify(all));
 });
 await page.reload();
@@ -60,8 +68,17 @@ await page.click('#btn-embark');
 await page.waitForSelector('#screen-worldmap.show');
 
 await page.locator('#map-markers .zone-pin').nth(ZONE).click();
-await page.waitForTimeout(700);
-// Each zone opens on its grammar scroll; dismiss it so the world is visible.
+await page.waitForTimeout(900);
+// A zone can open on its pre-test or its grammar scroll; clear whichever is up.
+if (await page.locator('#screen-test.show').isVisible()) {
+  for (let i = 0; i < 12 && await page.locator('#test-options .opt').first().isVisible(); i++) {
+    await page.locator('#test-options .opt').first().click();
+    await page.waitForTimeout(80);
+  }
+  await page.waitForTimeout(250);
+  await page.click('#btn-test-close');
+  await page.waitForTimeout(500);
+}
 const lesson = page.locator('#btn-lesson-close');
 if (await lesson.isVisible()) await lesson.click();
 await page.waitForTimeout(600);

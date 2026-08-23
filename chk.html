@@ -310,14 +310,6 @@ kbd{
 .opt.right{background:linear-gradient(180deg,#bde8b0,#7fc472);border-color:#3f7a35;box-shadow:0 3px 0 #3f7a35;color:#1c3d16;}
 .opt.wrong{background:linear-gradient(180deg,#f0a89e,#d4655a);border-color:#8d2e26;box-shadow:0 3px 0 #8d2e26;color:#41100c;}
 #battle-feedback{text-align:center;font-weight:600;min-height:1.6rem;margin-top:11px;font-size:.96rem;}
-/* the reason, not just the mark — this is the line that does the teaching */
-.why{
-  display:block;font-weight:500;font-size:.86rem;line-height:1.6;
-  color:var(--ink);margin:6px auto 0;max-width:44rem;
-  padding:7px 12px;border-radius:8px;
-  background:linear-gradient(180deg,rgba(232,184,75,.16),rgba(232,184,75,.26));
-  border:1px solid var(--gold-dk);
-}
 
 .pip-row{display:flex;gap:5px;justify-content:center;margin-top:5px;}
 .pip{width:13px;height:13px;border-radius:3px;background:rgba(255,255,255,.22);border:1px solid rgba(255,214,150,.4);}
@@ -435,89 +427,6 @@ mark.signal{
   background:linear-gradient(180deg,var(--gold-hi),var(--gold));
   color:#3a2408;border-radius:4px;padding:0 4px;font-weight:700;
 }
-/* ------------------------------------------------------- survey + teacher */
-#survey-items{max-height:46vh;overflow-y:auto;margin-top:8px;}
-.sv-item{padding:8px 0;border-bottom:1px dashed rgba(74,47,30,.22);}
-.sv-item:last-child{border-bottom:0;}
-.sv-q{font-size:.9rem;line-height:1.5;color:var(--ink);margin-bottom:5px;}
-.sv-scale{display:flex;gap:6px;}
-.sv-scale button{
-  flex:1;padding:7px 0;cursor:pointer;font-family:'Kanit',sans-serif;font-weight:700;
-  border:2px solid var(--wood-3);border-radius:7px;color:var(--wood);
-  background:linear-gradient(180deg,#fffaef,#ecdcbc);
-}
-.sv-scale button[aria-pressed="true"]{
-  background:linear-gradient(180deg,var(--gold-hi),var(--gold));border-color:var(--gold-dk);color:#3a2408;
-}
-#screen-teacher{background:#f6efdd;overflow-y:auto;align-items:flex-start;padding:0;}
-#teacher-wrap{width:min(1180px,96vw);margin:0 auto;padding:22px 16px 60px;color:var(--ink);}
-#teacher-summary{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0 18px;
-}
-.tcard{
-  padding:10px 12px;border-radius:10px;border:2px solid var(--wood-3);
-  background:linear-gradient(180deg,#fffaef,#efe0c2);
-}
-.tcard b{display:block;font-family:'Cinzel',serif;font-size:1.5rem;color:var(--wood);line-height:1.2;}
-.tcard span{font-size:.76rem;color:var(--ink-2);}
-.tcard.pass b{color:var(--emerald);} .tcard.fail b{color:var(--crimson);}
-#teacher-table{overflow-x:auto;}
-#teacher-table table{border-collapse:collapse;width:100%;font-size:.8rem;font-variant-numeric:tabular-nums;}
-#teacher-table th,#teacher-table td{border:1px solid rgba(74,47,30,.25);padding:5px 8px;text-align:center;white-space:nowrap;}
-#teacher-table th{background:linear-gradient(180deg,#e9d9b6,#dcc79a);font-weight:700;}
-#teacher-table td.name{text-align:left;}
-#teacher-table tr:nth-child(even) td{background:rgba(255,255,255,.45);}
-.tnote{font-size:.78rem;color:var(--ink-2);margin:3px 0 6px;}
-#code-box{margin-top:10px}
-#code-text,
-#teacher-csv,#teacher-import{
-  width:100%;font-family:ui-monospace,monospace;font-size:.72rem;
-  border:2px solid var(--wood-3);border-radius:8px;padding:8px;background:#fffdf6;color:var(--ink);
-}
-
-/* ------------------------------------------------ lesson: worked examples */
-#lesson-q{margin:6px 0 4px;}
-#lesson-q .fill{color:var(--emerald);border-bottom:3px solid var(--gold);padding:0 3px;}
-#lesson-steps{list-style:none;margin:10px 0 0;}
-#lesson-steps li{
-  display:flex;gap:9px;align-items:flex-start;
-  font-size:.92rem;line-height:1.65;color:var(--ink);
-  padding:7px 11px;margin-bottom:6px;border-radius:8px;
-  background:linear-gradient(180deg,rgba(74,47,30,.06),rgba(74,47,30,.13));
-  border-left:4px solid var(--gold-dk);
-  animation:step-in .22s ease-out;
-}
-@keyframes step-in{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:none;}}
-#lesson-steps .stepno{
-  flex:0 0 auto;width:20px;height:20px;border-radius:50%;
-  background:var(--gold);color:#3a2408;font-weight:800;font-size:.76rem;
-  display:grid;place-items:center;margin-top:2px;
-}
-
-/* ------------------------------------------------------- pre / post-test */
-#test-progress{height:8px;border-radius:5px;background:rgba(74,47,30,.18);overflow:hidden;margin:4px 0 2px;}
-#test-bar{display:block;height:100%;background:linear-gradient(180deg,var(--gold-hi),var(--gold-dk));transition:width .25s;}
-.qno{
-  display:block;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--ink-2);margin-bottom:4px;
-}
-#test-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
-@media (max-width:520px){#test-options{grid-template-columns:1fr;}}
-.big-score{font-family:'Cinzel',serif;font-size:3rem;font-weight:900;color:var(--wood);text-align:center;line-height:1;}
-#test-score .pct{text-align:center;font-size:1.1rem;font-weight:700;color:var(--gold-dk);}
-#test-score .note{text-align:center;font-size:.9rem;margin-top:8px;color:var(--ink-2);}
-#test-score .note.ok{color:var(--emerald);font-weight:700;}
-#test-score .note.bad{color:var(--crimson);font-weight:700;}
-#test-review{max-height:38vh;overflow-y:auto;margin-top:12px;}
-.rev{
-  padding:8px 11px;margin-bottom:7px;border-radius:8px;
-  border-left:4px solid var(--emerald);
-  background:linear-gradient(180deg,rgba(30,91,58,.07),rgba(30,91,58,.13));
-}
-.rev.bad{border-left-color:var(--crimson);background:linear-gradient(180deg,rgba(179,58,50,.07),rgba(179,58,50,.14));}
-.rev-q{font-size:.9rem;line-height:1.55;color:var(--ink);}
-.rev-you{font-size:.82rem;color:var(--crimson);margin-top:2px;}
-.rev-rule{font-size:.8rem;color:var(--ink-2);margin-top:3px;font-style:italic;}
 #btn-hint{margin-left:8px;}
 
 /* ------------------------------------------------------------ world map */
@@ -696,7 +605,6 @@ mark.signal{
       <div style="text-align:center;margin-top:10px">
         <button class="btn" id="btn-flee" style="font-size:.86rem;padding:.42rem 1.1rem">หนี</button>
         <button class="btn btn-gold" id="btn-hint" style="font-size:.86rem;padding:.42rem 1.1rem;display:none">✨ เวทเปิดเผย</button>
-        <button class="btn btn-gold" id="btn-next" style="font-size:.86rem;padding:.42rem 1.1rem;display:none">ข้อต่อไป →</button>
       </div>
     </div>
   </div>
@@ -707,92 +615,10 @@ mark.signal{
       <div class="label-eyebrow" style="text-align:center">ศิลาจารึกโบราณ</div>
       <h2 class="title-epic" id="lesson-title" style="font-size:2rem;text-align:center">—</h2>
       <div class="rule-gold"></div>
-      <div class="label-eyebrow" style="text-align:center" id="lesson-count">—</div>
-      <p class="q-prompt" id="lesson-q">—</p>
-      <ol id="lesson-steps"></ol>
-      <div style="text-align:center;margin-top:14px">
-        <button class="btn btn-gold" id="btn-lesson-step">ขั้นต่อไป →</button>
-        <button class="btn" id="btn-lesson-close">ปิด</button>
-      </div>
-      <div class="rule-gold tight"></div>
-      <div class="label-eyebrow">กฎที่ต้องจำ</div>
       <ul class="lesson-rules" id="lesson-rules"></ul>
-    </div>
-  </div>
-
-  <!-- ================================================== SAGE (practice) -->
-  <div class="overlay dim" id="screen-sage">
-    <div class="scroll-panel sheet corner-bottom" style="max-width:430px">
-      <div class="label-eyebrow" style="text-align:center">นักปราชญ์</div>
-      <h2 class="title-epic" id="sage-title" style="font-size:1.7rem;text-align:center">—</h2>
-      <div class="rule-gold"></div>
-      <p style="text-align:center;color:var(--ink-2);font-size:.9rem" id="sage-note">—</p>
-      <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px">
-        <button class="btn btn-gold" id="btn-sage-practice">🎯 ฝึกซ้อม (ไม่เสียพลังชีวิต)</button>
-        <button class="btn" id="btn-sage-lesson">📖 ทบทวนศิลาจารึก</button>
-        <button class="btn" id="btn-sage-test">📝 สอบหลังเรียนอีกครั้ง</button>
-        <button class="btn" id="btn-sage-close">กลับ</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================ SATISFACTION SURVEY -->
-  <div class="overlay dim" id="screen-survey">
-    <div class="scroll-panel sheet corner-bottom">
-      <div class="label-eyebrow" style="text-align:center">แบบสอบถามความพึงพอใจ</div>
-      <h2 class="title-epic" style="font-size:1.6rem;text-align:center">ความคิดเห็นของเจ้า</h2>
-      <div class="rule-gold"></div>
-      <p style="text-align:center;color:var(--ink-2);font-size:.86rem">
-        5 = มากที่สุด · 4 = มาก · 3 = ปานกลาง · 2 = น้อย · 1 = น้อยที่สุด</p>
-      <div id="survey-items"></div>
-      <div style="text-align:center;margin-top:14px">
-        <button class="btn btn-gold" id="btn-survey-send" disabled>ส่งแบบสอบถาม</button>
-        <button class="btn" id="btn-survey-close">ไว้ทีหลัง</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ==================================================== TEACHER VIEW -->
-  <div class="overlay" id="screen-teacher">
-    <div id="teacher-wrap">
-      <h2 class="title-epic" style="font-size:1.7rem">รายงานผลการเรียน · Lexicora</h2>
-      <div class="rule-gold"></div>
-      <div id="teacher-summary"></div>
-      <div id="teacher-table"></div>
-      <div class="label-eyebrow" style="margin-top:16px">ส่งออกข้อมูล (CSV)</div>
-      <p class="tnote">กดคัดลอก แล้ววางใน Excel หรือ Google Sheets — เลือก “แยกข้อความเป็นคอลัมน์” ด้วยเครื่องหมายจุลภาค</p>
-      <textarea id="teacher-csv" readonly rows="6"></textarea>
-      <div style="margin-top:8px">
-        <button class="btn btn-gold" id="btn-csv-copy">📋 คัดลอก CSV</button>
-        <button class="btn" id="btn-csv-download">⬇ บันทึกเป็นไฟล์</button>
-      </div>
-      <div class="label-eyebrow" style="margin-top:18px">รวมผลจากเครื่องอื่น</div>
-      <p class="tnote">ให้นักเรียนคัดลอก “รหัสผลการเรียน” จากสมุดคำศัพท์ในเครื่องของตน แล้วนำมาวางที่นี่ ทีละคนหรือหลายคนก็ได้</p>
-      <textarea id="teacher-import" rows="3" placeholder="วางรหัสผลการเรียนที่นี่..."></textarea>
-      <div style="margin-top:8px">
-        <button class="btn btn-gold" id="btn-import">รวมผล</button>
-        <span id="import-msg" class="tnote"></span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================== PRE / POST-TEST -->
-  <div class="overlay dim" id="screen-test">
-    <div class="scroll-panel sheet corner-bottom">
-      <div class="label-eyebrow" style="text-align:center" id="test-kind">—</div>
-      <h2 class="title-epic" id="test-title" style="font-size:1.7rem;text-align:center">—</h2>
-      <div class="rule-gold"></div>
-      <div id="test-live">
-        <div id="test-progress"><i id="test-bar"></i></div>
-        <p class="q-prompt" id="test-question">—</p>
-        <div id="test-options"></div>
-      </div>
-      <div id="test-done" hidden>
-        <div id="test-score">—</div>
-        <div id="test-review"></div>
-        <div style="text-align:center;margin-top:16px">
-          <button class="btn btn-gold" id="btn-test-close">ไปต่อ</button>
-        </div>
+      <div class="example-box" id="lesson-examples"></div>
+      <div style="text-align:center;margin-top:18px">
+        <button class="btn btn-gold" id="btn-lesson-close">เข้าใจแล้ว</button>
       </div>
     </div>
   </div>
@@ -823,14 +649,7 @@ mark.signal{
       <div class="rule-gold tight"></div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
         <button class="btn btn-gold" id="btn-codex-close">กลับ</button>
-        <button class="btn" id="btn-survey-open">💛 แบบสอบถาม</button>
-        <button class="btn" id="btn-code">🔑 รหัสผลการเรียน</button>
         <button class="btn" id="btn-quit">ออกจากระบบ</button>
-      </div>
-      <div id="code-box" hidden>
-        <p class="tnote">ส่งรหัสนี้ให้ครู (คัดลอกแล้ววางในช่อง “รวมผลจากเครื่องอื่น”)</p>
-        <textarea id="code-text" readonly rows="3"></textarea>
-        <button class="btn btn-gold" id="btn-code-copy" style="margin-top:6px">📋 คัดลอกรหัส</button>
       </div>
     </div>
   </div>
@@ -2615,8 +2434,8 @@ function setHint(t){
 }
 
 // ═════════════════════════════════════════════════════════════ OVERLAYS
-const OV = ['screen-landing','screen-register','screen-worldmap','screen-battle','screen-sage','screen-test',
-            'screen-survey','screen-teacher','screen-lesson','screen-reward','screen-codex'];
+const OV = ['screen-landing','screen-register','screen-worldmap','screen-battle',
+            'screen-lesson','screen-reward','screen-codex'];
 function showOverlay(id){ OV.forEach(o => $(o).classList.toggle('show', o===id)); }
 function hideOverlays(){ OV.forEach(o => $(o).classList.remove('show')); }
 const paused = () => mode !== 'play' || OV.some(o => $(o).classList.contains('show'));
@@ -2890,10 +2709,7 @@ function enterZone(zi){
     const side = world.village.x > player.x ? 'ตะวันออก' : 'ตะวันตก';
     toast('🏘', `หมู่บ้านอยู่ทาง<b>${side}</b> · มีหมอยา นักปราชญ์ และนักสอดแนม`);
   }, 2000);
-  // The pre-test comes before anything can be learned here — that is the only
-  // way its score means what the research needs it to mean.
-  if(!S.pre[zi]) setTimeout(() => startTest('pre'), 500);
-  else if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 650);
+  if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 650);
 }
 $('btn-to-map').onclick = () => { sfx.open(); openMap(); };
 $('btn-map-codex').onclick = () => { codexTab = zone; renderCodex(); showOverlay('screen-codex'); };
@@ -3085,30 +2901,23 @@ function markSignals(text){
 
 function startBattle(kind, target){
   const Z = ZONES[zone], isBoss = kind === 'boss', C = CLASSES[heroCls()];
-  const isPractice = kind === 'practice';
   const maxHP = isBoss ? 8 : 4;
   // Every clue stone read out in the map is one more use of ✨ เวทเปิดเผย in
   // the boss fight, for any class. That is what walking the map buys you.
   const clueHints = isBoss ? cluesFound(zone) : 0;
   battle = {kind, target, hp:maxHP, hpMax:maxHP, pool:shuffle(Z.quiz), qi:0, locked:false,
-            wrong:0, hintLeft: isPractice ? 0 : (C.hint ? 1 : 0) + clueHints};
-  $('enemy-name').textContent = isPractice ? `ฝึกซ้อมกับนักปราชญ์ · ${Z.topic}`
-    : isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
+            wrong:0, hintLeft: (C.hint ? 1 : 0) + clueHints};
+  $('enemy-name').textContent = isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
   $('battle-topic').textContent = Z.topic;
-  // Practice always has the notes open: it is a lesson, not an exam.
-  renderNotes(isBoss || isPractice);
-  $('enemy-plate').style.display = isPractice ? 'none' : '';
-  $('battle-pips').style.display = isPractice ? 'none' : '';
-  $('btn-flee').textContent = isPractice ? 'พอแล้ว' : 'หนี';
+  renderNotes(isBoss);
 
   const t0 = performance.now()/1000;
   const kit = heroCls();
   duel.hero = {kit, img:IMG['battle_'+kit+heroStage()], rowBase:0, at:.24, dir:1,
                size:104, action:'idle', start:t0, until:0, flash:0, fade:0};
-  duel.foe = isPractice ? null
-    : {kit:'mon', img: isBoss ? IMG.battle_boss : IMG.battle_mon,
-       rowBase: (isBoss ? Z.boss : target.type)*3, at:.74, dir:-1,
-       size: isBoss ? 128 : 108, action:'idle', start:t0, until:0, flash:0, fade:0};
+  duel.foe = {kit:'mon', img: isBoss ? IMG.battle_boss : IMG.battle_mon,
+              rowBase: (isBoss ? Z.boss : target.type)*3, at:.74, dir:-1,
+              size: isBoss ? 128 : 108, action:'idle', start:t0, until:0, flash:0, fade:0};
   duel.fx = null;
   if(!duel.raf) drawDuel();
 
@@ -3148,7 +2957,7 @@ function renderBattleQ(){
   // questions, Modal Verbs in slot 1 for all twelve — so a student could clear
   // a zone by learning the button, then came unstuck the moment it moved.
   const order = shuffle(opts.map((_,i) => i));
-  b.shown = {opts: order.map(i => opts[i]), ans: order.indexOf(ans), why: b.pool[b.qi][3] || ''};
+  b.shown = {opts: order.map(i => opts[i]), ans: order.indexOf(ans)};
   $('battle-question').innerHTML =
     markSignals(q).replace('___','<span class="blank">_____</span>');
   const box = $('battle-options'); box.innerHTML = '';
@@ -3169,7 +2978,6 @@ function renderBattleQ(){
     pips.appendChild(d);
   }
   b.locked = false;
-  $('btn-next').style.display = 'none';
   if(b.hintLeft > 0) $('btn-hint').disabled = false;
   refreshHintLabel();
 }
@@ -3178,32 +2986,10 @@ function answerBattle(sel, ans, btn){
   b.locked = true;
   [...$('battle-options').children].forEach(c => c.disabled = true);
   const C = CLASSES[heroCls()];
-  const right = sel === ans;
-  // Whatever else happens, the student is told why. Being shown which button
-  // was right teaches the button; being shown the reasoning teaches the tense,
-  // and that is the whole point of the game.
-  const why = b.shown.why || '';
-  // Practice is for learning and must never count toward the research figures;
-  // fights are the graded work the 80/80 first number is computed from.
-  const tally = b.kind === 'practice' ? S.practice[zone] : S.proc[zone];
-  tally.asked++; if(right) tally.correct++;
-
-  if(b.kind === 'practice'){
-    btn.classList.add(right ? 'right' : 'wrong');
-    if(!right) [...$('battle-options').children][ans].classList.add('right');
-    (right ? sfx.pickup : sfx.deny)();
-    $('battle-feedback').innerHTML = feedbackHTML(right, b, why);
-    b.qi++; save();
-    // Practice waits for the student rather than moving on by itself: there is
-    // no clock to beat and the explanation is the reason they are here.
-    $('btn-next').style.display = 'inline-block';
-    return;
-  }
-
   // One exchange: the attacker swings, the weapon crosses, the target reels.
   // Every beat below is a delay into that swing, not a separate animation.
   const SWING = .42, LAND = .30;
-  if(right){
+  if(sel === ans){
     btn.classList.add('right');
     b.hp -= C.dmg; sfx.hit();
     duelAct(duel.hero, 'attack', SWING);
@@ -3214,7 +3000,7 @@ function answerBattle(sel, ans, btn){
       duelHit(duel.foe);
       duelAct(duel.foe, 'hurt', .5);
     }, LAND*1000);
-    $('battle-feedback').innerHTML = feedbackHTML(true, b, why);
+    $('battle-feedback').innerHTML = `<span style="color:#2f6b28">⚔ โจมตีสำเร็จ! -${C.dmg}</span>`;
     if(b.hp <= 0){
       setTimeout(() => { if(duel.foe) duel.foe.fade = performance.now()/1000; }, 700);
       setTimeout(winBattle, 1300);
@@ -3230,19 +3016,11 @@ function answerBattle(sel, ans, btn){
       duelHit(duel.hero);
       duelAct(duel.hero, 'hurt', .5);
     }, LAND*1000);
-    $('battle-feedback').innerHTML = feedbackHTML(false, b, why);
-    if(S.hp <= 0){ setTimeout(loseBattle, 2600); return; }
+    $('battle-feedback').innerHTML = `<span style="color:#96271f">✖ พลาด! คำตอบคือ <b>${b.shown.opts[b.shown.ans]}</b></span>`;
+    if(S.hp <= 0){ setTimeout(loseBattle, 1200); return; }
   }
   b.qi++;
-  // A wrong answer gets longer on screen than a right one: there is more to
-  // read, and it is the moment the learning actually happens.
-  setTimeout(() => { if(battle) renderBattleQ(); }, right ? 1600 : 3200);
-}
-function feedbackHTML(right, b, why){
-  const head = right
-    ? '<span style="color:#2f6b28">✔ ถูกต้อง!</span>'
-    : `<span style="color:#96271f">✖ คำตอบคือ <b>${b.shown.opts[b.shown.ans]}</b></span>`;
-  return head + (why ? `<span class="why">${why}</span>` : '');
+  setTimeout(() => { if(battle) renderBattleQ(); }, 1150);
 }
 function winBattle(){
   const b = battle; battle = null; stopDuel();
@@ -3259,12 +3037,9 @@ function winBattle(){
     $('reward-title').textContent = ZONES[zi].thai;
     $('reward-icon').src = spriteURL(IMG.gear, (zi%6)*32, 0, 32, 32);
     $('reward-hero').src = heroImg() ? spriteURL(heroImg(), 0, 0, CH, CH) : '';
-    // The boss proves the fighting. The post-test is what opens the next
-    // land, so the reward screen hands straight over to it.
     $('reward-text').innerHTML = `ได้รับ <b>${g.thai}</b><br>` +
-      `ต่อไปคือ <b>แบบทดสอบหลังเรียน</b> — ทำให้ได้ ${PASS_PCT}% เพื่อเปิด` +
-      (nxt ? ` <b>${nxt.thai}</b>` : `บทสรุปการเดินทาง`);
-    $('btn-reward-close').textContent = '📝 ทำแบบทดสอบหลังเรียน';
+      (nxt ? `ดินแดน <b>${nxt.thai}</b> (${nxt.topic}) เปิดแล้ว!`
+           : `เจ้าได้ปลดปล่อยเกาะ Lexicora ครบทุกดินแดน! 🎉`);
     showOverlay('screen-reward');
   } else {
     S.xp += 22; S.kills++;
@@ -3290,19 +3065,9 @@ function loseBattle(){
   toast('💔','เจ้าล้มลง... ฟื้นคืนที่ใจกลางดินแดน');
   refreshHUD(); save();
 }
-$('btn-next').onclick = () => {
-  if(!battle || battle.kind !== 'practice') return;
-  renderBattleQ();
-};
 $('btn-flee').onclick = () => {
   if(!battle) return;
   if(battle.kind === 'boss'){ toast('🚫','หนีจากผู้พิทักษ์ไม่ได้!'); sfx.deny(); return; }
-  if(battle.kind === 'practice'){
-    const t = S.practice[zone];
-    battle = null; stopDuel(); hideOverlays(); save();
-    toast('📓', `ฝึกซ้อมจบ · ตอบถูก <b>${t.correct}/${t.asked}</b> ข้อ`);
-    return;
-  }
   battle.target.iframe = 1.4; battle = null; stopDuel();
   hideOverlays(); player.iframe = 1.4;
 };
@@ -3315,13 +3080,7 @@ function interact(){
   if(npc){ talkTo(npc); return; }
   const stone = world.clues.find(c => !S.clues[zone][c.idx] && near(c, 52));
   if(stone){ readClue(stone); return; }
-  // The shrine also holds the retake: a student below the pass mark comes back
-  // here after practising rather than hunting for a menu.
-  if(near(world.shrine, 58)){
-    if(S.cleared[zone] && !zonePassed(zone)) startTest('post');
-    else openLesson(zone);
-    return;
-  }
+  if(near(world.shrine, 58)){ openLesson(zone); return; }
   if(!S.cleared[zone] && near(world.boss, 76)){
     if(!S.lessonSeen[zone]){ toast('📜','อ่านศิลาจารึกก่อนท้าผู้พิทักษ์'); sfx.deny(); return; }
     // You cannot fight what you have not studied. The stones are marked on the
@@ -3361,7 +3120,7 @@ function talkTo(n){
   n.face = Math.abs(player.x-n.x) > Math.abs(player.y-n.y)
          ? (player.x < n.x ? 1 : 2) : (player.y < n.y ? 3 : 0);
 
-  if(k.key === 'sage'){ openSageMenu(); return; }
+  if(k.key === 'sage'){ openLesson(zone); return; }
 
   if(k.key === 'healer'){
     const day = Math.floor(S.dayCount || 0);
@@ -3396,365 +3155,16 @@ function talkTo(n){
   toast(k.icon, `นักสอดแนม: “${what}ใกล้สุดอยู่ทาง<b>${dirName}</b> ราว ${Math.round(bd/TILE)} ช่อง”`);
 }
 
-// ═══════════════════════════════════════════════════ RESEARCH REPORTING
-// Everything here is derived from raw counts kept in the save, so any figure
-// the teacher publishes can be recomputed by hand from the exported CSV.
-const SURVEY_ITEMS = [
-  'เกมทำให้ฉันเข้าใจไวยากรณ์ภาษาอังกฤษมากขึ้น',
-  'คำอธิบายหลังตอบคำถามช่วยให้ฉันรู้ว่าทำไมตอบผิด',
-  'ตัวอย่างทีละขั้นในศิลาจารึกเข้าใจง่าย',
-  'การเก็บศิลาเบาะแสทำให้ฉันอยากสำรวจแผนที่',
-  'การฝึกกับนักปราชญ์ช่วยให้ฉันมั่นใจก่อนสอบ',
-  'ภาพและเสียงในเกมน่าสนใจ',
-  'เกมเล่นง่าย ไม่สับสน',
-  'ฉันได้เรียนรู้คำศัพท์ใหม่จากเกมนี้',
-  'ฉันอยากใช้เกมแบบนี้ในวิชาอื่นด้วย',
-  'โดยรวมฉันพอใจกับเกมนี้',
-];
-const SURVEY_BANDS = [
-  [4.51,'มากที่สุด'], [3.51,'มาก'], [2.51,'ปานกลาง'], [1.51,'น้อย'], [0,'น้อยที่สุด'],
-];
-const surveyBand = m => (SURVEY_BANDS.find(([lo]) => m >= lo) || ['','—'])[1];
-
-function allProfiles(){
-  try{
-    const all = JSON.parse(localStorage.getItem('lexicoraSavesV3')||'{}');
-    return Object.entries(all).map(([k,v]) => ({key:k, s:v}));
-  }catch(e){ return []; }
-}
-const sum = a => a.reduce((x,y)=>x+y,0);
-function mean(a){ return a.length ? sum(a)/a.length : 0; }
-function sd(a){
-  if(a.length < 2) return 0;
-  const m = mean(a);
-  return Math.sqrt(sum(a.map(v => (v-m)*(v-m))) / (a.length-1));
-}
-// One student's figures. Zones the student never reached are left out of the
-// totals rather than counted as zero — a zone not attempted is missing data,
-// not a score of nought.
-function studentRow(s){
-  const done = ZONES.map((_,i)=>i).filter(i => s.post && s.post[i]);
-  const preScore  = sum(done.map(i => s.pre[i] ? s.pre[i].score : 0));
-  const postScore = sum(done.map(i => s.post[i].score));
-  const full      = sum(done.map(i => s.post[i].total));
-  const asked   = sum((s.proc||[]).map(p => p.asked||0));
-  const correct = sum((s.proc||[]).map(p => p.correct||0));
-  const svMean = s.survey ? mean(s.survey) : null;
-  return {
-    key: `${s.profile.class}|${s.profile.number}|${s.profile.name}`,
-    name: s.profile.name, cls: s.profile.class, no: s.profile.number,
-    role: (CLASSES[s.cls]||CLASSES.hero).thai,
-    zonesDone: done.length, preScore, postScore, full,
-    e1: pct(correct, asked), e2: pct(postScore, full),
-    procAsked: asked, procCorrect: correct,
-    prAsked: sum((s.practice||[]).map(p=>p.asked||0)),
-    prCorrect: sum((s.practice||[]).map(p=>p.correct||0)),
-    gain: postScore - preScore,
-    minutes: Math.round(sum(s.timeMs||[])/60000),
-    survey: svMean, raw: s,
-  };
-}
-function classReport(rows){
-  const scored = rows.filter(r => r.full > 0);
-  const sumPre = sum(scored.map(r => r.preScore));
-  const sumPost = sum(scored.map(r => r.postScore));
-  const sumFull = sum(scored.map(r => r.full));
-  return {
-    n: rows.length, scored: scored.length,
-    e1: mean(scored.map(r => r.e1)),
-    e2: mean(scored.map(r => r.e2)),
-    // ดัชนีประสิทธิผล: how much of the room left for improvement was taken up
-    ei: (sumFull - sumPre) ? (sumPost - sumPre)/(sumFull - sumPre) : 0,
-    preMean: mean(scored.map(r => r.preScore)), preSD: sd(scored.map(r => r.preScore)),
-    postMean: mean(scored.map(r => r.postScore)), postSD: sd(scored.map(r => r.postScore)),
-    survey: mean(rows.filter(r => r.survey !== null).map(r => r.survey)),
-    surveyN: rows.filter(r => r.survey !== null).length,
-  };
-}
-function buildCSV(rows){
-  const zh = [];
-  ZONES.forEach((z,i) => zh.push(`pre${i+1}`, `post${i+1}`, `postbest${i+1}`, `tries${i+1}`));
-  const head = ['name','class','no','role','zones_done', ...zh,
-                'pre_total','post_total','full','gain',
-                'proc_asked','proc_correct','E1',
-                'practice_asked','practice_correct','E2',
-                'minutes','satisfaction'];
-  const esc = v => {
-    const t = String(v ?? '');
-    return /[",\n]/.test(t) ? '"'+t.replace(/"/g,'""')+'"' : t;
-  };
-  const body = rows.map(r => {
-    const s = r.raw, cells = [r.name, r.cls, r.no, r.role, r.zonesDone];
-    ZONES.forEach((z,i) => cells.push(
-      s.pre[i] ? s.pre[i].score : '', s.post[i] ? s.post[i].score : '',
-      s.postBest[i] ?? '', s.postAttempts[i] ?? ''));
-    cells.push(r.preScore, r.postScore, r.full, r.gain,
-               r.procAsked, r.procCorrect, r.e1.toFixed(2),
-               r.prAsked, r.prCorrect, r.e2.toFixed(2),
-               r.minutes, r.survey === null ? '' : r.survey.toFixed(2));
-    return cells.map(esc).join(',');
-  });
-  return [head.join(','), ...body].join('\n');
-}
-function renderTeacher(){
-  const rows = allProfiles().map(p => studentRow(p.s))
-    .sort((a,b) => (a.cls+a.no).localeCompare(b.cls+b.no, 'th', {numeric:true}));
-  const R = classReport(rows);
-  const card = (v, label, cls='') => `<div class="tcard ${cls}"><b>${v}</b><span>${label}</span></div>`;
-  const ok = v => v >= 80 ? 'pass' : 'fail';
-  $('teacher-summary').innerHTML =
-    card(R.n, 'จำนวนนักเรียน') +
-    card(R.e1.toFixed(2), 'E1 · คะแนนระหว่างเรียน', ok(R.e1)) +
-    card(R.e2.toFixed(2), 'E2 · คะแนนหลังเรียน', ok(R.e2)) +
-    card(`${R.e1.toFixed(1)}/${R.e2.toFixed(1)}`,
-         `เกณฑ์ 80/80 · ${R.e1>=80 && R.e2>=80 ? 'ผ่าน' : 'ยังไม่ผ่าน'}`,
-         R.e1>=80 && R.e2>=80 ? 'pass' : 'fail') +
-    card(R.ei.toFixed(4), 'ดัชนีประสิทธิผล E.I.') +
-    card(`${R.preMean.toFixed(2)} ± ${R.preSD.toFixed(2)}`, 'ก่อนเรียน (x̄ ± S.D.)') +
-    card(`${R.postMean.toFixed(2)} ± ${R.postSD.toFixed(2)}`, 'หลังเรียน (x̄ ± S.D.)') +
-    card(R.surveyN ? `${R.survey.toFixed(2)} · ${surveyBand(R.survey)}` : '—',
-         `ความพึงพอใจ (n=${R.surveyN})`);
-
-  const th = ['ชื่อ','ชั้น','เลขที่','อาชีพ','ด่านที่จบ','ก่อนเรียน','หลังเรียน','เต็ม',
-              'ผลต่าง','E1','E2','นาที','พึงพอใจ'];
-  $('teacher-table').innerHTML = rows.length ? `<table><thead><tr>${
-    th.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${
-    rows.map(r => `<tr>
-      <td class="name">${r.name}</td><td>${r.cls}</td><td>${r.no}</td><td>${r.role}</td>
-      <td>${r.zonesDone}/${ZONES.length}</td><td>${r.preScore}</td><td>${r.postScore}</td>
-      <td>${r.full}</td><td>${r.gain >= 0 ? '+' : ''}${r.gain}</td>
-      <td>${r.e1.toFixed(1)}</td><td>${r.e2.toFixed(1)}</td><td>${r.minutes}</td>
-      <td>${r.survey === null ? '—' : r.survey.toFixed(2)}</td></tr>`).join('')
-    }</tbody></table>` : '<p class="tnote">ยังไม่มีข้อมูลนักเรียนในเครื่องนี้</p>';
-  $('teacher-csv').value = buildCSV(rows);
-}
-$('btn-csv-copy').onclick = async () => {
-  const ta = $('teacher-csv');
-  ta.select();
-  try{ await navigator.clipboard.writeText(ta.value); $('btn-csv-copy').textContent = '✔ คัดลอกแล้ว'; }
-  catch(e){ document.execCommand('copy'); $('btn-csv-copy').textContent = '✔ คัดลอกแล้ว'; }
-  setTimeout(() => { $('btn-csv-copy').textContent = '📋 คัดลอก CSV'; }, 1800);
-};
-$('btn-csv-download').onclick = () => {
-  // Works when the file is opened locally. Inside the artifact sandbox every
-  // page-initiated download is blocked, which is why copy is the primary path.
-  const blob = new Blob(['﻿' + $('teacher-csv').value], {type:'text/csv;charset=utf-8'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `lexicora-${new Date().toISOString().slice(0,10)}.csv`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-};
-// A class spread over many machines still has to end up in one table, and
-// there is no server, so a student carries their record as a pasteable code.
-function resultCode(s){
-  return btoa(unescape(encodeURIComponent(JSON.stringify(s))));
-}
-$('btn-import').onclick = () => {
-  const raw = $('teacher-import').value.trim();
-  if(!raw){ $('import-msg').textContent = 'ยังไม่ได้วางรหัส'; return; }
-  let added = 0, bad = 0;
-  const all = JSON.parse(localStorage.getItem('lexicoraSavesV3')||'{}');
-  for(const line of raw.split(/\s+/).filter(Boolean)){
-    try{
-      const s = JSON.parse(decodeURIComponent(escape(atob(line))));
-      if(!s || !s.profile) throw 0;
-      all[`${s.profile.class}|${s.profile.number}|${s.profile.name}`] = s;
-      added++;
-    }catch(e){ bad++; }
-  }
-  localStorage.setItem('lexicoraSavesV3', JSON.stringify(all));
-  $('teacher-import').value = '';
-  $('import-msg').textContent = `รวมแล้ว ${added} คน` + (bad ? ` · อ่านไม่ได้ ${bad} รหัส` : '');
-  renderTeacher();
-};
-
-// ── satisfaction survey ────────────────────────────────────────────────────
-let surveyDraft = [];
-function openSurvey(){
-  surveyDraft = S.survey ? S.survey.slice() : SURVEY_ITEMS.map(()=>0);
-  $('survey-items').innerHTML = SURVEY_ITEMS.map((q,i) => `
-    <div class="sv-item">
-      <div class="sv-q">${i+1}. ${q}</div>
-      <div class="sv-scale" data-i="${i}">${[1,2,3,4,5].map(v =>
-        `<button type="button" data-v="${v}" aria-pressed="${surveyDraft[i]===v}">${v}</button>`).join('')}</div>
-    </div>`).join('');
-  $('survey-items').querySelectorAll('.sv-scale').forEach(row => {
-    row.onclick = e => {
-      const btn = e.target.closest('button'); if(!btn) return;
-      surveyDraft[+row.dataset.i] = +btn.dataset.v;
-      row.querySelectorAll('button').forEach(b =>
-        b.setAttribute('aria-pressed', String(b === btn)));
-      $('btn-survey-send').disabled = surveyDraft.some(v => !v);
-      sfx.open();
-    };
-  });
-  $('btn-survey-send').disabled = surveyDraft.some(v => !v);
-  showOverlay('screen-survey'); sfx.open();
-}
-$('btn-survey-send').onclick = () => {
-  S.survey = surveyDraft.slice(); save();
-  hideOverlays();
-  toast('💛', `ขอบคุณ! ค่าเฉลี่ยความพึงพอใจของเจ้า ${mean(S.survey).toFixed(2)}`);
-};
-$('btn-survey-close').onclick = () => hideOverlays();
-
-// ── the tests ──────────────────────────────────────────────────────────────
-// One bank per zone, given twice: once on arrival and once after the boss. The
-// same instrument both times, which is what makes the two scores comparable.
-// No feedback while answering — being told mid-test turns a measurement into a
-// lesson, and the lesson is everything in between.
-let test = null;
-function startTest(kind){
-  const Z = ZONES[zone];
-  const n = testTotal(zone);
-  test = {kind, zi:zone, items:shuffle(Z.test).slice(0, n), qi:0, given:[], startedAt:Date.now()};
-  $('test-kind').textContent = kind === 'pre' ? 'แบบทดสอบก่อนเรียน' : 'แบบทดสอบหลังเรียน';
-  $('test-title').textContent = Z.topic;
-  $('test-live').hidden = false;
-  $('test-done').hidden = true;
-  renderTestQ();
-  showOverlay('screen-test'); sfx.open();
-}
-function renderTestQ(){
-  const [q, opts, ans] = test.items[test.qi];
-  const order = shuffle(opts.map((_,i)=>i));
-  test.shown = {opts: order.map(i => opts[i]), ans: order.indexOf(ans)};
-  $('test-bar').style.width = (test.qi/test.items.length*100)+'%';
-  $('test-question').innerHTML =
-    `<span class="qno">ข้อ ${test.qi+1}/${test.items.length}</span>` +
-    q.replace('___','<span class="blank">_____</span>');
-  const box = $('test-options'); box.innerHTML = '';
-  test.shown.opts.forEach((o,i) => {
-    const btn = document.createElement('button');
-    btn.className = 'opt'; btn.type = 'button';
-    btn.innerHTML = `<span class="key">${i+1}</span>`;
-    btn.appendChild(document.createTextNode(o));
-    btn.onclick = () => answerTest(i);
-    box.appendChild(btn);
-  });
-}
-function answerTest(sel){
-  // Keep the shuffled options with the answer: the review has to show what the
-  // student actually saw, not what the source table happens to list first.
-  test.given.push({sel, opts:test.shown.opts, ans:test.shown.ans});
-  test.qi++;
-  sfx.open();
-  if(test.qi < test.items.length) renderTestQ();
-  else finishTest();
-}
-function finishTest(){
-  const zi = test.zi, total = test.items.length;
-  const score = test.given.filter(g => g.sel === g.ans).length;
-  const rec = {score, total, at:Date.now(), ms:Date.now()-test.startedAt};
-  if(test.kind === 'pre'){
-    S.pre[zi] = rec;
-  } else {
-    S.postAttempts[zi]++;
-    // The first attempt is what the research reports; later ones only open the
-    // gate. Both are exported so a score can never quietly become a retake.
-    if(!S.post[zi]) S.post[zi] = rec;
-    S.postBest[zi] = Math.max(S.postBest[zi], score);
-  }
-  save();
-  renderTestResult(score, total);
-}
-function renderTestResult(score, total){
-  const zi = test.zi, Z = ZONES[zi], p = Math.round(pct(score, total));
-  $('test-live').hidden = true;
-  $('test-done').hidden = false;
-  const passed = p >= PASS_PCT;
-  $('test-score').innerHTML =
-    `<div class="big-score">${score} / ${total}</div>` +
-    `<div class="pct">${p}%</div>` +
-    (test.kind === 'pre'
-      ? `<p class="note">บันทึกคะแนนก่อนเรียนแล้ว · ออกไปเรียนรู้ในดินแดนนี้ได้เลย</p>`
-      : passed
-        ? `<p class="note ok">ผ่านเกณฑ์ ${PASS_PCT}% · ดินแดนถัดไปเปิดแล้ว</p>`
-        : `<p class="note bad">ยังไม่ถึงเกณฑ์ ${PASS_PCT}% · ไปฝึกกับนักปราชญ์ในหมู่บ้าน แล้วกลับมาสอบใหม่ได้</p>`);
-  // The pre-test keeps its answers to itself: handing over the key before the
-  // lesson would teach the test instead of the tense.
-  $('test-review').innerHTML = test.kind === 'pre' ? '' :
-    '<div class="label-eyebrow">เฉลยและเหตุผล</div>' +
-    test.items.map((it, i) => {
-      const [q, opts, ans, rule] = it;
-      const g = test.given[i];
-      const gave = g.opts[g.sel], ok = g.sel === g.ans;
-      return `<div class="rev ${ok?'ok':'bad'}">
-        <div class="rev-q">${i+1}. ${q.replace('___', `<b>${opts[ans]}</b>`)}</div>
-        ${ok ? '' : `<div class="rev-you">คำตอบของเจ้า: ${gave}</div>`}
-        <div class="rev-rule">${Z.rules[rule] || ''}</div></div>`;
-    }).join('');
-  (passed || test.kind === 'pre' ? sfx.win : sfx.deny)();
-}
-$('btn-test-close').onclick = () => {
-  const wasPost = test.kind === 'post', zi = test.zi;
-  test = null;
-  hideOverlays();
-  refreshHUD(); save();
-  if(wasPost){
-    openMap();
-    // The whole island is finished — this is the moment to ask what they
-    // thought of it, while it is still fresh.
-    const allDone = ZONES.every((_,i) => S.cleared[i] && zonePassed(i));
-    if(allDone && !S.survey) setTimeout(openSurvey, 900);
-  }
-  // The pre-test hands straight over to the teaching it was measuring against.
-  else if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 250);
-};
-
-// The sage is where a stuck student goes: read the lesson again, or drill it
-// with no health at stake and the reason shown after every single answer.
-function openSageMenu(){
-  const Z = ZONES[zone], t = S.practice[zone];
-  const done = t.asked ? ` (เคยฝึกแล้ว ${t.correct}/${t.asked} ข้อ)` : '';
-  $('sage-title').textContent = Z.topic;
-  $('sage-note').innerHTML = `ฝึกกี่ข้อก็ได้ ไม่เสียพลังชีวิต และมีคำอธิบายทุกข้อ${done}`;
-  showOverlay('screen-sage'); sfx.open();
-}
-$('btn-sage-lesson').onclick = () => { hideOverlays(); openLesson(zone); };
-$('btn-sage-practice').onclick = () => { hideOverlays(); startBattle('practice', null); };
-$('btn-sage-test').onclick = () => { hideOverlays(); startTest('post'); };
-$('btn-sage-close').onclick = () => hideOverlays();
-
-// ── the lesson: a worked example, one step at a time ───────────────────────
-// A finished answer is something to skim. Revealing the reasoning a step at a
-// time makes the student walk the same path they will have to walk alone.
-let lesson = {zi:0, ex:0, step:0};
 function openLesson(zi){
-  lesson = {zi, ex:0, step:0};
+  const Z = ZONES[zi];
+  $('lesson-title').textContent = Z.topic;
+  $('lesson-rules').innerHTML = Z.rules.map(r=>`<li>${r}</li>`).join('');
+  $('lesson-examples').innerHTML = Z.examples.map(e=>`<p>“${e}”</p>`).join('');
   S.lessonSeen[zi] = true; save();
-  renderLesson();
   showOverlay('screen-lesson'); sfx.open();
 }
-function renderLesson(){
-  const Z = ZONES[lesson.zi], w = Z.worked[lesson.ex];
-  const last = lesson.step >= w.steps.length;
-  $('lesson-title').textContent = Z.topic;
-  $('lesson-count').textContent = `ตัวอย่างที่ ${lesson.ex+1}/${Z.worked.length}`;
-  $('lesson-q').innerHTML = last
-    ? w.q.replace('___', `<b class="fill">${w.a}</b>`)
-    : w.q.replace('___', '<span class="blank">_____</span>');
-  $('lesson-steps').innerHTML = w.steps.slice(0, lesson.step)
-    .map((s,i) => `<li><span class="stepno">${i+1}</span>${s}</li>`).join('');
-  $('btn-lesson-step').textContent = last ? 'ตัวอย่างถัดไป →' : 'ขั้นต่อไป →';
-  $('btn-lesson-step').style.display =
-    (last && lesson.ex === Z.worked.length-1) ? 'none' : 'inline-block';
-  $('lesson-rules').innerHTML = Z.rules.map(r=>`<li>${r}</li>`).join('');
-}
-$('btn-lesson-step').onclick = () => {
-  const w = ZONES[lesson.zi].worked[lesson.ex];
-  if(lesson.step < w.steps.length){ lesson.step++; }
-  else { lesson.ex++; lesson.step = 0; }
-  sfx.open(); renderLesson();
-};
 $('btn-lesson-close').onclick = () => hideOverlays();
-$('btn-reward-close').onclick = () => {
-  hideOverlays();
-  // straight into the post-test; openMap only once it has been sat
-  if(S.cleared[zone] && !S.post[zone]) startTest('post');
-  else openMap();
-};
+$('btn-reward-close').onclick = () => { hideOverlays(); openMap(); };
 
 // ═════════════════════════════════════════════════════════════════ INPUT
 const keys = {};
@@ -3855,15 +3265,6 @@ function renderCodex(){
       : `<li style="opacity:.55;font-style:italic">🔒 ยังไม่พบเบาะแสนี้</li>`).join('') +
     `</ul>
      <div class="rule-gold tight"></div>
-     <div style="display:flex;justify-content:space-between;align-items:baseline">
-       <span class="label-eyebrow">คะแนนแบบทดสอบ</span>
-       <span style="font-weight:700;color:var(--wood)">${
-         S.pre[codexTab] ? S.pre[codexTab].score : '—'} → ${
-         S.post[codexTab] ? S.post[codexTab].score : '—'} / ${testTotal(codexTab)}</span>
-     </div>
-     <p class="tnote">ก่อนเรียน → หลังเรียน${
-       S.postAttempts[codexTab] > 1 ? ` · สอบซ้ำ ${S.postAttempts[codexTab]} ครั้ง (ดีสุด ${S.postBest[codexTab]})` : ''}</p>
-     <div class="rule-gold tight"></div>
      <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-2)">
        <span>รวมคำศัพท์ <b style="color:var(--wood)">${wordsFound()}/${wordsTotal()}</b></span>
        <span>ดินแดนที่ผ่าน <b style="color:var(--wood)">${clearedCount()}/${ZONES.length}</b></span>
@@ -3875,18 +3276,6 @@ $('btn-codex-close').onclick = () => {
   if(mode === 'map') showOverlay('screen-worldmap');
 };
 $('btn-quit').onclick = () => { save(); location.reload(); };
-$('btn-survey-open').onclick = () => { hideOverlays(); openSurvey(); };
-$('btn-code').onclick = () => {
-  const box = $('code-box');
-  box.hidden = !box.hidden;
-  if(!box.hidden){ $('code-text').value = resultCode(S); $('code-text').select(); }
-};
-$('btn-code-copy').onclick = async () => {
-  const ta = $('code-text'); ta.select();
-  try{ await navigator.clipboard.writeText(ta.value); }catch(e){ document.execCommand('copy'); }
-  $('btn-code-copy').textContent = '✔ คัดลอกแล้ว';
-  setTimeout(() => { $('btn-code-copy').textContent = '📋 คัดลอกรหัส'; }, 1800);
-};
 
 // ═════════════════════════════════════════════════════════════ GAME LOOP
 let last = 0;
@@ -3906,7 +3295,6 @@ function tick(now){
 }
 
 function update(dt){
-  if(S) S.timeMs[zone] = (S.timeMs[zone]||0) + dt*1000;
   const wasClock = clock;
   clock = (clock + dt/DAY_LENGTH) % 1;
   // Midnight rolls the day over, which is what the healer's daily dose is on.
@@ -4150,16 +3538,8 @@ regForm.addEventListener('submit', e => {
 setupTouch();
 VIAL_PROP = (propsNamed('vial')[0] ?? 0);
 lampTypes = new Set(propsNamed('lamp'));
-// ?teacher=1 opens the report instead of the game. Same convention as the
-// ?w= and ?hour= switches, and out of a student's way without being secret.
-if(params.get('teacher') === '1'){
-  renderTeacher();
-  showOverlay('screen-teacher');
-}
-
 loadImages().then(() => {
   resize();
-  if(params.get('teacher') === '1'){ requestAnimationFrame(tick); return; }
   landingScene();
   const lh = $('landing-hero').getContext('2d');
   lh.imageSmoothingEnabled = false;

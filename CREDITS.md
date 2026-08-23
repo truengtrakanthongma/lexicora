@@ -90,5 +90,6 @@ and the sword is drawn as the flying strike sprite instead.
 Fonts **Cinzel** and **Kanit** are served from Google Fonts under the
 SIL Open Font License 1.1.
 
-Game code, level design, grammar lessons and vocabulary are original work for
-this project.
+Game code, level design, grammar lessons, worked examples, the explanation
+written for every quiz item, the per-zone pre/post-test banks and the
+satisfaction questionnaire are original work for this project.
