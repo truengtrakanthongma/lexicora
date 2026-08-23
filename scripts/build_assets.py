@@ -261,7 +261,7 @@ def build_terrain():
 
 # Props the wind does not move. Foliage leans in a gust; masonry does not, and
 # a swaying brick house is more distracting than no wind at all.
-RIGID = ("rock", "crag", "shrine", "house_", "fountain", "fence",
+RIGID = ("rock", "crag", "shrine", "clue", "house_", "fountain", "fence",
          "lamp", "barrel", "crate", "sign")
 
 
@@ -329,6 +329,13 @@ def build_props():
     for i, col in enumerate((0, 3, 6)):
         shrine = pillar.crop((col * TILE, 0, (col + 1) * TILE, 3 * TILE))
         picks.append((f"shrine{i}", shrine, True))
+
+    # Clue stones: the slim pillar in column 2, two cells tall. Same family as
+    # the shrine and plainly smaller — the big stone carries the whole lesson,
+    # these carry one rule each. Rows 3 and 6 are the other stone colours.
+    for i, row in enumerate((0, 3, 6)):
+        marker = pillar.crop((2 * TILE, row * TILE, 3 * TILE, (row + 2) * TILE))
+        picks.append((f"clue{i}", marker, True))
 
     vases = load("Small_Flowers.png")            # 9 x 4 cells of 32px
     for i, col in enumerate((0, 1)):             # row 2 holds the glass vials

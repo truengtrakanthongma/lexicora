@@ -25,7 +25,7 @@ Licence: **CC-BY 3.0 / OGA-BY 3.0** (attribution required, no share-alike)
 | Trees (four seasons) | `trees_spring/summer/autumn/winter.png` |
 | Rocks and crags | `Rocks, Grasslands.png`, `Rocks, Cliffs.png` |
 | Grass tufts, flowers, mushrooms | `plants_summer/autumn.png`, `flowers.png`, `mushrooms.png` |
-| Shrines (stone pillars) | `Structure/Pillars/Stone Pillar A.png` |
+| Shrines and clue stones (stone pillars) | `Structure/Pillars/Stone Pillar A.png` |
 | Word vials | `Objects/Small Items/Flowers.png` |
 | Village huts | `Structure/Structures/Brick House A/B.png`, `Paneled House A.png` |
 | Fountain, fences, signposts | `Structure/Misc/Fountain A.png`, `Structure/Fences/Plain Fence A.png`, `Structure/Signs/Sign Backgrounds A.png` |

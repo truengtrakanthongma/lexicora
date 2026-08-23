@@ -97,6 +97,11 @@ console.log('zone', ZONE, 'frame byte deltas', delta(frames[0], frames[1]), delt
 // map on long legs until something engages. Trees and cliffs stop a leg early,
 // hence the many changes of heading rather than one long diagonal.
 let fought = false;
+// Walking is the thing most easily broken by a layout change, and it fails
+// silently: no error, just a hero who cannot leave the tile they landed on.
+// So the sweep is bracketed by two shots of the same view, and if they come
+// back near-identical the zone is walled in.
+const beforeSweep = await page.locator('#world').screenshot();
 const engaged = () => page.locator('#screen-battle.show').isVisible();
 const leg = async (keys, seconds) => {
   for (const k of keys) await page.keyboard.down(k);
@@ -117,7 +122,17 @@ for (const [keys, secs] of ROUTE) {
   if (fought) break;
   await leg(keys, secs);
 }
-if (!fought) await page.screenshot({ path: `${OUT}/z${ZONE}_nofight.png` });
+if (!fought) {
+  // Only meaningful when no battle interrupted the sweep — a battle overlay
+  // would explain the difference by itself.
+  await page.screenshot({ path: `${OUT}/z${ZONE}_nofight.png` });
+  const afterSweep = await page.locator('#world').screenshot();
+  const moved = delta(beforeSweep, afterSweep) / Math.max(1, beforeSweep.length);
+  console.log('view changed over the sweep:', (moved * 100).toFixed(1) + '%');
+  if (moved < 0.2) errors.push(
+    `stuck: the view barely changed (${(moved * 100).toFixed(1)}%) over a full ` +
+    `sweep of zone ${ZONE} — the hero cannot get anywhere`);
+}
 if (fought) {
   for (let round = 0; round < 3; round++) {
     const opts = page.locator('#battle-options .opt:not([disabled])');

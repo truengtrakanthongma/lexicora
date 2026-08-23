@@ -369,6 +369,9 @@ kbd{
   #quest-text{font-size:.76rem;}
   .sheet{padding:20px 18px 24px;}
   #battle-stage{height:150px;}
+  /* short screens: keep the notes to one line until asked for */
+  #battle-notes{--start-shut:1;}
+  #notes-list{max-height:64px;}
 }
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
@@ -397,6 +400,33 @@ kbd{
    fighters play their real ULPC attack and hurt animations on a single
    timeline, so nothing can drift out of step with anything else. */
 #battle-cv{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;}
+/* ---- field notes: what exploring the map earned you, in the boss fight ---- */
+#battle-notes{
+  margin:6px 0 2px;border:2px solid var(--wood-3);border-radius:8px;
+  background:linear-gradient(180deg,rgba(74,47,30,.07),rgba(74,47,30,.14));
+  overflow:hidden;
+}
+#btn-notes{
+  display:block;width:100%;text-align:left;cursor:pointer;
+  font-family:'Kanit',sans-serif;font-size:.78rem;font-weight:600;
+  color:var(--wood);background:rgba(255,255,255,.35);
+  border:0;border-bottom:1px solid var(--wood-3);padding:5px 10px;
+}
+#btn-notes:focus-visible{outline:3px solid var(--gold);outline-offset:-3px;}
+#notes-list{list-style:none;max-height:92px;overflow-y:auto;padding:5px 10px 7px;}
+#notes-list li{
+  font-size:.79rem;line-height:1.5;color:var(--ink);
+  padding-left:15px;position:relative;
+}
+#notes-list li::before{content:'❖';position:absolute;left:0;color:var(--gold-dk);font-size:.7rem;}
+#notes-list li.locked{color:var(--ink-2);opacity:.6;font-style:italic;}
+#notes-list li.locked::before{content:'🔒';font-size:.66rem;}
+#battle-notes.shut #notes-list{display:none;}
+/* the time markers you learned to spot, lit up in the question */
+mark.signal{
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold));
+  color:#3a2408;border-radius:4px;padding:0 4px;font-weight:700;
+}
 #btn-hint{margin-left:8px;}
 
 /* ------------------------------------------------------------ world map */
@@ -564,6 +594,10 @@ kbd{
         <canvas id="battle-cv"></canvas>
       </div>
       <div class="label-eyebrow" style="text-align:center" id="battle-topic">—</div>
+      <div id="battle-notes" hidden>
+        <button type="button" id="btn-notes">📓 สมุดบันทึก</button>
+        <ul id="notes-list"></ul>
+      </div>
       <p class="q-prompt" id="battle-question">—</p>
       <div id="battle-options"></div>
       <p id="battle-feedback"></p>
@@ -635,8 +669,10 @@ const ZONES = [
       'ใช้กับสิ่งที่ทำเป็นประจำ หรือความจริงทั่วไป',
       'ประธาน + กริยาช่อง 1 (เอกพจน์บุรุษที่ 3 เติม s/es)',
       'ปฏิเสธ: don\'t / doesn\'t + กริยาช่อง 1',
-      'คำถาม: Do / Does + ประธาน + กริยาช่อง 1 ?'
+      'คำถาม: Do / Does + ประธาน + กริยาช่อง 1 ?',
+      'คำชี้นำ: every day, always, usually, often, sometimes, never'
     ],
+    signals:['every day','on Sundays','always','usually','often','sometimes','never'], signalRule:4,
     examples:['She walks to school every day.','He doesn\'t like coffee.','Do you play football?'],
     words:[['forest','ป่าไม้'],['tree','ต้นไม้'],['river','แม่น้ำ'],['bird','นก'],
            ['leaf','ใบไม้'],['path','เส้นทาง'],['morning','ตอนเช้า'],['walk','เดิน']],
@@ -666,6 +702,7 @@ const ZONES = [
       'ปฏิเสธ: เติม not หลัง am/is/are (isn\'t, aren\'t)',
       'คำถาม: สลับ am/is/are มาไว้หน้าประธาน'
     ],
+    signals:['I','He','She','It','You','We','They'], signalRule:1,
     examples:['I am a student.','She is very kind.','They are not at home.'],
     words:[['hill','เนินเขา','n'],['grass','หญ้า'],['sheep','แกะ'],['farm','ฟาร์ม'],
            ['village','หมู่บ้าน'],['sky','ท้องฟ้า'],['wind','ลม'],['happy','มีความสุข']],
@@ -695,6 +732,7 @@ const ZONES = [
       'ปฏิเสธ: is / am / are + not + กริยาเติม -ing',
       'คำบอกเวลา: now, right now, at the moment, Look!'
     ],
+    signals:['right now','at the moment','Look!','now'], signalRule:3,
     examples:['She is reading a book now.','They are not playing outside.','Are you listening to me?'],
     words:[['desert','ทะเลทราย'],['sand','ทราย'],['camel','อูฐ'],['oasis','โอเอซิส'],
            ['hot','ร้อน'],['thirsty','กระหายน้ำ'],['travel','เดินทาง'],['map','แผนที่']],
@@ -724,6 +762,7 @@ const ZONES = [
       'ปฏิเสธ: did not (didn\'t) + กริยาช่อง 1',
       'คำบอกเวลา: yesterday, last night, ago, in 2020'
     ],
+    signals:['last night','last week','yesterday','ago','in 2020'], signalRule:3,
     examples:['I visited my grandmother last week.','He didn\'t finish his homework.','Did you see that movie?'],
     words:[['cave','ถ้ำ'],['rock','หิน'],['dark','มืด'],['torch','คบเพลิง'],
            ['deep','ลึก'],['echo','เสียงสะท้อน'],['found','พบ (อดีต)'],['climb','ปีน']],
@@ -751,8 +790,10 @@ const ZONES = [
       'ใช้กับเหตุการณ์ที่กำลังดำเนินอยู่ ณ จุดหนึ่งในอดีต',
       'ประธาน + was / were + กริยาเติม -ing',
       'I/He/She/It + was · You/We/They + were',
-      'มักถูกขัดจังหวะ: …was V-ing when + Past Simple'
+      'มักถูกขัดจังหวะ: …was V-ing when + Past Simple',
+      'คำชี้นำ: while, when, at 8 o\'clock, all evening'
     ],
+    signals:['at 8 o\'clock','all evening','while','when'], signalRule:4,
     examples:['I was reading when she called.','They were not listening.','Were you sleeping at 10 PM?'],
     words:[['snow','หิมะ'],['ice','น้ำแข็ง'],['mountain','ภูเขา'],['cold','หนาว'],
            ['freeze','แข็งตัว'],['peak','ยอดเขา'],['warm','อบอุ่น'],['slip','ลื่น']],
@@ -780,8 +821,10 @@ const ZONES = [
       'ใช้พูดถึงอนาคต การตัดสินใจ ณ ขณะพูด หรือการคาดการณ์',
       'will: ประธาน + will + กริยาช่อง 1',
       'going to: ประธาน + am/is/are + going to + กริยาช่อง 1 (มีแผน/หลักฐาน)',
-      'ปฏิเสธ: will not (won\'t) + กริยาช่อง 1'
+      'ปฏิเสธ: will not (won\'t) + กริยาช่อง 1',
+      'คำชี้นำ: tomorrow, next week, soon, later, tonight'
     ],
+    signals:['next week','tomorrow','tonight','soon','later'], signalRule:4,
     examples:['I will help you.','Look at those clouds — it is going to rain.','Will you come to the party?'],
     words:[['fire','ไฟ'],['flame','เปลวไฟ'],['smoke','ควัน'],['ash','เถ้าถ่าน'],
            ['burn','เผาไหม้'],['danger','อันตราย'],['escape','หลบหนี'],['brave','กล้าหาญ']],
@@ -811,6 +854,7 @@ const ZONES = [
       'He/She/It + has · I/You/We/They + have',
       'คำที่ใช้บ่อย: already, yet, just, ever, never, since, for'
     ],
+    signals:['already','yet','just','ever','never','since','for'], signalRule:3,
     examples:['I have visited Japan twice.','She hasn\'t finished her homework yet.','Have you ever eaten sushi?'],
     words:[['ruin','ซากปรักหักพัง'],['ancient','โบราณ'],['temple','วิหาร'],['statue','รูปปั้น'],
            ['treasure','สมบัติ'],['secret','ความลับ'],['history','ประวัติศาสตร์'],['discover','ค้นพบ']],
@@ -840,6 +884,7 @@ const ZONES = [
       'can = ทำได้ · must = ต้อง · should = ควร · may = อาจจะ',
       'ปฏิเสธ: เติม not หลัง modal (cannot, mustn\'t, shouldn\'t)'
     ],
+    signals:[], signalRule:-1,
     examples:['I can swim very well.','You should study every day.','She must finish it today.'],
     words:[['magic','เวทมนตร์'],['spell','คาถา'],['fairy','นางฟ้า'],['glow','เปล่งแสง'],
            ['wish','ปรารถนา'],['power','พลัง'],['secretly','อย่างลับๆ'],['believe','เชื่อ']],
@@ -869,6 +914,7 @@ const ZONES = [
       'มักคู่กับ Past Simple: had + V3 … before / after / when …',
       'ปฏิเสธ: had not (hadn\'t) + กริยาช่อง 3'
     ],
+    signals:['by the time','before','after','when'], signalRule:2,
     examples:['I had finished my homework before dinner.','She had never seen snow before that day.','They had left when we arrived.'],
     words:[['shadow','เงามืด'],['fear','ความกลัว'],['silence','ความเงียบ'],['bridge','สะพาน'],
            ['fall','ตกลงมา'],['brave','กล้าหาญ'],['already','เรียบร้อยแล้ว'],['before','ก่อนหน้า']],
@@ -898,6 +944,7 @@ const ZONES = [
       'every day / always → Present Simple · now → Present Continuous',
       'yesterday / ago → Past Simple · tomorrow / will → Future'
     ],
+    signals:['every day','always','yesterday','tomorrow','already','now','ago','will','yet'], signalRule:2,
     examples:['She goes to school every day.','She is going to school now.','She went to school yesterday.'],
     words:[['castle','ปราสาท'],['king','กษัตริย์'],['throne','บัลลังก์'],['sword','ดาบ'],
            ['victory','ชัยชนะ'],['courage','ความกล้าหาญ'],['final','สุดท้าย'],['legend','ตำนาน']],
@@ -1058,6 +1105,7 @@ function freshState(profile, cls){
     cleared:ZONES.map(()=>false),
     stars:ZONES.map(()=>0),
     words:ZONES.map(z => z.words.map(()=>false)),
+    clues:ZONES.map(z => z.rules.map(()=>false)),
     lessonSeen:ZONES.map(()=>false)
   };
 }
@@ -1092,7 +1140,7 @@ const world = {
   // what the terrain blocks, before any prop is stamped on top of it
   baseSolid:new Uint8Array(ZW*ZH),
   props:[], crystals:[], shrine:null, boss:null, monsters:[],
-  npcs:[], village:null, campfire:null, drops:[]
+  npcs:[], village:null, campfire:null, drops:[], clues:[]
 };
 const tIdx = (x,y) => y*ZW + x;
 
@@ -1101,7 +1149,7 @@ function buildZone(zi){
   const g1 = T[Z.ground], g2 = T[Z.ground2], gp = T[Z.path];
   const zonePropPool = propsMatching(Z.props);
   const shrineProp = propsNamed('shrine')[zi % Math.max(1, propsNamed('shrine').length)] ?? 0;
-  world.props = []; world.crystals = []; world.monsters = []; world.drops = [];
+  world.props = []; world.crystals = []; world.monsters = []; world.drops = []; world.clues = [];
   mmZone = -1;                  // the cached minimap belongs to the old layout
 
   for(let y=0;y<ZH;y++) for(let x=0;x<ZW;x++){
@@ -1126,15 +1174,36 @@ function buildZone(zi){
   world.baseSolid.set(world.solid);
 
   // ---- scenery
+  // Clutter is budgeted by the ground it takes up, not by the number of props.
+  // A boulder standing on four tiles has to be four times rarer than a shrub
+  // standing on one, or a rocky zone blocks four times as much ground as a
+  // grassy one from the same density — which is how the desert became a wall.
+  const claimed = new Uint8Array(ZW*ZH);
   for(let y=2;y<ZH-2;y++) for(let x=2;x<ZW-2;x++){
     const i = tIdx(x,y);
     if(world.solid[i] || world.tiles[i]===gp) continue;
     const dens = noise2(x*.09, y*.09, zi*7)*.1 + .022;
-    if(hash2(x,y,zi*13+1) < dens){
-      const pool = zonePropPool;
-      const type = pool[Math.floor(hash2(x,y,zi*13+2)*pool.length)];
-      world.props.push({x:x*TILE+TILE/2, y:y*TILE+TILE, type});
+    if(hash2(x,y,zi*13+1) >= dens) continue;
+    const pool = zonePropPool;
+    const type = pool[Math.floor(hash2(x,y,zi*13+2)*pool.length)];
+    const m = PROPS[type];
+    const prop = {x:x*TILE+TILE/2, y:y*TILE+TILE, type};
+    if(m && m.s){
+      const tiles = Math.max(1, (m.fw/TILE) * (m.fd/TILE));
+      if(hash2(x,y,zi*13+4) > 1/tiles) continue;
+      // Keep solid props a tile apart. Left to itself the density noise
+      // clusters them, and touching footprints fuse into walls.
+      const want = propTiles(prop);
+      if(want.some(j => claimed[j])) continue;
+      for(const j of want){
+        const cx = j%ZW, cy = (j/ZW)|0;
+        for(let dy=-1; dy<=1; dy++) for(let dx=-1; dx<=1; dx++){
+          const nx = cx+dx, ny = cy+dy;
+          if(nx>=0 && ny>=0 && nx<ZW && ny<ZH) claimed[tIdx(nx,ny)] = 1;
+        }
+      }
     }
+    world.props.push(prop);
   }
 
   // ---- clear a landing glade at the centre so arrivals are never boxed in
@@ -1159,7 +1228,8 @@ function buildZone(zi){
   // have finished adding and removing them; then the layout is checked and
   // opened up if anything ended up walled off.
   stampProps();
-  const {seen} = ensureReachable(glX, glY);
+  ensureReachable(glX, glY);
+  const seen = ensureOpenGround(glX, glY);
 
   // ---- word crystals, on ground you can actually walk to
   let placed = 0, guard = 0;
@@ -1174,6 +1244,26 @@ function buildZone(zi){
   }
   if(placed < Z.words.length)
     console.warn(`lexicora: only placed ${placed}/${Z.words.length} crystals in zone ${zi}`);
+
+  // ---- clue stones: one per rule of this zone's grammar, out in the map.
+  // These are what turns walking around into knowing something, so they are
+  // spread wide and never hidden behind the glade.
+  const cluePool = propsNamed('clue');
+  let cl = 0; guard = 0;
+  while(cl < Z.rules.length && guard < 5000){
+    guard++;
+    const x = 2+Math.floor(hash2(guard, zi, 211)*(ZW-4));
+    const y = 2+Math.floor(hash2(zi, guard, 307)*(ZH-4));
+    if(!seen[tIdx(x,y)]) continue;
+    if(Math.hypot(x-glX, y-glY) < 7) continue;
+    if(world.clues.some(c => Math.hypot(c.x-x*TILE, c.y-y*TILE) < TILE*7)) continue;
+    if(world.crystals.some(c => Math.hypot(c.x-x*TILE, c.y-y*TILE) < TILE*3)) continue;
+    world.clues.push({x:x*TILE+TILE/2, y:y*TILE+TILE, idx:cl,
+                      type: cluePool[cl % Math.max(1, cluePool.length)] ?? 0});
+    cl++;
+  }
+  if(cl < Z.rules.length)
+    console.warn(`lexicora: only placed ${cl}/${Z.rules.length} clue stones in zone ${zi}`);
 
   // ---- roaming monsters, kept clear of the arrival glade
   for(let m=0;m<10;m++){
@@ -1294,6 +1384,42 @@ function hidesPlayer(p, m){
   const left = p.x - m.w/2;
   return player.x > left - 8 && player.x < left + m.w + 8 &&
          player.y - 44 > p.y - m.h && player.y - 8 < p.y;
+}
+
+// How much of the ground the terrain leaves walkable you can actually walk to.
+// Terrain blocking is excluded: a wide river is the map's design, not clutter.
+function openFraction(seen){
+  let open = 0, walkable = 0;
+  for(let i=0;i<ZW*ZH;i++){
+    if(world.baseSolid[i]) continue;
+    walkable++;
+    if(seen[i]) open++;
+  }
+  return walkable ? open/walkable : 1;
+}
+const OPEN_TARGET = .62;
+// Landmarks being reachable is not the same as the zone being pleasant to walk
+// through. This thins the biggest obstacles until enough of the map is open,
+// so no prop pool — however rocky — can turn a zone into a maze.
+function ensureOpenGround(glX, glY){
+  let seen = floodFrom(glX, glY);
+  for(let pass=0; pass<8 && openFraction(seen) < OPEN_TARGET; pass++){
+    const solids = world.props
+      .map((p, i) => [i, propTiles(p).length])
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1]);
+    if(!solids.length) break;
+    const drop = new Set(solids.slice(0, Math.max(1, Math.ceil(solids.length*.12)))
+                               .map(([i]) => i));
+    world.props = world.props.filter((_, i) => !drop.has(i));
+    stampProps();
+    ensureReachable(glX, glY);
+    seen = floodFrom(glX, glY);
+  }
+  const open = openFraction(seen);
+  if(open < OPEN_TARGET)
+    console.warn(`lexicora: zone is still only ${Math.round(open*100)}% walkable`);
+  return seen;
 }
 
 // A prop blocks the ground it stands on, not the one tile it was dropped at.
@@ -1702,6 +1828,7 @@ function drawWorld(dt){
   for(const m of world.monsters) if(!m.dead && vis(m.x,m.y)) draws.push({y:m.y, kind:'mon', o:m});
   for(const n of world.npcs) if(vis(n.x,n.y)) draws.push({y:n.y, kind:'npc', o:n});
   for(const d of world.drops) if(vis(d.x,d.y)) draws.push({y:d.y, kind:'drop', o:d});
+  for(const c of world.clues) if(vis(c.x,c.y)) draws.push({y:c.y, kind:'clue', o:c});
   if(world.campfire && vis(world.campfire.x, world.campfire.y))
     draws.push({y:world.campfire.y, kind:'fire', o:world.campfire});
   draws.push({y:player.y, kind:'player'});
@@ -1752,6 +1879,29 @@ function drawWorld(dt){
       const f = REDUCED ? 0 : Math.floor(t*8)%4;
       if(IMG.campfire) ctx.drawImage(IMG.campfire, f*TILE, 0, TILE, TILE,
         Math.round(d.o.x-TILE/2), Math.round(d.o.y-TILE), TILE, TILE);
+    } else if(d.kind === 'clue'){
+      const c = d.o, m = PROPS[c.type];
+      if(!IMG.props || !m) continue;
+      shadow(c.x, c.y, 8, .30);
+      // An unread stone glows and carries a mark, so it reads as something to
+      // walk over to rather than one more pillar in the scenery.
+      if(!S.clues[zone][c.idx]){
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = .35 + .2*Math.sin(t*2.4 + c.x*.02);
+        const g = ctx.createRadialGradient(c.x, c.y-26, 2, c.x, c.y-26, 34);
+        g.addColorStop(0, Z.accent); g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = g; ctx.fillRect(c.x-34, c.y-60, 68, 68);
+        ctx.restore();
+      }
+      ctx.drawImage(IMG.props, m.x, m.y, m.w, m.h,
+        Math.round(c.x-m.w/2), Math.round(c.y-m.h), m.w, m.h);
+      if(!S.clues[zone][c.idx]){
+        ctx.save();
+        ctx.font = '12px system-ui, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('📜', Math.round(c.x), Math.round(c.y - m.h - 6 + Math.sin(t*3)*2));
+        ctx.restore();
+      }
     } else if(d.kind === 'drop'){
       const dr = d.o, bob = Math.sin(t*3 + dr.x*.02)*2;
       const vm = PROPS[VIAL_PROP];
@@ -2018,6 +2168,15 @@ function drawMinimap(){
   mmx.drawImage(mmTerrain, 0, 0);
   for(const c of world.crystals){ if(c.got) continue;
     mmx.fillStyle='#eafcff'; mmx.fillRect(c.x/TILE*sx-1, c.y/TILE*sy-1, 3, 3); }
+  // Unread clue stones, in the gold the scroll icons use — the boss is gated
+  // on these, so they have to be findable.
+  for(const c of world.clues){
+    if(S.clues[zone][c.idx]) continue;
+    mmx.fillStyle='#ffd76a'; mmx.strokeStyle='#4a2f1e'; mmx.lineWidth=1;
+    const cx = c.x/TILE*sx, cy = c.y/TILE*sy;
+    mmx.beginPath(); mmx.moveTo(cx, cy-4); mmx.lineTo(cx+3, cy+3); mmx.lineTo(cx-3, cy+3);
+    mmx.closePath(); mmx.fill(); mmx.stroke();
+  }
   if(!S.cleared[zone]){ mmx.fillStyle='#ff5a4a';
     mmx.fillRect(world.boss.x/TILE*sx-2, world.boss.y/TILE*sy-2, 5, 5); }
   mmx.fillStyle='#ffe08a';
@@ -2047,9 +2206,12 @@ function refreshHUD(){
   $('xp-fill').style.width = clamp(S.xp/xpNeed()*100,0,100)+'%';
   $('region-name').textContent = Z.no+'. '+Z.name;
   const got = S.words[zone].filter(Boolean).length;
+  const clues = cluesFound(zone);
+  const clueLine = `เบาะแส ${clues}/${Z.rules.length}` +
+        (clues < Z.rules.length ? ' 🗿' : ' ✔');
   $('quest-text').innerHTML = S.cleared[zone]
     ? `ดินแดนนี้ปลดปล่อยแล้ว · คริสตัล ${got}/${Z.words.length}`
-    : `ปราบผู้พิทักษ์<br>คริสตัลคำศัพท์ ${got}/${Z.words.length}`;
+    : `ปราบผู้พิทักษ์<br>คริสตัลคำศัพท์ ${got}/${Z.words.length}<br>${clueLine}`;
   const pc = $('portrait').getContext('2d');
   pc.imageSmoothingEnabled = false; pc.clearRect(0,0,CH,CH);
   const im = heroImg(); if(im) pc.drawImage(im, 0, 0, CH, CH, 0, 0, CH, CH);
@@ -2498,13 +2660,68 @@ function stopDuel(){
   duel.raf = 0; duel.hero = duel.foe = duel.fx = null;
 }
 
+// ── what exploring earned you, brought into the fight ──────────────────────
+// The rules you found out in the map, listed beside the question. The ones you
+// have not found yet stay locked, so the panel shows what is still out there.
+function renderNotes(isBoss){
+  const box = $('battle-notes');
+  box.hidden = !isBoss;
+  if(!isBoss) return;
+  const Z = ZONES[zone], list = $('notes-list');
+  list.innerHTML = '';
+  Z.rules.forEach((r, i) => {
+    const li = document.createElement('li');
+    if(S.clues[zone][i]) li.textContent = r;
+    else { li.className = 'locked'; li.textContent = 'ยังไม่พบเบาะแสนี้'; }
+    list.appendChild(li);
+  });
+  $('btn-notes').textContent =
+    `📓 สมุดบันทึก · ${cluesFound(zone)}/${Z.rules.length}`;
+  // Short screens open it on demand so it can never push the answers off view.
+  const shut = getComputedStyle(box).getPropertyValue('--start-shut').trim() === '1';
+  box.classList.toggle('shut', shut);
+  $('btn-notes').setAttribute('aria-expanded', String(!shut));
+}
+$('btn-notes').onclick = () => {
+  const box = $('battle-notes');
+  const open = box.classList.toggle('shut');
+  $('btn-notes').setAttribute('aria-expanded', String(!open));
+};
+function refreshHintLabel(){
+  const b = battle; if(!b) return;
+  $('btn-hint').textContent = b.hintLeft > 1
+    ? `✨ เวทเปิดเผย ×${b.hintLeft}` : '✨ เวทเปิดเผย';
+}
+// Light up the time markers in the question — but only once the clue stone
+// that teaches them has been read. Spotting the marker is the actual skill;
+// this shows a student what they are supposed to be looking at.
+function markSignals(text){
+  const Z = ZONES[zone];
+  if(Z.signalRule < 0 || !S.clues[zone][Z.signalRule]) return text;
+  let out = text;
+  for(const sig of Z.signals){
+    const esc = sig.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // \b does not fit a phrase ending in "!", so only guard the edges that
+    // are word characters
+    const left = /^\w/.test(sig) ? '\\b' : '';
+    const right = /\w$/.test(sig) ? '\\b' : '';
+    out = out.replace(new RegExp(left + esc + right, 'gi'),
+                      m => `<mark class="signal">${m}</mark>`);
+  }
+  return out;
+}
+
 function startBattle(kind, target){
   const Z = ZONES[zone], isBoss = kind === 'boss', C = CLASSES[heroCls()];
   const maxHP = isBoss ? 8 : 4;
+  // Every clue stone read out in the map is one more use of ✨ เวทเปิดเผย in
+  // the boss fight, for any class. That is what walking the map buys you.
+  const clueHints = isBoss ? cluesFound(zone) : 0;
   battle = {kind, target, hp:maxHP, hpMax:maxHP, pool:shuffle(Z.quiz), qi:0, locked:false,
-            wrong:0, hintLeft: C.hint ? 1 : 0};
+            wrong:0, hintLeft: (C.hint ? 1 : 0) + clueHints};
   $('enemy-name').textContent = isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
   $('battle-topic').textContent = Z.topic;
+  renderNotes(isBoss);
 
   const t0 = performance.now()/1000;
   const kit = heroCls();
@@ -2516,8 +2733,10 @@ function startBattle(kind, target){
   duel.fx = null;
   if(!duel.raf) drawDuel();
 
-  $('btn-hint').style.display = C.hint ? 'inline-block' : 'none';
+  // shown whenever there is a charge to spend, not only for the mage
+  $('btn-hint').style.display = battle.hintLeft > 0 ? 'inline-block' : 'none';
   $('btn-hint').disabled = false;
+  refreshHintLabel();
   renderBattleQ();
   showOverlay('screen-battle');
   // after the overlay is up, so the stage has a real width to measure — sized
@@ -2529,7 +2748,7 @@ $('btn-hint').onclick = () => {
   const b = battle;
   if(!b || b.locked || b.hintLeft <= 0) return;
   const opts = [...$('battle-options').children];
-  const ans = b.pool[b.qi][2];
+  const ans = b.shown.ans;
   const wrongOnes = opts.map((o,i)=>i).filter(i => i !== ans && !opts[i].disabled);
   shuffle(wrongOnes).slice(0,2).forEach(i => {
     opts[i].disabled = true;
@@ -2538,20 +2757,28 @@ $('btn-hint').onclick = () => {
   });
   b.hintLeft--;
   $('btn-hint').disabled = true;
+  refreshHintLabel();
   sfx.pickup();
 };
 function renderBattleQ(){
   const b = battle;
   if(b.qi >= b.pool.length){ b.pool = shuffle(b.pool); b.qi = 0; }
   const [q,opts,ans] = b.pool[b.qi];
-  $('battle-question').innerHTML = q.replace('___','<span class="blank">_____</span>');
+  // Shuffle the four answers. Written in order they gave the answer away by
+  // position — Present Continuous had it in slot 3 for eleven of twelve
+  // questions, Modal Verbs in slot 1 for all twelve — so a student could clear
+  // a zone by learning the button, then came unstuck the moment it moved.
+  const order = shuffle(opts.map((_,i) => i));
+  b.shown = {opts: order.map(i => opts[i]), ans: order.indexOf(ans)};
+  $('battle-question').innerHTML =
+    markSignals(q).replace('___','<span class="blank">_____</span>');
   const box = $('battle-options'); box.innerHTML = '';
-  opts.forEach((o,i) => {
+  b.shown.opts.forEach((o,i) => {
     const btn = document.createElement('button');
     btn.className = 'opt'; btn.type = 'button';
     btn.innerHTML = `<span class="key">${i+1}</span>`;
     btn.appendChild(document.createTextNode(o));
-    btn.onclick = () => answerBattle(i, ans, btn);
+    btn.onclick = () => answerBattle(i, b.shown.ans, btn);
     box.appendChild(btn);
   });
   $('battle-feedback').textContent = '';
@@ -2564,6 +2791,7 @@ function renderBattleQ(){
   }
   b.locked = false;
   if(b.hintLeft > 0) $('btn-hint').disabled = false;
+  refreshHintLabel();
 }
 function answerBattle(sel, ans, btn){
   const b = battle; if(!b || b.locked) return;
@@ -2600,7 +2828,7 @@ function answerBattle(sel, ans, btn){
       duelHit(duel.hero);
       duelAct(duel.hero, 'hurt', .5);
     }, LAND*1000);
-    $('battle-feedback').innerHTML = `<span style="color:#96271f">✖ พลาด! คำตอบคือ <b>${b.pool[b.qi][1][ans]}</b></span>`;
+    $('battle-feedback').innerHTML = `<span style="color:#96271f">✖ พลาด! คำตอบคือ <b>${b.shown.opts[b.shown.ans]}</b></span>`;
     if(S.hp <= 0){ setTimeout(loseBattle, 1200); return; }
   }
   b.qi++;
@@ -2662,11 +2890,36 @@ function interact(){
   if(mode !== 'play' || battle) return;
   const npc = world.npcs.find(n => near(n, 62));
   if(npc){ talkTo(npc); return; }
+  const stone = world.clues.find(c => !S.clues[zone][c.idx] && near(c, 52));
+  if(stone){ readClue(stone); return; }
   if(near(world.shrine, 58)){ openLesson(zone); return; }
   if(!S.cleared[zone] && near(world.boss, 76)){
     if(!S.lessonSeen[zone]){ toast('📜','อ่านศิลาจารึกก่อนท้าผู้พิทักษ์'); sfx.deny(); return; }
+    // You cannot fight what you have not studied. The stones are marked on the
+    // minimap and the scout points at the nearest one, so this sends you out
+    // to look rather than leaving you stuck at the door.
+    const left = cluesLeft(zone);
+    if(left > 0){
+      toast('🗿', `ยังขาดเบาะแสอีก <b>${left}</b> ชิ้น · หาศิลาเบาะแสในแผนที่ก่อน`);
+      sfx.deny(); return;
+    }
     startBattle('boss', world.boss); return;
   }
+}
+const cluesFound = zi => S.clues[zi].filter(Boolean).length;
+const cluesLeft = zi => S.clues[zi].length - cluesFound(zi);
+function readClue(stone){
+  const Z = ZONES[zone];
+  S.clues[zone][stone.idx] = true;
+  S.xp += 10;
+  while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax; }
+  sfx.pickup();
+  puff(stone.x, stone.y-30, Z.accent, 12, 46);
+  const left = cluesLeft(zone);
+  toast('🗿', `<b>${Z.rules[stone.idx]}</b>` +
+        (left ? `<br><span style="opacity:.75">เหลืออีก ${left} ชิ้น</span>`
+              : '<br><span style="opacity:.75">ครบแล้ว! ท้าผู้พิทักษ์ได้เลย</span>'));
+  refreshHUD(); save();
 }
 // What each villager is for. Nothing here hands out crystals — the hamlet is
 // support, so exploring still matters.
@@ -2692,21 +2945,26 @@ function talkTo(n){
     return;
   }
 
-  // scout: points at the nearest crystal you have not found yet
-  const left = world.crystals.filter(c => !c.got);
-  if(!left.length){
-    toast(k.icon, 'นักสอดแนม: “เจ้าเก็บคริสตัลครบแล้ว! ไปจัดการผู้พิทักษ์เลย”');
+  // scout: points at the nearest thing you still have to find. Clue stones
+  // come first — the boss is gated on those, so being sent to a crystal while
+  // a stone is missing would be sending you the wrong way.
+  const stones = world.clues.filter(c => !S.clues[zone][c.idx]);
+  const gems = world.crystals.filter(c => !c.got);
+  const hunting = stones.length ? stones : gems;
+  const what = stones.length ? 'ศิลาเบาะแส' : 'คริสตัล';
+  if(!hunting.length){
+    toast(k.icon, 'นักสอดแนม: “เจ้าเก็บครบทุกอย่างแล้ว! ไปจัดการผู้พิทักษ์เลย”');
     return;
   }
-  let best = left[0], bd = Infinity;
-  for(const c of left){
+  let best = hunting[0], bd = Infinity;
+  for(const c of hunting){
     const d = Math.hypot(c.x-player.x, c.y-player.y);
     if(d < bd){ bd = d; best = c; }
   }
   const ang = Math.atan2(best.y-player.y, best.x-player.x);
   // atan2 gives 0 at east and grows clockwise on screen; rotate so 0 is north
   const dirName = COMPASS[(Math.round((ang*4/Math.PI) + 2) + 8) % 8];
-  toast(k.icon, `นักสอดแนม: “คริสตัลใกล้สุดอยู่ทาง<b>${dirName}</b> ราว ${Math.round(bd/TILE)} ช่อง”`);
+  toast(k.icon, `นักสอดแนม: “${what}ใกล้สุดอยู่ทาง<b>${dirName}</b> ราว ${Math.round(bd/TILE)} ช่อง”`);
 }
 
 function openLesson(zi){
@@ -2808,6 +3066,16 @@ function renderCodex(){
       ? `<div class="word-chip"><b>${w[0]}</b><span>${w[1]}</span></div>`
       : `<div class="word-chip locked"><b>? ? ?</b><span>ยังไม่พบ</span></div>`).join('') +
     `</div>
+     <div class="rule-gold tight"></div>
+     <div style="display:flex;justify-content:space-between;align-items:baseline">
+       <span class="label-eyebrow">เบาะแสไวยากรณ์</span>
+       <span style="font-weight:700;color:var(--wood)">${S.clues[codexTab].filter(Boolean).length}/${Z.rules.length} ชิ้น</span>
+     </div>
+     <ul class="lesson-rules">` +
+    Z.rules.map((r,i) => S.clues[codexTab][i]
+      ? `<li>${r}</li>`
+      : `<li style="opacity:.55;font-style:italic">🔒 ยังไม่พบเบาะแสนี้</li>`).join('') +
+    `</ul>
      <div class="rule-gold tight"></div>
      <div style="display:flex;gap:18px;flex-wrap:wrap;font-size:.88rem;color:var(--ink-2)">
        <span>รวมคำศัพท์ <b style="color:var(--wood)">${wordsFound()}/${wordsTotal()}</b></span>
@@ -3056,6 +3324,9 @@ regForm.addEventListener('submit', e => {
   if(!S.cleared || S.cleared.length !== ZONES.length) S.cleared = ZONES.map(()=>false);
   if(!S.stars || S.stars.length !== ZONES.length) S.stars = ZONES.map(()=>0);
   if(!S.lessonSeen || S.lessonSeen.length !== ZONES.length) S.lessonSeen = ZONES.map(()=>false);
+  // saves made before clue stones existed
+  if(!S.clues || S.clues.length !== ZONES.length) S.clues = ZONES.map(z => z.rules.map(()=>false));
+  ZONES.forEach((z,i) => { while(S.clues[i].length < z.rules.length) S.clues[i].push(false); });
   zone = clamp(clearedCount(), 0, ZONES.length-1);
   buildZone(zone);
   refreshHUD();
