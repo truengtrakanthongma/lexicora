@@ -52,8 +52,11 @@ await page.evaluate(() => {
   for (const k of Object.keys(all)) {
     const s = all[k];
     s.cleared = s.cleared.map(() => true);
-    s.postBest = s.postBest.map(() => 10);
-    s.pre = s.pre.map(() => ({score: 5, total: 10, at: Date.now(), ms: 1}));
+    // Any value at or above the test length clears the pass gate; the harness
+    // only needs the map open, and hard-coding the length would rot whenever
+    // TEST_ITEMS or VOCAB_ITEMS changes.
+    s.postBest = s.postBest.map(() => 999);
+    s.pre = s.pre.map(() => ({score: 5, total: 14, at: Date.now(), ms: 1}));
     s.lessonSeen = s.lessonSeen.map(() => true);
   }
   localStorage.setItem('lexicoraSavesV3', JSON.stringify(all));

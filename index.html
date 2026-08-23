@@ -466,8 +466,22 @@ mark.signal{
 #teacher-table th,#teacher-table td{border:1px solid rgba(74,47,30,.25);padding:5px 8px;text-align:center;white-space:nowrap;}
 #teacher-table th{background:linear-gradient(180deg,#e9d9b6,#dcc79a);font-weight:700;}
 #teacher-table td.name{text-align:left;}
+#teacher-items{display:flex;flex-direction:column;gap:12px;}
+.ia-zone table{border-collapse:collapse;width:100%;font-size:.78rem;font-variant-numeric:tabular-nums;}
+.ia-zone th,.ia-zone td{border:1px solid rgba(74,47,30,.25);padding:4px 8px;text-align:center;}
+.ia-zone th{background:linear-gradient(180deg,#e9d9b6,#dcc79a);}
+.ia-zone td.name{text-align:left;white-space:normal;}
+.ia-head{font-weight:700;color:var(--wood);margin-bottom:4px;}
+.ia-head span{font-weight:400;color:var(--ink-2);font-size:.8rem;}
+.ia-zone tr.hard td{background:rgba(179,58,50,.16);}
+.ia-zone tr.easy td{background:rgba(30,91,58,.13);}
 #teacher-table tr:nth-child(even) td{background:rgba(255,255,255,.45);}
 .tnote{font-size:.78rem;color:var(--ink-2);margin:3px 0 6px;}
+#teacher-hint{margin-top:14px;font-size:.78rem;color:rgba(255,238,196,.72);text-align:center;}
+#teacher-hint a{color:var(--gold-hi);text-underline-offset:3px;}
+#resume-list{margin-bottom:6px;}
+#resume-buttons{display:flex;flex-direction:column;gap:6px;}
+#resume-buttons .btn{width:100%;font-size:.86rem;padding:.42rem .8rem;text-align:left;}
 #code-box{margin-top:10px}
 #code-text,
 #teacher-csv,#teacher-import{
@@ -636,6 +650,7 @@ mark.signal{
         ล่ามอนสเตอร์ เก็บคริสตัลคำศัพท์ และปราบเจ้าผู้พิทักษ์ เพื่อปลดปล่อย Lexicora
       </p>
       <button class="btn btn-gold" id="btn-begin" style="font-size:1.16rem;padding:.8rem 2.3rem">เริ่มการผจญภัย</button>
+      <p id="teacher-hint">สำหรับครู · <a href="?teacher=1">เปิดรายงานผลการเรียน</a></p>
     </div>
     <div id="landing-credit">พัฒนาโดยครูตรึงตระกานต์ ทองมา · โรงเรียนบ้านหัวถนน · ปีการศึกษา 2568</div>
   </div>
@@ -644,6 +659,12 @@ mark.signal{
   <div class="overlay dim" id="screen-register">
     <div class="scroll-panel sheet corner-bottom" style="max-width:430px">
       <div class="label-eyebrow" style="text-align:center">จารึกชื่อผู้กล้า</div>
+      <div id="resume-list" hidden>
+        <div class="label-eyebrow">เล่นต่อจากเดิม</div>
+        <div id="resume-buttons"></div>
+        <div class="rule-gold tight"></div>
+        <div class="label-eyebrow">หรือลงทะเบียนใหม่</div>
+      </div>
       <h2 class="title-epic" style="font-size:1.9rem;text-align:center">Wordkeeper</h2>
       <div class="rule-gold"></div>
       <form id="form-register">
@@ -757,9 +778,13 @@ mark.signal{
     <div id="teacher-wrap">
       <h2 class="title-epic" style="font-size:1.7rem">รายงานผลการเรียน · Lexicora</h2>
       <div class="rule-gold"></div>
+      <p class="tnote" id="teacher-setup">—</p>
       <div id="teacher-summary"></div>
       <div id="teacher-table"></div>
-      <div class="label-eyebrow" style="margin-top:16px">ส่งออกข้อมูล (CSV)</div>
+      <div class="label-eyebrow" style="margin-top:20px">วิเคราะห์รายข้อ (ค่าความยาก p)</div>
+      <p class="tnote">p = สัดส่วนนักเรียนที่ตอบข้อนั้นถูก · <b>แดง</b> = ยากเกินไป (p&lt;.20) · <b>เขียว</b> = ง่ายเกินไป (p&gt;.80) · ข้อคำศัพท์สร้างจากคลังคำของด่าน จึงไม่อยู่ในตารางนี้</p>
+      <div id="teacher-items"></div>
+      <div class="label-eyebrow" style="margin-top:20px">ส่งออกข้อมูล (CSV)</div>
       <p class="tnote">กดคัดลอก แล้ววางใน Excel หรือ Google Sheets — เลือก “แยกข้อความเป็นคอลัมน์” ด้วยเครื่องหมายจุลภาค</p>
       <textarea id="teacher-csv" readonly rows="6"></textarea>
       <div style="margin-top:8px">
@@ -1444,6 +1469,10 @@ const sfx = {
 
 // ═══════════════════════════════════════════════════════════════ STATE
 let S = null, profileKey = null;
+// The save is keyed on ชั้น|เลขที่, not on the name. One mistyped character in
+// a name used to create a second student and split that child's data across two
+// rows; the number is the thing a class register actually guarantees is unique.
+const profileKeyOf = p => `${(p.class||'').trim()}|${(p.number||'').trim()}`;
 let mode = 'menu';           // 'menu' | 'map' | 'play'
 let zone = 0;                // index of the zone currently loaded
 
@@ -1471,7 +1500,9 @@ function freshState(profile, cls){
     startedAt:Date.now()
   };
 }
-const TEST_ITEMS = 10;        // items per zone test; lower it to shorten both tests
+const TEST_ITEMS = 10;        // grammar items per zone test
+const VOCAB_ITEMS = 4;        // vocabulary items appended to it
+const SURVEY_AFTER_ZONES = 3; // offer the questionnaire once this many are passed
 const PASS_PCT = 80;          // post-test percentage that unlocks the next zone
 function heroStage(){ const g = S.gear; return g===0?0 : g<=3?1 : g<=6?2 : 3; }
 function heroCls(){ return CLASSES[S.cls] ? S.cls : 'hero'; }
@@ -1482,8 +1513,18 @@ function wordsTotal(){ return ZONES.reduce((a,z)=>a+z.words.length,0); }
 // A zone opens when the one before it was both cleared and passed. The boss
 // proves you can fight; the post-test proves you learned the tense.
 function zoneUnlocked(i){ return i===0 || (S.cleared[i-1] && zonePassed(i-1)); }
-function zonePassed(i){ return pct(S.postBest[i], testTotal(i)) >= PASS_PCT; }
-function testTotal(i){ return Math.min(TEST_ITEMS, ZONES[i].test.length); }
+// Judged against the test the student actually sat, not against today's
+// constants: a save made when the test was ten items long passed on ten, and
+// lengthening the test must not retroactively lock that zone again.
+function zonePassed(i){
+  const total = (S.post[i] && S.post[i].total) || testTotal(i);
+  return pct(S.postBest[i], total) >= PASS_PCT;
+}
+function testTotal(i){
+  // grammar plus the vocabulary items the zone's own word list can supply
+  return Math.min(TEST_ITEMS, ZONES[i].test.length) +
+         Math.min(VOCAB_ITEMS, Math.ceil(ZONES[i].words.length/2));
+}
 const pct = (n, d) => d ? n/d*100 : 0;
 function clearedCount(){ return S.cleared.filter(Boolean).length; }
 
@@ -3433,18 +3474,25 @@ function sd(a){
 // totals rather than counted as zero — a zone not attempted is missing data,
 // not a score of nought.
 function studentRow(s){
+  // `done` is the unit of analysis: a zone the student actually finished a
+  // post-test in. E1 and E2 are the two halves of one 80/80 claim, so both are
+  // computed over exactly these zones — summing the process counts across all
+  // ten while the post-test covered three made the pair describe different
+  // amounts of work and quietly not comparable.
   const done = ZONES.map((_,i)=>i).filter(i => s.post && s.post[i]);
   const preScore  = sum(done.map(i => s.pre[i] ? s.pre[i].score : 0));
   const postScore = sum(done.map(i => s.post[i].score));
   const full      = sum(done.map(i => s.post[i].total));
-  const asked   = sum((s.proc||[]).map(p => p.asked||0));
-  const correct = sum((s.proc||[]).map(p => p.correct||0));
+  const grammar   = sum(done.map(i => s.post[i].grammar ?? s.post[i].score));
+  const vocab     = sum(done.map(i => s.post[i].vocab ?? 0));
+  const asked   = sum(done.map(i => (s.proc[i]||{}).asked||0));
+  const correct = sum(done.map(i => (s.proc[i]||{}).correct||0));
   const svMean = s.survey ? mean(s.survey) : null;
   return {
-    key: `${s.profile.class}|${s.profile.number}|${s.profile.name}`,
+    key: profileKeyOf(s.profile),
     name: s.profile.name, cls: s.profile.class, no: s.profile.number,
     role: (CLASSES[s.cls]||CLASSES.hero).thai,
-    zonesDone: done.length, preScore, postScore, full,
+    zonesDone: done.length, done, preScore, postScore, full, grammar, vocab,
     e1: pct(correct, asked), e2: pct(postScore, full),
     procAsked: asked, procCorrect: correct,
     prAsked: sum((s.practice||[]).map(p=>p.asked||0)),
@@ -3471,11 +3519,57 @@ function classReport(rows){
     surveyN: rows.filter(r => r.survey !== null).length,
   };
 }
+// Item difficulty: of the students who met an item, how many got it right.
+// This is the analysis that names the grammar point a class failed, and it is
+// the reason the per-item record is kept at all.
+function itemAnalysis(rows){
+  const out = [];
+  ZONES.forEach((Z, zi) => {
+    const tally = Z.test.map(() => ({n:0, right:0}));
+    let seen = 0;
+    for(const r of rows){
+      const rec = r.raw.post && r.raw.post[zi];
+      if(!rec || !rec.src || !rec.hits) continue;
+      seen++;
+      rec.src.forEach((srcIdx, k) => {
+        if(srcIdx < 0 || !tally[srcIdx]) return;   // -1 marks a vocabulary item
+        tally[srcIdx].n++;
+        if(rec.hits[k] === '1') tally[srcIdx].right++;
+      });
+    }
+    if(seen) out.push({zi, Z, seen, tally});
+  });
+  return out;
+}
+function renderItemAnalysis(rows){
+  const data = itemAnalysis(rows);
+  if(!data.length){
+    $('teacher-items').innerHTML = '<p class="tnote">ยังไม่มีผลสอบหลังเรียนให้วิเคราะห์</p>';
+    return;
+  }
+  $('teacher-items').innerHTML = data.map(({Z, seen, tally}) => `
+    <div class="ia-zone">
+      <div class="ia-head">${Z.no}. ${Z.thai} · ${Z.topic} <span>(n=${seen})</span></div>
+      <table><thead><tr><th>ข้อ</th><th>โจทย์</th><th>ตอบถูก</th><th>p</th></tr></thead><tbody>${
+        tally.map((t, i) => {
+          if(!t.n) return '';
+          const pv = t.right / t.n;
+          // The usual reading: below .20 too hard, above .80 too easy.
+          const band = pv < .2 ? 'hard' : pv > .8 ? 'easy' : '';
+          return `<tr class="${band}"><td>${i+1}</td>
+            <td class="name">${Z.test[i][0]}</td>
+            <td>${t.right}/${t.n}</td><td>${pv.toFixed(2)}</td></tr>`;
+        }).join('')
+      }</tbody></table>
+    </div>`).join('');
+}
 function buildCSV(rows){
   const zh = [];
-  ZONES.forEach((z,i) => zh.push(`pre${i+1}`, `post${i+1}`, `postbest${i+1}`, `tries${i+1}`));
+  ZONES.forEach((z,i) => zh.push(`pre${i+1}`, `post${i+1}`, `postbest${i+1}`, `tries${i+1}`,
+                                 `pre_items${i+1}`, `post_items${i+1}`));
   const head = ['name','class','no','role','zones_done', ...zh,
                 'pre_total','post_total','full','gain',
+                'post_grammar','post_vocab',
                 'proc_asked','proc_correct','E1',
                 'practice_asked','practice_correct','E2',
                 'minutes','satisfaction'];
@@ -3487,8 +3581,10 @@ function buildCSV(rows){
     const s = r.raw, cells = [r.name, r.cls, r.no, r.role, r.zonesDone];
     ZONES.forEach((z,i) => cells.push(
       s.pre[i] ? s.pre[i].score : '', s.post[i] ? s.post[i].score : '',
-      s.postBest[i] ?? '', s.postAttempts[i] ?? ''));
-    cells.push(r.preScore, r.postScore, r.full, r.gain,
+      s.postBest[i] ?? '', s.postAttempts[i] ?? '',
+      // the right/wrong string, so any statistic can be rebuilt by hand
+      s.pre[i] ? (s.pre[i].hits || '') : '', s.post[i] ? (s.post[i].hits || '') : ''));
+    cells.push(r.preScore, r.postScore, r.full, r.gain, r.grammar, r.vocab,
                r.procAsked, r.procCorrect, r.e1.toFixed(2),
                r.prAsked, r.prCorrect, r.e2.toFixed(2),
                r.minutes, r.survey === null ? '' : r.survey.toFixed(2));
@@ -3526,6 +3622,12 @@ function renderTeacher(){
       <td>${r.e1.toFixed(1)}</td><td>${r.e2.toFixed(1)}</td><td>${r.minutes}</td>
       <td>${r.survey === null ? '—' : r.survey.toFixed(2)}</td></tr>`).join('')
     }</tbody></table>` : '<p class="tnote">ยังไม่มีข้อมูลนักเรียนในเครื่องนี้</p>';
+  $('teacher-setup').innerHTML =
+    `แบบทดสอบต่อด่าน: ไวยากรณ์ <b>${TEST_ITEMS}</b> ข้อ + คำศัพท์ <b>${VOCAB_ITEMS}</b> ข้อ ` +
+    `= <b>${TEST_ITEMS+VOCAB_ITEMS}</b> ข้อ · เกณฑ์ผ่าน <b>${PASS_PCT}%</b> · ` +
+    `แบบสอบถามเปิดหลังผ่าน <b>${SURVEY_AFTER_ZONES}</b> ด่าน ` +
+    `<span style="opacity:.7">(แก้ค่าเหล่านี้ได้ที่ค่าคงที่ TEST_ITEMS / VOCAB_ITEMS / PASS_PCT / SURVEY_AFTER_ZONES ในไฟล์เกม)</span>`;
+  renderItemAnalysis(rows);
   $('teacher-csv').value = buildCSV(rows);
 }
 $('btn-csv-copy').onclick = async () => {
@@ -3582,7 +3684,7 @@ $('btn-import').onclick = () => {
     try{
       const s = JSON.parse(decodeURIComponent(escape(atob(line))));
       if(!s || !s.profile) throw 0;
-      all[`${s.profile.class}|${s.profile.number}|${s.profile.name}`] = s;
+      all[profileKeyOf(s.profile)] = s;
       added++;
     }catch(e){ bad++; }
   }
@@ -3628,10 +3730,33 @@ $('btn-survey-close').onclick = () => hideOverlays();
 // No feedback while answering — being told mid-test turns a measurement into a
 // lesson, and the lesson is everything in between.
 let test = null;
+// The 80 vocabulary words were collected, listed in the codex and never
+// measured, though teaching them was part of the brief from the start. These
+// items are built from the zone's own word list rather than authored: a fixed
+// stride so the pre-test and the post-test really are the same instrument, and
+// distractors taken from the other words of the same zone so a wrong answer
+// means the word was confused, not that the options were from nowhere.
+function vocabItems(zi){
+  const words = ZONES[zi].words;
+  const out = [];
+  for(let k = 0; k < VOCAB_ITEMS && k*2 < words.length; k++){
+    const i = k*2, [en, th] = words[i];
+    const others = words.filter((_,j) => j !== i).map(w => w[1]);
+    // deterministic distractors: three meanings a fixed distance away
+    const wrong = [1,3,5].map(d => others[(i+d) % others.length]);
+    const opts = [th, ...new Set(wrong)].slice(0,4);
+    while(opts.length < 4) opts.push(others[opts.length]);
+    out.push([`“${en}” แปลว่าอะไร`, opts, 0, -1, 'vocab', en, th]);
+  }
+  return out;
+}
 function startTest(kind){
   const Z = ZONES[zone];
   const n = testTotal(zone);
-  test = {kind, zi:zone, items:shuffle(Z.test).slice(0, n), qi:0, given:[], startedAt:Date.now()};
+  // Grammar first, then vocabulary — scored apart so the teacher can say
+  // something about each rather than about one blended number.
+  const items = shuffle(Z.test).slice(0, n).concat(vocabItems(zone));
+  test = {kind, zi:zone, items, qi:0, given:[], startedAt:Date.now()};
   $('test-kind').textContent = kind === 'pre' ? 'แบบทดสอบก่อนเรียน' : 'แบบทดสอบหลังเรียน';
   $('test-title').textContent = Z.topic;
   $('test-live').hidden = false;
@@ -3660,7 +3785,10 @@ function renderTestQ(){
 function answerTest(sel){
   // Keep the shuffled options with the answer: the review has to show what the
   // student actually saw, not what the source table happens to list first.
-  test.given.push({sel, opts:test.shown.opts, ans:test.shown.ans});
+  const it = test.items[test.qi];
+  test.given.push({sel, opts:test.shown.opts, ans:test.shown.ans,
+                   vocab: it[4] === 'vocab',
+                   src: it[4] === 'vocab' ? -1 : ZONES[test.zi].test.indexOf(it)});
   test.qi++;
   sfx.open();
   if(test.qi < test.items.length) renderTestQ();
@@ -3668,8 +3796,20 @@ function answerTest(sel){
 }
 function finishTest(){
   const zi = test.zi, total = test.items.length;
-  const score = test.given.filter(g => g.sel === g.ans).length;
-  const rec = {score, total, at:Date.now(), ms:Date.now()-test.startedAt};
+  const right = g => g.sel === g.ans;
+  const score = test.given.filter(right).length;
+  // Item-level record, kept compact: which grammar item each response belongs
+  // to, and a "10110" string of right/wrong. Totals alone cannot tell a teacher
+  // WHICH grammar point the class failed, which is the analysis worth having.
+  const rec = {
+    score, total, at:Date.now(), ms:Date.now()-test.startedAt,
+    grammar: test.given.filter(g => !g.vocab && right(g)).length,
+    grammarOf: test.given.filter(g => !g.vocab).length,
+    vocab: test.given.filter(g => g.vocab && right(g)).length,
+    vocabOf: test.given.filter(g => g.vocab).length,
+    src: test.given.map(g => g.src),
+    hits: test.given.map(g => right(g) ? 1 : 0).join(''),
+  };
   if(test.kind === 'pre'){
     S.pre[zi] = rec;
   } else {
@@ -3687,9 +3827,14 @@ function renderTestResult(score, total){
   $('test-live').hidden = true;
   $('test-done').hidden = false;
   const passed = p >= PASS_PCT;
+  const gr = test.given.filter(g => !g.vocab && g.sel === g.ans).length;
+  const grOf = test.given.filter(g => !g.vocab).length;
+  const vo = test.given.filter(g => g.vocab && g.sel === g.ans).length;
+  const voOf = test.given.filter(g => g.vocab).length;
   $('test-score').innerHTML =
     `<div class="big-score">${score} / ${total}</div>` +
     `<div class="pct">${p}%</div>` +
+    `<p class="note">ไวยากรณ์ ${gr}/${grOf} · คำศัพท์ ${vo}/${voOf}</p>` +
     (test.kind === 'pre'
       ? `<p class="note">บันทึกคะแนนก่อนเรียนแล้ว · ออกไปเรียนรู้ในดินแดนนี้ได้เลย</p>`
       : passed
@@ -3700,13 +3845,18 @@ function renderTestResult(score, total){
   $('test-review').innerHTML = test.kind === 'pre' ? '' :
     '<div class="label-eyebrow">เฉลยและเหตุผล</div>' +
     test.items.map((it, i) => {
-      const [q, opts, ans, rule] = it;
+      const [q, opts, ans, rule, kind, en, th] = it;
       const g = test.given[i];
       const gave = g.opts[g.sel], ok = g.sel === g.ans;
+      // A missed word is re-taught right here rather than pointing at a rule
+      // that has nothing to do with vocabulary.
+      const why = kind === 'vocab'
+        ? `📖 ${en} = ${th}`
+        : (Z.rules[rule] || '');
       return `<div class="rev ${ok?'ok':'bad'}">
         <div class="rev-q">${i+1}. ${q.replace('___', `<b>${opts[ans]}</b>`)}</div>
         ${ok ? '' : `<div class="rev-you">คำตอบของเจ้า: ${gave}</div>`}
-        <div class="rev-rule">${Z.rules[rule] || ''}</div></div>`;
+        <div class="rev-rule">${why}</div></div>`;
     }).join('');
   (passed || test.kind === 'pre' ? sfx.win : sfx.deny)();
 }
@@ -3717,10 +3867,13 @@ $('btn-test-close').onclick = () => {
   refreshHUD(); save();
   if(wasPost){
     openMap();
-    // The whole island is finished — this is the moment to ask what they
-    // thought of it, while it is still fresh.
-    const allDone = ZONES.every((_,i) => S.cleared[i] && zonePassed(i));
-    if(allDone && !S.survey) setTimeout(openSurvey, 900);
+    // Browser storage is all there is. A re-imaged school PC wipes the study
+    // without warning, so every post-test ends by naming the way out.
+    toast('🔑','เก็บผลไว้ให้ครู: เปิดสมุดคำศัพท์ แล้วกด “รหัสผลการเรียน”');
+    // Almost nobody finishes ten zones inside a study period, so waiting for
+    // the end meant the satisfaction data came back empty.
+    const passed = ZONES.filter((_,i) => S.cleared[i] && zonePassed(i)).length;
+    if(!S.survey && passed >= SURVEY_AFTER_ZONES) setTimeout(openSurvey, 1400);
   }
   // The pre-test hands straight over to the teaching it was measuring against.
   else if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 250);
@@ -3786,9 +3939,14 @@ addEventListener('keydown', e => {
   keys[e.key.toLowerCase()] = true;
   // In a duel, 1-4 answer the question — nobody should have to reach for the
   // mouse mid-fight, and the number matches the option's position on screen.
-  if(battle && !battle.locked && e.key >= '1' && e.key <= '4'){
-    const opt = $('battle-options').children[+e.key - 1];
-    if(opt && !opt.disabled){ opt.click(); return; }
+  if(e.key >= '1' && e.key <= '4'){
+    // whichever question is on screen — the battle had these, the test did not
+    const box = test && $('screen-test').classList.contains('show') ? 'test-options'
+              : (battle && !battle.locked) ? 'battle-options' : null;
+    if(box){
+      const opt = $(box).children[+e.key - 1];
+      if(opt && !opt.disabled){ opt.click(); return; }
+    }
   }
   if(e.key === 'e' || e.key === 'E' || e.key === ' ') interact();
   if(e.key === 'm' || e.key === 'M') toggleCodex();
@@ -3921,15 +4079,26 @@ function tick(now){
   if($('screen-worldmap').classList.contains('show')) drawMap(t);
   if(!S) return;
   if(mode === 'play'){
+    // Time on task is wall clock, counted whether or not an overlay is up: the
+    // tests, the lesson, practice and the battles are the task. Counting only
+    // unpaused frames measured how long the child spent walking around.
+    if(!document.hidden) S.timeMs[zone] = (S.timeMs[zone]||0) + dt*1000;
     if(!paused()) update(dt);
-    drawWorld(dt);
-    drawMinimap();
-    refreshSky();
+    // Nothing of the world is visible under a full-screen overlay, so drawing
+    // it is sixty wasted frames a second of battery on a school tablet.
+    if(!opaqueOverlay()){
+      drawWorld(dt);
+      drawMinimap();
+      refreshSky();
+    }
   }
 }
+// Overlays without `dim` cover the screen completely; the dimmed ones let the
+// world show through behind them and still need it drawn.
+const OPAQUE_OV = ['screen-test','screen-teacher','screen-worldmap'];
+const opaqueOverlay = () => OPAQUE_OV.some(o => $(o).classList.contains('show'));
 
 function update(dt){
-  if(S) S.timeMs[zone] = (S.timeMs[zone]||0) + dt*1000;
   const wasClock = clock;
   clock = (clock + dt/DAY_LENGTH) % 1;
   // Midnight rolls the day over, which is what the healer's daily dose is on.
@@ -4127,8 +4296,27 @@ function buildClassPicker(){
   });
 }
 
+// Retyping a name is where a student's record gets split in two. Offering the
+// saves already on this device means the common case needs no typing at all.
+function buildResumeList(){
+  const rows = allProfiles()
+    .filter(p => p.s && p.s.profile)
+    .sort((a,b) => (a.s.profile.class+a.s.profile.number)
+      .localeCompare(b.s.profile.class+b.s.profile.number, 'th', {numeric:true}));
+  $('resume-list').hidden = !rows.length;
+  const box = $('resume-buttons'); box.innerHTML = '';
+  for(const {s} of rows){
+    const b = document.createElement('button');
+    b.className = 'btn'; b.type = 'button';
+    const done = s.cleared ? s.cleared.filter(Boolean).length : 0;
+    b.textContent = `${s.profile.name} · ${s.profile.class} เลขที่ ${s.profile.number} · ผ่าน ${done}/${ZONES.length} ด่าน`;
+    b.onclick = () => startWith(s.profile, s.cls || 'hero');
+    box.appendChild(b);
+  }
+}
 $('btn-begin').onclick = () => {
-  audio(); showOverlay('screen-register'); buildClassPicker(); $('in-name').focus(); sfx.open();
+  audio(); showOverlay('screen-register'); buildClassPicker(); buildResumeList();
+  $('in-name').focus(); sfx.open();
 };
 const regForm = $('form-register');
 regForm.addEventListener('input', () => {
@@ -4136,13 +4324,19 @@ regForm.addEventListener('input', () => {
 });
 regForm.addEventListener('submit', e => {
   e.preventDefault();
-  const profile = {name:$('in-name').value.trim(), class:$('in-class').value.trim(), number:$('in-no').value.trim()};
-  profileKey = `${profile.class}|${profile.number}|${profile.name}`;
+  startWith({name:$('in-name').value.trim(), class:$('in-class').value.trim(), number:$('in-no').value.trim()},
+            pickedClass);
+});
+function startWith(profile, cls){
+  profileKey = profileKeyOf(profile);
   let saved = null;
   try{ saved = (JSON.parse(localStorage.getItem('lexicoraSavesV3')||'{}'))[profileKey]; }catch(err){}
-  S = saved || freshState(profile, pickedClass);
+  S = saved || freshState(profile, cls);
+  // The name is a label on a record keyed by ชั้น|เลขที่, so a corrected
+  // spelling updates the row the child already has instead of starting a
+  // second one beside it.
   S.profile = profile;
-  if(!S.cls || !CLASSES[S.cls]) S.cls = pickedClass;
+  if(!S.cls || !CLASSES[S.cls]) S.cls = cls;
   if(!S.words || S.words.length !== ZONES.length) S.words = ZONES.map(z => z.words.map(()=>false));
   if(!S.cleared || S.cleared.length !== ZONES.length) S.cleared = ZONES.map(()=>false);
   if(!S.stars || S.stars.length !== ZONES.length) S.stars = ZONES.map(()=>0);
@@ -4168,7 +4362,8 @@ regForm.addEventListener('submit', e => {
   refreshHUD();
   openMap();
   toast('🗺️','ยินดีต้อนรับสู่เกาะ Lexicora!');
-});
+  save();
+}
 
 setupTouch();
 VIAL_PROP = (propsNamed('vial')[0] ?? 0);
