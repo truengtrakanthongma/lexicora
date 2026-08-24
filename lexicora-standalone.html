@@ -1388,7 +1388,17 @@ const RANKS = ['ผู้ฝึกหัด','นักเดินทาง','�
                'วีรบุรุษ','ตำนาน','ผู้พิทักษ์คำ','จอมปราชญ์','ราชาแห่งถ้อยคำ'];
 
 // ══════════════════════════════════════════════════════════════════ ART
-const TILE = 32, SCALE = 2;
+const TILE = 32;
+// How much of the world fits on screen. A fixed x2 showed only about 17 of a
+// zone's 56 tiles across — roughly a twelfth of the map — so the scale now
+// follows the window: wide screens see more world, and small ones stop
+// shrinking before the hero gets too small to read.
+const VIEW_TILES = 24;                    // tiles across the view aims for
+const SCALE_MIN = 1.25, SCALE_MAX = 2;
+let SCALE = 2;
+function pickScale(){
+  SCALE = clamp(VW / (VIEW_TILES * TILE), SCALE_MIN, SCALE_MAX);
+}
 // ULPC character frames: 64x64 cells, 9 walk frames, rows = down/left/right/up.
 const CH = 64, CH_FRAMES = 9, CH_FOOT = 58;   // feet sit ~58px down the cell
 const TERRAIN_ROWS = {grass:0,forest:1,sand:2,snow:3,stone:4,ash:5,void:6,dirt:7,pstone:8,water:9,ice:10,lava:11};
@@ -2008,6 +2018,7 @@ let VW = 0, VH = 0;
 function resize(){
   const dpr = Math.min(devicePixelRatio||1, 2);
   VW = innerWidth; VH = innerHeight;
+  pickScale();
   cv.width = Math.floor(VW*dpr); cv.height = Math.floor(VH*dpr);
   cv.style.width = VW+'px'; cv.style.height = VH+'px';
   ctx.setTransform(dpr,0,0,dpr,0,0);
