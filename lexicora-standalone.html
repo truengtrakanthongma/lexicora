@@ -85,7 +85,11 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
 .btn:disabled{filter:grayscale(.7) brightness(.8);cursor:not-allowed;transform:none;}
 
 /* ------------------------------------------------------------------ HUD */
-#hud{position:absolute;inset:0;pointer-events:none;}
+#hud{position:absolute;inset:0;pointer-events:none;
+  /* keep the whole HUD clear of the notch and the home indicator; children are
+     positioned against this padding box, so one inset here covers them all */
+  padding:env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);}
 #hud > *{pointer-events:auto;}
 
 #player-banner{
@@ -189,7 +193,7 @@ kbd{
 }
 #btn-action:active{transform:translateY(4px);box-shadow:0 1px 0 #6d4a10;}
 #btn-menu{
-  position:absolute;right:12px;bottom:120px;width:46px;height:46px;border-radius:10px;
+  position:absolute;right:12px;bottom:120px;width:48px;height:48px;border-radius:10px;
   display:flex;align-items:center;justify-content:center;font-size:1.3rem;
   background:linear-gradient(180deg,rgba(58,36,20,.92),rgba(32,19,10,.95));
   border:2px solid var(--gold-dk);color:#ffeec4;
@@ -199,12 +203,16 @@ kbd{
 .overlay{
   position:absolute;inset:0;display:none;align-items:center;justify-content:center;
   padding:16px;z-index:20;
+  padding-left:max(16px,env(safe-area-inset-left));
+  padding-right:max(16px,env(safe-area-inset-right));
+  padding-top:max(16px,env(safe-area-inset-top));
+  padding-bottom:max(16px,env(safe-area-inset-bottom));
 }
 .overlay.show{display:flex;animation:ov-in .26s ease;}
 @keyframes ov-in{from{opacity:0;}to{opacity:1;}}
 .overlay.dim{background:radial-gradient(ellipse at center,rgba(24,14,8,.5),rgba(12,7,4,.86));backdrop-filter:blur(2.5px);}
 
-.sheet{width:min(680px,100%);max-height:92vh;overflow-y:auto;padding:26px 30px 30px;}
+.sheet{width:min(680px,100%);max-height:92vh;max-height:92dvh;overflow-y:auto;padding:26px 30px 30px;}
 .sheet::-webkit-scrollbar{width:10px;}
 .sheet::-webkit-scrollbar-thumb{background:var(--wood);border-radius:5px;}
 
@@ -244,6 +252,10 @@ kbd{
 #landing-credit{
   position:absolute;bottom:12px;left:0;right:0;text-align:center;
   color:rgba(255,244,220,.75);font-size:.76rem;text-shadow:0 1px 6px rgba(0,0,0,.7);z-index:2;
+  /* A full-width strip above the button in the stacking order: on a phone in
+     landscape it lay straight over "เริ่มการผจญภัย" and ate every tap, so the
+     game could not be started at all. It is a caption — it never needs taps. */
+  pointer-events:none;
 }
 
 /* --------------------------------------------------------------- forms */
@@ -378,6 +390,27 @@ kbd{
   #battle-notes{--start-shut:1;}
   #notes-list{max-height:64px;}
 }
+/* Short screens — a phone held sideways. Every breakpoint above keys on width,
+   so a 844x390 landscape phone counted as "desktop" and kept the tall layout:
+   the second row of answers, the explanation and the HP pips all fell below the
+   fold. These rules are about vertical room, so they key on height. */
+@media (max-height:520px){
+  .sheet{max-height:96vh;max-height:96dvh;padding:12px 16px 14px;}
+  #battle-stage{height:104px;margin:-4px -6px 4px;}
+  #battle-question{font-size:.94rem;margin-bottom:6px;}
+  #battle-options{gap:6px;}
+  .opt{padding:7px 10px;font-size:.92rem;}
+  #battle-feedback{margin-top:6px;font-size:.88rem;min-height:1.2rem;}
+  .why{font-size:.8rem;}
+  #battle-notes{--start-shut:1;}
+  #notes-list{max-height:46px;}
+  /* the landing page has to fit the button on screen, not just render it */
+  #landing-inner{padding:8px 20px;}
+  #landing-hero{width:64px;height:64px;animation:none;}
+  #landing-blurb{margin:8px auto 12px;font-size:.84rem;line-height:1.45;}
+  #landing-credit,#teacher-hint{font-size:.68rem;}
+  #landing-credit{bottom:4px;}
+}
 @media (prefers-reduced-motion:reduce){
   *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
 }
@@ -433,7 +466,7 @@ mark.signal{
   color:#3a2408;border-radius:4px;padding:0 4px;font-weight:700;
 }
 /* ------------------------------------------------------- survey + teacher */
-#survey-items{max-height:46vh;overflow-y:auto;margin-top:8px;}
+#survey-items{max-height:46vh;max-height:46dvh;overflow-y:auto;margin-top:8px;}
 .sv-item{padding:8px 0;border-bottom:1px dashed rgba(74,47,30,.22);}
 .sv-item:last-child{border-bottom:0;}
 .sv-q{font-size:.9rem;line-height:1.5;color:var(--ink);margin-bottom:5px;}
@@ -519,7 +552,7 @@ mark.signal{
 #test-score .note{text-align:center;font-size:.9rem;margin-top:8px;color:var(--ink-2);}
 #test-score .note.ok{color:var(--emerald);font-weight:700;}
 #test-score .note.bad{color:var(--crimson);font-weight:700;}
-#test-review{max-height:38vh;overflow-y:auto;margin-top:12px;}
+#test-review{max-height:38vh;max-height:38dvh;overflow-y:auto;margin-top:12px;}
 .rev{
   padding:8px 11px;margin-bottom:7px;border-radius:8px;
   border-left:4px solid var(--emerald);
@@ -1462,8 +1495,17 @@ function shuffle(a){
 let actx = null;
 function audio(){
   if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  // iOS starts a context suspended and suspends it again whenever the tab goes
+  // to the background, so without this the game is simply silent on an iPhone
+  // or iPad. resume() is a no-op once it is already running.
+  if(actx.state === 'suspended') actx.resume().catch(() => {});
   return actx;
 }
+// The very first resume only counts if it happens inside a user gesture.
+for(const ev of ['pointerdown','touchend','keydown']){
+  addEventListener(ev, () => audio(), {once:true, passive:true});
+}
+addEventListener('visibilitychange', () => { if(!document.hidden && actx) audio(); });
 function beep(freq, dur, type='sine', vol=.09, slideTo){
   const c = audio(); if(!c) return;
   const o = c.createOscillator(), g = c.createGain();
@@ -2920,6 +2962,14 @@ function renderMapMarkers(){
     else pin.onclick = () => { sfx.deny(); toast('🔒', `ต้องผ่าน ${ZONES[i-1].thai} ก่อน`); };
     box.appendChild(pin);
   });
+  // A flag hangs above its anchor (translateY(-100%)), so on a short screen the
+  // northern islands push it off the top of the frame. Its own height is only
+  // known after layout, hence a measured nudge rather than a guess at the top.
+  const frame = box.getBoundingClientRect();
+  for(const pin of box.children){
+    const over = frame.top + 2 - pin.getBoundingClientRect().top;
+    if(over > 0) pin.style.top = (parseFloat(pin.style.top) + over) + 'px';
+  }
   $('map-progress').innerHTML =
     `ดินแดนที่ปลดปล่อย <b>${clearedCount()}/${ZONES.length}</b> · คำศัพท์ <b>${wordsFound()}/${wordsTotal()}</b> · Lv.<b>${S.level}</b>`;
 }
@@ -3251,7 +3301,7 @@ function answerBattle(sel, ans, btn){
     btn.classList.add(right ? 'right' : 'wrong');
     if(!right) [...$('battle-options').children][ans].classList.add('right');
     (right ? sfx.pickup : sfx.deny)();
-    $('battle-feedback').innerHTML = feedbackHTML(right, b, why, b.shown.opts[sel]);
+    showFeedback(feedbackHTML(right, b, why, b.shown.opts[sel]));
     b.qi++; save();
     // Practice waits for the student rather than moving on by itself: there is
     // no clock to beat and the explanation is the reason they are here.
@@ -3273,7 +3323,7 @@ function answerBattle(sel, ans, btn){
       duelHit(duel.foe);
       duelAct(duel.foe, 'hurt', .5);
     }, LAND*1000);
-    $('battle-feedback').innerHTML = feedbackHTML(true, b, why, b.shown.opts[sel]);
+    showFeedback(feedbackHTML(true, b, why, b.shown.opts[sel]));
     if(b.hp <= 0){
       setTimeout(() => { if(duel.foe) duel.foe.fade = performance.now()/1000; }, 700);
       setTimeout(winBattle, 1300);
@@ -3289,7 +3339,7 @@ function answerBattle(sel, ans, btn){
       duelHit(duel.hero);
       duelAct(duel.hero, 'hurt', .5);
     }, LAND*1000);
-    $('battle-feedback').innerHTML = feedbackHTML(false, b, why, b.shown.opts[sel]);
+    showFeedback(feedbackHTML(false, b, why, b.shown.opts[sel]));
     if(S.hp <= 0){ setTimeout(loseBattle, 2600); return; }
   }
   b.qi++;
@@ -3441,6 +3491,15 @@ function describeChoice(raw){
   return '';
 }
 
+// Writes the feedback and makes sure it is actually on screen. On a short
+// screen the explanation can sit below the fold, and a child does not scroll to
+// find something they have no idea is there — so the teaching would be lost in
+// silence rather than visibly cut off.
+function showFeedback(html){
+  const el = $('battle-feedback');
+  el.innerHTML = html;
+  el.scrollIntoView({block:'nearest', behavior:'smooth'});
+}
 function feedbackHTML(right, b, why, chose){
   const head = right
     ? '<span style="color:#2f6b28">✔ ถูกต้อง!</span>'
@@ -3623,11 +3682,44 @@ const SURVEY_BANDS = [
 ];
 const surveyBand = m => (SURVEY_BANDS.find(([lo]) => m >= lo) || ['','—'])[1];
 
+// Rebuilds any per-zone array a save is missing. Saves written by an older
+// version, or half-written when a tab was closed mid-save, are missing some of
+// these; every consumer that reads them raw would otherwise throw. The load
+// path has always repaired the save it plays — this makes the same repair
+// available to the teacher's report, which reads everyone else's saves.
+function repairSave(s){
+  if(!s || !s.profile) return null;
+  const perZone = (k, make) => {
+    if(!s[k] || s[k].length !== ZONES.length) s[k] = ZONES.map(make);
+  };
+  perZone('cleared', ()=>false);
+  perZone('stars', ()=>0);
+  perZone('lessonSeen', ()=>false);
+  perZone('pre', ()=>null);
+  perZone('post', ()=>null);
+  perZone('postBest', ()=>0);
+  perZone('postAttempts', ()=>0);
+  perZone('proc', ()=>({asked:0,correct:0}));
+  perZone('practice', ()=>({asked:0,correct:0}));
+  perZone('timeMs', ()=>0);
+  if(s.survey === undefined) s.survey = null;
+  // `words` and `clues` hold one flag per word/rule, not one per zone, and the
+  // report never reads them — repairing them here would only invent a shape.
+  return s;
+}
+// Entries with no profile at all cannot name a row, so they are dropped and
+// counted rather than repaired. `skipped` rides along for the report to show.
 function allProfiles(){
   try{
     const all = JSON.parse(localStorage.getItem('lexicoraSavesV3')||'{}');
-    return Object.entries(all).map(([k,v]) => ({key:k, s:v}));
-  }catch(e){ return []; }
+    const out = []; let skipped = 0;
+    for(const [k,v] of Object.entries(all)){
+      const s = repairSave(v);
+      if(s) out.push({key:k, s}); else skipped++;
+    }
+    out.skipped = skipped;
+    return out;
+  }catch(e){ const out = []; out.skipped = 0; return out; }
 }
 const sum = a => a.reduce((x,y)=>x+y,0);
 function mean(a){ return a.length ? sum(a)/a.length : 0; }
@@ -3759,7 +3851,15 @@ function buildCSV(rows){
   return [head.join(','), ...body].join('\n');
 }
 function renderTeacher(){
-  const rows = allProfiles().map(p => studentRow(p.s))
+  // One unreadable save used to throw here and leave the teacher staring at a
+  // blank report with the whole class's data apparently gone. A damaged entry
+  // is dropped and counted instead, so everyone else's marks still come out.
+  const profiles = allProfiles();
+  let skipped = profiles.skipped || 0;
+  const rows = profiles.map(p => {
+      try{ return studentRow(p.s); }
+      catch(e){ skipped++; return null; }   // second net: repair missed something
+    }).filter(Boolean)
     .sort((a,b) => (a.cls+a.no).localeCompare(b.cls+b.no, 'th', {numeric:true}));
   const R = classReport(rows);
   const card = (v, label, cls='') => `<div class="tcard ${cls}"><b>${v}</b><span>${label}</span></div>`;
@@ -3779,7 +3879,7 @@ function renderTeacher(){
 
   const th = ['ชื่อ','ชั้น','เลขที่','อาชีพ','ด่านที่จบ','ก่อนเรียน','หลังเรียน','เต็ม',
               'ผลต่าง','E1','E2','นาที','พึงพอใจ'];
-  $('teacher-table').innerHTML = rows.length ? `<table><thead><tr>${
+  $('teacher-table').innerHTML = (rows.length ? `<table><thead><tr>${
     th.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${
     rows.map(r => `<tr>
       <td class="name">${r.name}</td><td>${r.cls}</td><td>${r.no}</td><td>${r.role}</td>
@@ -3787,7 +3887,9 @@ function renderTeacher(){
       <td>${r.full}</td><td>${r.gain >= 0 ? '+' : ''}${r.gain}</td>
       <td>${r.e1.toFixed(1)}</td><td>${r.e2.toFixed(1)}</td><td>${r.minutes}</td>
       <td>${r.survey === null ? '—' : r.survey.toFixed(2)}</td></tr>`).join('')
-    }</tbody></table>` : '<p class="tnote">ยังไม่มีข้อมูลนักเรียนในเครื่องนี้</p>';
+    }</tbody></table>` : '<p class="tnote">ยังไม่มีข้อมูลนักเรียนในเครื่องนี้</p>') +
+    (skipped ? `<p class="tnote">⚠ ข้ามข้อมูลที่เสียหาย <b>${skipped}</b> รายการ ` +
+               `(อ่านไม่ได้ · คะแนนของนักเรียนคนอื่นยังครบถ้วน)</p>` : '');
   $('teacher-setup').innerHTML =
     `แบบทดสอบต่อด่าน: ไวยากรณ์ <b>${TEST_ITEMS}</b> ข้อ + คำศัพท์ <b>${VOCAB_ITEMS}</b> ข้อ ` +
     `= <b>${TEST_ITEMS+VOCAB_ITEMS}</b> ข้อ · เกณฑ์ผ่าน <b>${PASS_PCT}%</b> · ` +
