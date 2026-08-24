@@ -311,6 +311,10 @@ kbd{
 .opt.wrong{background:linear-gradient(180deg,#f0a89e,#d4655a);border-color:#8d2e26;box-shadow:0 3px 0 #8d2e26;color:#41100c;}
 #battle-feedback{text-align:center;font-weight:600;min-height:1.6rem;margin-top:11px;font-size:.96rem;}
 /* the reason, not just the mark — this is the line that does the teaching */
+.why.mine{
+  background:linear-gradient(180deg,rgba(179,58,50,.13),rgba(179,58,50,.2));
+  border-color:var(--crimson);margin-bottom:5px;
+}
 .why{
   display:block;font-weight:500;font-size:.86rem;line-height:1.6;
   color:var(--ink);margin:6px auto 0;max-width:44rem;
@@ -3233,7 +3237,7 @@ function answerBattle(sel, ans, btn){
     btn.classList.add(right ? 'right' : 'wrong');
     if(!right) [...$('battle-options').children][ans].classList.add('right');
     (right ? sfx.pickup : sfx.deny)();
-    $('battle-feedback').innerHTML = feedbackHTML(right, b, why);
+    $('battle-feedback').innerHTML = feedbackHTML(right, b, why, b.shown.opts[sel]);
     b.qi++; save();
     // Practice waits for the student rather than moving on by itself: there is
     // no clock to beat and the explanation is the reason they are here.
@@ -3255,7 +3259,7 @@ function answerBattle(sel, ans, btn){
       duelHit(duel.foe);
       duelAct(duel.foe, 'hurt', .5);
     }, LAND*1000);
-    $('battle-feedback').innerHTML = feedbackHTML(true, b, why);
+    $('battle-feedback').innerHTML = feedbackHTML(true, b, why, b.shown.opts[sel]);
     if(b.hp <= 0){
       setTimeout(() => { if(duel.foe) duel.foe.fade = performance.now()/1000; }, 700);
       setTimeout(winBattle, 1300);
@@ -3271,7 +3275,7 @@ function answerBattle(sel, ans, btn){
       duelHit(duel.hero);
       duelAct(duel.hero, 'hurt', .5);
     }, LAND*1000);
-    $('battle-feedback').innerHTML = feedbackHTML(false, b, why);
+    $('battle-feedback').innerHTML = feedbackHTML(false, b, why, b.shown.opts[sel]);
     if(S.hp <= 0){ setTimeout(loseBattle, 2600); return; }
   }
   b.qi++;
@@ -3279,11 +3283,159 @@ function answerBattle(sel, ans, btn){
   // read, and it is the moment the learning actually happens.
   setTimeout(() => { if(battle) renderBattleQ(); }, right ? 1600 : 3200);
 }
-function feedbackHTML(right, b, why){
+// ── naming the answer the student actually chose ───────────────────────────
+// Telling a child the right answer teaches the right answer. Telling them what
+// the thing they picked *is* — "watches is Present Simple, for habits" — is the
+// part that stops them picking it again. Every option in the game is built from
+// the verbs below, so a choice can be named rather than guessed at.
+// base, -s, ช่อง 2, ช่อง 3, -ing
+const VERBS = [
+  ['boil','boils','boiled','boiled','boiling'],
+  ['buy','buys','bought','bought','buying'],
+  ['catch','catches','caught','caught','catching'],
+  ['clean','cleans','cleaned','cleaned','cleaning'],
+  ['come','comes','came','come','coming'],
+  ['cook','cooks','cooked','cooked','cooking'],
+  ['cry','cries','cried','cried','crying'],
+  ['do','does','did','done','doing'],
+  ['draw','draws','drew','drawn','drawing'],
+  ['drink','drinks','drank','drunk','drinking'],
+  ['eat','eats','ate','eaten','eating'],
+  ['finish','finishes','finished','finished','finishing'],
+  ['fly','flies','flew','flown','flying'],
+  ['freeze','freezes','froze','frozen','freezing'],
+  ['go','goes','went','gone','going'],
+  ['have','has','had','had','having'],
+  ['hear','hears','heard','heard','hearing'],
+  ['lay','lays','laid','laid','laying'],
+  ['leave','leaves','left','left','leaving'],
+  ['listen','listens','listened','listened','listening'],
+  ['live','lives','lived','lived','living'],
+  ['lose','loses','lost','lost','losing'],
+  ['meet','meets','met','met','meeting'],
+  ['melt','melts','melted','melted','melting'],
+  ['open','opens','opened','opened','opening'],
+  ['play','plays','played','played','playing'],
+  ['read','reads','read','read','reading'],
+  ['ride','rides','rode','ridden','riding'],
+  ['rise','rises','rose','risen','rising'],
+  ['run','runs','ran','run','running'],
+  ['see','sees','saw','seen','seeing'],
+  ['set','sets','set','set','setting'],
+  ['sleep','sleeps','slept','slept','sleeping'],
+  ['speak','speaks','spoke','spoken','speaking'],
+  ['start','starts','started','started','starting'],
+  ['study','studies','studied','studied','studying'],
+  ['swim','swims','swam','swum','swimming'],
+  ['travel','travels','traveled','traveled','traveling'],
+  ['visit','visits','visited','visited','visiting'],
+  ['wait','waits','waited','waited','waiting'],
+  ['wash','washes','washed','washed','washing'],
+  ['watch','watches','watched','watched','watching'],
+  ['write','writes','wrote','written','writing'],
+];
+const FORM_NAMES = ['กริยาช่อง 1','กริยาเติม -s (เอกพจน์บุรุษที่ 3)','กริยาช่อง 2 (อดีต)',
+                    'กริยาช่อง 3','กริยาเติม -ing'];
+const VERB_FORM = (() => {
+  const m = new Map();
+  for(const row of VERBS) row.forEach((f, k) => {
+    // read/set repeat across columns; the first (simplest) reading wins
+    if(!m.has(f)) m.set(f, {base:row[0], k});
+  });
+  return m;
+})();
+const MODALS = ['can','could','may','must','should','will'];
+// Helper verbs, read as helpers. Which subject each one takes is exactly what
+// the child got wrong when they picked it, so every line names the subjects.
+const AUX = {
+  do:   'ใช้ตั้งคำถาม/ปฏิเสธของ Present Simple กับ I, You, We, They (ตามด้วยกริยาช่อง 1)',
+  does: 'ใช้ตั้งคำถาม/ปฏิเสธของ Present Simple กับ He, She, It (ตามด้วยกริยาช่อง 1)',
+  did:  'ใช้ตั้งคำถาม/ปฏิเสธของ Past Simple ทุกประธาน (ตามด้วยกริยาช่อง 1)',
+  have: 'ใช้กับ Present Perfect กับ I, You, We, They (ตามด้วยกริยาช่อง 3)',
+  has:  'ใช้กับ Present Perfect กับ He, She, It (ตามด้วยกริยาช่อง 3)',
+  had:  'ใช้กับ Past Perfect ทุกประธาน (ตามด้วยกริยาช่อง 3)',
+};
+const isVing = w => (VERB_FORM.get(w)||{}).k === 4;
+const isV1   = w => (VERB_FORM.get(w)||{}).k === 0;
+const isV3   = w => (VERB_FORM.get(w)||{}).k === 3;
+// Returns a short Thai description of a chosen option, or '' when it cannot be
+// named confidently — a wrong label would teach something false, which is
+// worse than saying nothing.
+function describeChoice(raw){
+  const t = String(raw||'').trim();
+  if(!t) return '';
+  const low = t.toLowerCase().replace(/[’]/g, "'");
+  const w = low.split(/\s+/);
+  const two = (a, b) => w.length === 2 && a.includes(w[0]) && b(w[1]);
+
+  // forms that cannot exist at all — the most useful thing to name
+  for(const md of MODALS){
+    if(low === md+'s' || low === md+'ning' || low === md+'ing' || low === md.slice(0,-1)+'ying'
+       || low === 'to '+md || low === md+' to')
+      return `“${t}” ไม่มีในภาษาอังกฤษ · ${md} เป็น modal ไม่เติม -s / -ing และไม่ใช้ to`;
+  }
+  if(low === 'setted') return `“${t}” ไม่มีในภาษาอังกฤษ · set เป็น irregular ช่อง 2 คือ set`;
+
+  if(two(['is','am','are'], isVing))   return `“${t}” เป็น Present Continuous (กำลังเกิดขึ้นตอนนี้)`;
+  if(two(['was','were'], isVing))      return `“${t}” เป็น Past Continuous (กำลังทำอยู่ในอดีต)`;
+  if(two(['have','has'], isV3))        return `“${t}” เป็น Present Perfect (ทำแล้วส่งผลถึงตอนนี้)`;
+  if(two(['had'], isV3))               return `“${t}” เป็น Past Perfect (ทำก่อนอีกเหตุการณ์ในอดีต)`;
+  if(two(['will'], isV1))              return `“${t}” เป็น Future Simple (จะทำในอนาคต)`;
+  if(two(["don't","doesn't"], isV1))   return `“${t}” เป็นรูปปฏิเสธของ Present Simple`;
+  if(two(["didn't"], isV1))            return `“${t}” เป็นรูปปฏิเสธของ Past Simple`;
+  if(/^(is|am|are)\s+going\s+to$/.test(low)) return `“${t}” เป็น going to (วางแผนไว้ หรือมีหลักฐาน)`;
+  if(two(['not'], isV1))
+    return `“${t}” ปฏิเสธแบบนี้ไม่ได้ · Present Simple ต้องมี do not / does not นำหน้ากริยาช่อง 1`;
+  if(two(['to'], isV1))
+    return `“${t}” เป็นรูป infinitive (to + กริยาช่อง 1) ใช้เป็นกริยาหลักของประโยคไม่ได้`;
+
+  // negatives that come up often enough to be worth naming
+  if(two(["isn't","aren't"], isVing)) return `“${t}” เป็นรูปปฏิเสธของ Present Continuous`;
+  if(two(["wasn't","weren't"], isVing)) return `“${t}” เป็นรูปปฏิเสธของ Past Continuous`;
+  if(/^(can|could|may|must|should|will)\s*not$/.test(low) || low === 'cannot')
+    return `“${t}” เป็นรูปปฏิเสธของ modal (ตามด้วยกริยาช่อง 1)`;
+
+  if(w.length === 1){
+    // do / does / did / have / has are in the verb table, but in this game they
+    // are nearly always the helper, not the main verb — so the helper reading
+    // has to be tried first or the table would answer "กริยาช่อง 2 ของ do" to a
+    // child staring at a question-formation item.
+    if(AUX[low]) return `“${t}” ${AUX[low]}`;
+    const f = VERB_FORM.get(low);
+    if(f){
+      const row = VERBS.find(r => r[0] === f.base);
+      // read / set spell all three the same; saying only "ช่อง 1" would hide
+      // the very thing that makes them confusing
+      const same = row && row[0] === row[2] && row[2] === row[3];
+      if(same && f.k === 0)
+        return `“${t}” ของ ${f.base} สะกดเหมือนกันทั้งช่อง 1, 2 และ 3 · ต้องดูคำบอกเวลาในประโยค`;
+      return `“${t}” เป็น${FORM_NAMES[f.k]} ของ ${f.base}`;
+    }
+    if(['be'].includes(low))             return `“${t}” เป็นกริยาช่อง 1 ของ verb to be (ใช้หลัง modal)`;
+    if(low === 'been')                   return `“${t}” เป็นกริยาช่อง 3 ของ verb to be (ใช้หลัง have/has/had)`;
+    if(low === 'being')                  return `“${t}” เป็นรูป -ing ของ verb to be`;
+    // Which subject each be-form belongs to *is* the lesson in the first zone,
+    // so these say the pairing rather than just "verb to be".
+    if(low === 'is')                     return `“${t}” เป็น verb to be ที่ใช้กับ He / She / It หรือคำนามเอกพจน์`;
+    if(low === 'am')                     return `“${t}” เป็น verb to be ที่ใช้กับ I เท่านั้น`;
+    if(low === 'are')                    return `“${t}” เป็น verb to be ที่ใช้กับ You / We / They หรือคำนามพหูพจน์`;
+    if(low === 'was')                    return `“${t}” เป็นอดีตของ is / am (I, He, She, It, เอกพจน์)`;
+    if(low === 'were')                   return `“${t}” เป็นอดีตของ are (You, We, They, พหูพจน์)`;
+    if(low === 'will')                   return `“${t}” ใช้กับ Future Simple (ตามด้วยกริยาช่อง 1)`;
+    if(MODALS.includes(low))             return `“${t}” เป็น modal (ตามด้วยกริยาช่อง 1 เสมอ)`;
+  }
+  return '';
+}
+
+function feedbackHTML(right, b, why, chose){
   const head = right
     ? '<span style="color:#2f6b28">✔ ถูกต้อง!</span>'
     : `<span style="color:#96271f">✖ คำตอบคือ <b>${b.shown.opts[b.shown.ans]}</b></span>`;
-  return head + (why ? `<span class="why">${why}</span>` : '');
+  // What the student picked, named — the line that stops them picking it again
+  const mine = right ? '' : describeChoice(chose);
+  return head +
+    (mine ? `<span class="why mine">เจ้าเลือก ${mine}</span>` : '') +
+    (why ? `<span class="why">${why}</span>` : '');
 }
 function winBattle(){
   const b = battle; battle = null; stopDuel();
@@ -3855,7 +4007,8 @@ function renderTestResult(score, total){
         : (Z.rules[rule] || '');
       return `<div class="rev ${ok?'ok':'bad'}">
         <div class="rev-q">${i+1}. ${q.replace('___', `<b>${opts[ans]}</b>`)}</div>
-        ${ok ? '' : `<div class="rev-you">คำตอบของเจ้า: ${gave}</div>`}
+        ${ok ? '' : `<div class="rev-you">คำตอบของเจ้า: ${gave}${
+          kind === 'vocab' ? '' : (describeChoice(gave) ? ' · ' + describeChoice(gave) : '')}</div>`}
         <div class="rev-rule">${why}</div></div>`;
     }).join('');
   (passed || test.kind === 'pre' ? sfx.win : sfx.deny)();
