@@ -1,0 +1,4 @@
+# Scratch copies of the game with debug hooks spliced in, used by the test
+# scripts to reach a state quickly or to read an answer key. They must never
+# be committed: a build carrying window.__dbg would hand students the answers.
+_*.html
