@@ -565,6 +565,37 @@ mark.signal{
 #test-score .note.ok{color:var(--emerald);font-weight:700;}
 #test-score .note.bad{color:var(--crimson);font-weight:700;}
 #test-review{max-height:38vh;max-height:38dvh;overflow-y:auto;margin-top:12px;}
+#drill-rule{
+  text-align:center;font-weight:600;font-size:1.02rem;line-height:1.55;
+  background:rgba(232,184,75,.16);border:2px solid var(--gold-dk);
+  border-radius:9px;padding:10px 14px;
+}
+#drill-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+#drill-options.wordy{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;}
+#drill-options.wordy .opt{font-size:.98rem;padding:8px 13px;}
+#drill-options.tf .opt{flex:1 1 40%;font-size:1.05rem;}
+#drill-options .opt.used{opacity:.35;filter:grayscale(.7);}
+#drill-feedback{text-align:center;font-weight:600;min-height:1.6rem;margin-top:11px;font-size:.96rem;}
+#drill-line{
+  margin-top:8px;padding:7px 12px;border-radius:8px;min-height:2.1rem;
+  background:rgba(74,47,30,.09);border:2px dashed var(--wood-3);
+  font-weight:600;color:var(--ink);
+}
+@media (max-width:520px){ #drill-options{grid-template-columns:1fr;} }
+/* word-based question layouts: taps on the words themselves, not on a grid */
+#battle-options.wordy{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;}
+#battle-options.wordy .opt{font-size:.98rem;padding:8px 13px;}
+#battle-options.tf .opt{flex:1 1 40%;font-size:1.05rem;}
+#battle-options .opt.used{opacity:.35;filter:grayscale(.7);}
+.q-lead{
+  display:block;font-size:.82rem;font-weight:600;color:var(--wood-3);
+  margin-bottom:6px;letter-spacing:.01em;
+}
+#order-line{
+  margin-top:8px;padding:7px 12px;border-radius:8px;min-height:2.1rem;
+  background:rgba(74,47,30,.09);border:2px dashed var(--wood-3);
+  font-weight:600;color:var(--ink);
+}
 .howto-list{list-style:none;margin:12px 0 0;}
 .howto-list li{
   display:grid;grid-template-columns:8.5rem 1fr;gap:10px;align-items:baseline;
@@ -780,6 +811,24 @@ mark.signal{
   </div>
 
   <!-- ========================================================= LESSON -->
+  <!-- ============================================ CLUE STONE DRILL -->
+  <div class="overlay dim" id="screen-drill">
+    <div class="scroll-panel sheet corner-bottom" style="max-width:560px">
+      <div class="label-eyebrow" style="text-align:center">ศิลาเบาะแส</div>
+      <h2 class="title-epic" style="font-size:1.6rem;text-align:center" id="drill-topic">—</h2>
+      <div class="rule-gold"></div>
+      <p id="drill-rule">—</p>
+      <div class="label-eyebrow" style="text-align:center;margin-top:12px" id="drill-count">—</div>
+      <p class="q-prompt" id="drill-question">—</p>
+      <div id="drill-options"></div>
+      <p id="drill-feedback"></p>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn" id="btn-drill-leave" style="font-size:.86rem;padding:.42rem 1.1rem">ไว้ก่อน</button>
+        <button class="btn btn-gold" id="btn-drill-next" style="font-size:.86rem;padding:.42rem 1.1rem;display:none">ข้อต่อไป →</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================================================== HOW TO PLAY -->
   <div class="overlay dim" id="screen-howto">
     <div class="scroll-panel sheet corner-bottom" style="max-width:520px">
@@ -2910,7 +2959,8 @@ function setHint(t){
 // Every overlay must be listed here: showOverlay/hideOverlays only touch these
 // ids, and paused() reads the same list to stop the world while one is up.
 const OV = ['screen-landing','screen-register','screen-worldmap','screen-battle','screen-sage','screen-test',
-            'screen-survey','screen-teacher','screen-lesson','screen-reward','screen-codex','screen-howto'];
+            'screen-survey','screen-teacher','screen-lesson','screen-reward','screen-codex','screen-howto',
+            'screen-drill'];
 function showOverlay(id){ OV.forEach(o => $(o).classList.toggle('show', o===id)); }
 function hideOverlays(){ OV.forEach(o => $(o).classList.remove('show')); }
 const paused = () => mode !== 'play' || OV.some(o => $(o).classList.contains('show'));
@@ -3411,8 +3461,15 @@ function startBattle(kind, target){
   // Every clue stone read out in the map is one more use of ✨ เวทเปิดเผย in
   // the boss fight, for any class. That is what walking the map buys you.
   const clueHints = isBoss ? cluesFound(zone) : 0;
+  // How this fight asks its questions. A monster always asks its own way, so
+  // the student learns to expect it; the guardian rotates through all four,
+  // because beating it should mean knowing the tense rather than one drill.
+  // Practice with the sage rotates too, so nothing is met cold in the fight.
+  const kindOf = isBoss || isPractice
+    ? (() => { let n = 0; return () => QKINDS[n++ % QKINDS.length]; })()
+    : (() => { const k = kindForMonster(target && target.type || 0); return () => k; })();
   battle = {kind, target, hp:maxHP, hpMax:maxHP, pool:shuffle(Z.quiz), qi:0, locked:false,
-            wrong:0, hintLeft: isPractice ? 0 : (C.hint ? 1 : 0) + clueHints};
+            wrong:0, kindOf, hintLeft: isPractice ? 0 : (C.hint ? 1 : 0) + clueHints};
   $('enemy-name').textContent = isPractice ? `ฝึกซ้อมกับนักปราชญ์ · ${Z.topic}`
     : isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
   $('battle-topic').textContent = Z.topic;
@@ -3460,25 +3517,213 @@ $('btn-hint').onclick = () => {
   refreshHintLabel();
   sfx.pickup();
 };
+
+// ── clue-stone drills ──────────────────────────────────────────────────────
+// A stone teaches one rule; this is the practice for that rule, and the stone
+// does not count as read until it is passed. Written fresh rather than drawn
+// from Z.test: the post-test is a research instrument and showing its items as
+// practice would quietly inflate every post-test score in the study.
+// Indexed by zone id, then by the same rule index the stone carries.
+const DRILLS = {
+  woods: [
+    [['The sun ___ in the east.',['rise','rises','is rising','rose'],1,'ความจริงทั่วไป → Present Simple · The sun เอกพจน์ → rises'],
+     ['Water ___ at 100 degrees.',['boil','boils','boiled','is boiling'],1,'ความจริงทางวิทยาศาสตร์ → Present Simple · Water เอกพจน์ → boils']],
+    [['My sister ___ English every day.',['study','studies','studied','is studying'],1,'My sister เอกพจน์บุรุษที่ 3 → เติม -es · study ลงท้าย y หน้าพยัญชนะ → studies'],
+     ['They ___ football after school.',['plays','play','is playing','played'],1,'They เป็นพหูพจน์ → ใช้กริยาช่อง 1 ไม่เติม s']],
+    [['He ___ like spicy food.',['don\'t','doesn\'t','isn\'t','not'],1,'He เอกพจน์ → doesn\'t + กริยาช่อง 1'],
+     ['We ___ go to school on Sunday.',['doesn\'t','don\'t','aren\'t','didn\'t'],1,'We เป็นพหูพจน์ → don\'t + กริยาช่อง 1']],
+    [['___ she play the piano?',['Do','Does','Is','Are'],1,'she เอกพจน์ → Does + ประธาน + กริยาช่อง 1'],
+     ['___ your parents work in Bangkok?',['Does','Do','Is','Are'],1,'your parents เป็นพหูพจน์ → Do + ประธาน + กริยาช่อง 1']],
+    [['My father ___ coffee every morning.',['drink','drinks','is drinking','drank'],1,'every morning = ทำเป็นประจำ → Present Simple · My father เอกพจน์ → drinks'],
+     ['I ___ my homework every evening.',['do','does','am doing','did'],0,'every evening = ทำเป็นประจำ → Present Simple · I ใช้กริยาช่อง 1']],
+  ],
+  hills: [
+    [['She ___ a nurse.',['am','is','are','be'],1,'She เอกพจน์ → is · แปลว่า "เป็น"'],
+     ['They ___ my friends.',['am','is','are','be'],2,'They พหูพจน์ → are']],
+    [['I ___ eleven years old.',['is','am','are','be'],1,'I คู่กับ am เสมอ'],
+     ['You ___ very tall.',['am','is','are','be'],2,'You ใช้ are เสมอ ไม่ว่าคนเดียวหรือหลายคน']],
+    [['He ___ not at home.',['am','is','are','be'],1,'He เอกพจน์ → is · ปฏิเสธเติม not หลัง is'],
+     ['We ___ not hungry.',['am','is','are','be'],2,'We พหูพจน์ → are · ปฏิเสธคือ are not (aren\'t)']],
+    [['___ you a student?',['Am','Is','Are','Be'],2,'คำถามกับ you → ย้าย are มาไว้หน้าประธาน'],
+     ['___ it cold today?',['Am','Is','Are','Be'],1,'it เอกพจน์ → ย้าย is มาไว้หน้าประธาน']],
+  ],
+  desert: [
+    [['Look! The baby ___.',['sleep','sleeps','is sleeping','slept'],2,'Look! บอกว่ากำลังเกิดขึ้นตอนนี้ → Present Continuous'],
+     ['Be quiet, I ___ to the radio.',['listen','listens','am listening','listened'],2,'กำลังทำอยู่ขณะพูด → Present Continuous · I + am + V-ing']],
+    [['She ___ a letter now.',['write','writes','is writing','wrote'],2,'She + is + writing · write ตัด e ก่อนเติม -ing'],
+     ['The children ___ in the garden.',['play','plays','are playing','played'],2,'The children พหูพจน์ → are + playing']],
+    [['He ___ not working today.',['do','does','is','are'],2,'He เอกพจน์ → is not + V-ing'],
+     ['They ___ not watching TV.',['is','am','are','does'],2,'They พหูพจน์ → are not + V-ing']],
+    [['I ___ my homework at the moment.',['do','does','am doing','did'],2,'at the moment = ตอนนี้ → Present Continuous'],
+     ['Right now she ___ dinner.',['cook','cooks','is cooking','cooked'],2,'Right now = ตอนนี้ → Present Continuous']],
+  ],
+  caves: [
+    [['We ___ to the zoo last Sunday.',['go','goes','went','are going'],2,'last Sunday = จบไปแล้ว → Past Simple · go ช่อง 2 คือ went'],
+     ['He ___ his keys this morning.',['lose','loses','lost','is losing'],2,'เหตุการณ์จบไปแล้ว → Past Simple · lose ช่อง 2 คือ lost']],
+    [['She ___ the door quietly.',['open','opens','opened','is opening'],2,'regular verb → เติม -ed เป็น opened'],
+     ['They ___ a new house last year.',['buy','buys','bought','are buying'],2,'buy เป็น irregular → ช่อง 2 คือ bought']],
+    [['I ___ not see him yesterday.',['do','does','did','was'],2,'ปฏิเสธในอดีต → did not + กริยาช่อง 1'],
+     ['She ___ finish her work.',['doesn\'t','didn\'t','isn\'t','wasn\'t'],1,'อดีต → didn\'t + กริยาช่อง 1 (finish ไม่เปลี่ยนรูป)']],
+    [['He ___ to Chiang Mai two years ago.',['travel','travels','traveled','is traveling'],2,'ago = อดีต → Past Simple'],
+     ['We ___ a movie last night.',['watch','watches','watched','are watching'],2,'last night = อดีต → Past Simple']],
+  ],
+  snow: [
+    [['At 8 o\'clock I ___ dinner.',['eat','eats','was eating','have eaten'],2,'ณ จุดหนึ่งในอดีต กำลังทำอยู่ → Past Continuous'],
+     ['They ___ football all afternoon.',['play','played','were playing','are playing'],2,'all afternoon = ดำเนินอยู่ตลอดช่วงนั้น → Past Continuous']],
+    [['She ___ reading a book.',['is','was','were','did'],1,'She เอกพจน์ → was + V-ing'],
+     ['The birds ___ singing.',['was','were','is','are'],1,'The birds พหูพจน์ → were + V-ing']],
+    [['I ___ studying at that time.',['was','were','is','are'],0,'I ใช้ was'],
+     ['You ___ sleeping when I called.',['was','were','is','am'],1,'You ใช้ were เสมอ']],
+    [['She was cooking when the phone ___.',['ring','rings','rang','was ringing'],2,'เหตุการณ์สั้นที่มาขัดจังหวะ → Past Simple · ring ช่อง 2 คือ rang'],
+     ['While we ___, it started to rain.',['walk','walked','were walking','are walking'],2,'While + Past Continuous · เหตุการณ์ยาวใช้ was/were + V-ing']],
+    [['While I ___ dinner, my brother arrived.',['cook','cooks','was cooking','will cook'],2,'While + เหตุการณ์ที่กำลังดำเนินอยู่ → was/were + V-ing · I ใช้ was'],
+     ['He was working ___ 9 o\'clock last night.',['in','on','at','since'],2,'at + เวลานาฬิกา → at 9 o\'clock']],
+  ],
+  volcano: [
+    [['I think it ___ tomorrow.',['rain','rains','will rain','rained'],2,'คาดการณ์อนาคต → will + กริยาช่อง 1'],
+     ['The phone is ringing. I ___ it.',['answer','answers','will answer','answered'],2,'ตัดสินใจ ณ ขณะพูด → will + กริยาช่อง 1']],
+    [['She ___ us next week.',['visit','visits','will visit','visited'],2,'will + กริยาช่อง 1 เสมอ ไม่เติม s'],
+     ['They ___ the answer soon.',['knows','know','will know','knew'],2,'soon = อนาคต → will + กริยาช่อง 1']],
+    [['Look at those clouds! It ___ rain.',['will','is going to','goes to','was going to'],1,'มีหลักฐานให้เห็น → is going to'],
+     ['We ___ buy a car next month.',['are going to','is going to','am going to','going to'],0,'We พหูพจน์ → are going to + กริยาช่อง 1']],
+    [['He ___ come to the party.',['will not','will not to','not will','doesn\'t will'],0,'ปฏิเสธคือ will not (won\'t) + กริยาช่อง 1'],
+     ['I ___ forget your name.',['won\'t','don\'t','didn\'t','am not'],0,'won\'t = will not → ตามด้วยกริยาช่อง 1']],
+    [['We ___ to the beach tomorrow.',['go','goes','will go','went'],2,'tomorrow = อนาคต → will go'],
+     ['She ___ here tonight.',['is','was','will be','been'],2,'tonight = อนาคต · verb to be ในอนาคตคือ will be']],
+  ],
+  ruins: [
+    [['I ___ never been to Japan.',['have','has','was','am'],0,'I ใช้ have · never = ประสบการณ์ที่ไม่เคยทำ → Present Perfect'],
+     ['She ___ just finished her work.',['have','has','had','is'],1,'She เอกพจน์ → has · just = เพิ่งเสร็จ ส่งผลถึงตอนนี้']],
+    [['They have ___ the news.',['hear','hears','heard','hearing'],2,'have + กริยาช่อง 3 · hear ช่อง 3 คือ heard'],
+     ['He has ___ his lunch.',['eat','eats','eaten','ate'],2,'has + กริยาช่อง 3 · eat ช่อง 3 คือ eaten']],
+    [['My brother ___ lost his phone.',['have','has','are','were'],1,'My brother = He → has'],
+     ['You ___ done a good job.',['has','have','is','was'],1,'You ใช้ have']],
+    [['I have lived here ___ 2015.',['for','since','ago','in'],1,'since + จุดเริ่มต้นของเวลา (ปี วัน เดือน)'],
+     ['We have known each other ___ ten years.',['since','for','ago','from'],1,'for + ช่วงระยะเวลา']],
+  ],
+  grove: [
+    [['___ you swim?',['Can','Cans','Canning','To can'],0,'can เป็น modal ใช้รูปเดิมเสมอ ไม่เติม s / ing และไม่ใช้ to'],
+     ['You ___ see a doctor.',['should','shoulds','shoulding','to should'],0,'should เป็น modal ไม่เปลี่ยนรูป']],
+    [['She can ___ three languages.',['speak','speaks','speaking','spoke'],0,'หลัง modal ใช้กริยาช่อง 1 เสมอ ไม่เติม s'],
+     ['We must ___ now.',['leave','leaves','leaving','left'],0,'หลัง must ใช้กริยาช่อง 1']],
+    [['You ___ wear a helmet. It is the law.',['can','may','must','could'],2,'must = ต้อง (จำเป็น เป็นกฎ)'],
+     ['It ___ rain later, take an umbrella.',['must','may','should','can'],1,'may = อาจจะ (ไม่แน่ใจ)']],
+    [['I ___ swim. I never learned.',['cannot','don\'t can','not can','am not can'],0,'ปฏิเสธของ can คือ cannot (can\'t) + กริยาช่อง 1'],
+     ['You ___ eat in the library.',['mustn\'t','don\'t must','not must','doesn\'t must'],0,'ปฏิเสธของ must คือ mustn\'t + กริยาช่อง 1']],
+  ],
+  shadow: [
+    [['When I arrived, the train ___ already left.',['has','had','have','was'],1,'รถไฟออกไป "ก่อน" ที่ฉันจะมาถึง → Past Perfect'],
+     ['She ___ finished her homework before dinner.',['has','had','have','was'],1,'เสร็จก่อนอีกเหตุการณ์ในอดีต → had + กริยาช่อง 3']],
+    [['They had ___ the film before.',['see','sees','seen','saw'],2,'had + กริยาช่อง 3 · see ช่อง 3 คือ seen'],
+     ['He ___ eaten before we came.',['has','have','had','was'],2,'had ใช้ได้กับทุกประธาน']],
+    [['After he ___ his work, he went home.',['finish','finishes','had finished','finishing'],2,'After + Past Perfect … + Past Simple'],
+     ['I had studied English ___ I moved here.',['before','while','now','after'],0,'had + V3 มาก่อน แล้วตามด้วยเหตุการณ์หลัง → before']],
+    [['She ___ not seen him before that day.',['has','had','have','was'],1,'ปฏิเสธคือ had not (hadn\'t) + กริยาช่อง 3'],
+     ['We ___ finished when they arrived.',['hadn\'t','didn\'t','haven\'t','weren\'t'],0,'hadn\'t + กริยาช่อง 3 = ยังไม่เสร็จก่อนหน้านั้น']],
+  ],
+  castle: [
+    [['She ___ to school every day.',['walk','walks','is walking','walked'],1,'every day → Present Simple · She เอกพจน์ → walks'],
+     ['They ___ TV right now.',['watch','watches','are watching','watched'],2,'right now → Present Continuous']],
+    [['We ___ him yesterday.',['meet','meets','met','will meet'],2,'yesterday → Past Simple · meet ช่อง 2 คือ met'],
+     ['I ___ you tomorrow.',['call','calls','called','will call'],3,'tomorrow → Future Simple → will + กริยาช่อง 1']],
+    [['My mother always ___ dinner at six.',['cook','cooks','is cooking','cooked'],1,'always = ทำเป็นประจำ → Present Simple'],
+     ['Listen! Someone ___ at the door.',['knock','knocks','is knocking','knocked'],2,'Listen! = กำลังเกิดขึ้นตอนนี้ → Present Continuous']],
+    [['He ___ his bike two days ago.',['fix','fixes','fixed','will fix'],2,'ago → Past Simple'],
+     ['We ___ the museum next Friday.',['visit','visits','visited','will visit'],3,'next Friday → Future Simple']],
+  ],
+};
+const drillsFor = (zi, rule) => (DRILLS[ZONES[zi].id] || [])[rule] || [];
+
+// ── question formats ───────────────────────────────────────────────────────
+// Twelve fill-the-blank items per zone, answered the same way every time, is
+// the shape of a worksheet rather than a fight. The same authored items can be
+// asked in four different ways, so a different monster feels like a different
+// problem without a word of new content — and each way exercises something
+// slightly different: recognising a correct sentence, catching a wrong word,
+// and putting a sentence together from scratch.
+const QKINDS = ['mc', 'tf', 'err', 'order'];
+// One format per monster kind, so a given monster always asks its own way and
+// the student learns what to expect from it.
+const kindForMonster = t => QKINDS[t % QKINDS.length];
+
+const words = str => str.trim().replace(/\s+/g, ' ').split(' ');
+// The item's sentence with the blank filled in.
+const filled = (q, word) => q.replace('___', word);
+
+// Some items have only multi-word options ("is watching"), which would give the
+// inserted word away in "find the mistake" — the odd chunk is visibly odd. Ask
+// those the ordinary way instead.
+const singleWordOpts = opts => opts.filter(o => !/\s/.test(o));
+
+function makeQuestion(item, kind){
+  const [q, opts, ans, why] = item;
+  const right = opts[ans];
+  const wrongs = opts.filter((_, i) => i !== ans);
+
+  if(kind === 'tf'){
+    // Half the time show the sentence correct, half the time spoiled.
+    const showRight = Math.random() < .5;
+    const shown = showRight ? right : wrongs[Math.floor(Math.random()*wrongs.length)];
+    return { kind, promptHTML: `<b>${filled(q, shown)}</b>`,
+      lead: 'ประโยคนี้ถูกไวยากรณ์หรือไม่',
+      choices: ['✓ ถูก', '✗ ผิด'], ans: showRight ? 0 : 1,
+      answerText: showRight ? 'ถูก' : 'ผิด',
+      why: showRight ? why : `ที่ถูกคือ <b>${right}</b> · ${why}` };
+  }
+
+  if(kind === 'err'){
+    const singles = singleWordOpts(wrongs);
+    if(!singles.length || /\s/.test(right)) return makeQuestion(item, 'mc');
+    const bad = singles[Math.floor(Math.random()*singles.length)];
+    const toks = words(filled(q, bad));
+    const at = toks.findIndex(t => t.replace(/[.?!,]$/, '') === bad);
+    if(at < 0) return makeQuestion(item, 'mc');
+    return { kind, promptHTML: '', lead: 'ประโยคนี้มีคำผิดอยู่หนึ่งคำ — แตะคำนั้น',
+      choices: toks, ans: at, answerText: bad,
+      why: `<b>${bad}</b> ผิด · ที่ถูกคือ <b>${right}</b> · ${why}` };
+  }
+
+  if(kind === 'order'){
+    const toks = words(filled(q, right));
+    // Two or three words is not a puzzle, it is a formality.
+    if(toks.length < 4 || toks.length > 9) return makeQuestion(item, 'mc');
+    const order = shuffle(toks.map((_, i) => i));
+    return { kind, lead: 'เรียงคำให้เป็นประโยคที่ถูกต้อง', promptHTML: '',
+      choices: order.map(i => toks[i]),
+      seq: order.map((_, slot) => order.indexOf(slot)),   // choice index per position
+      ans: order.indexOf(0), answerText: toks.join(' '), why };
+  }
+
+  const order = shuffle(opts.map((_, i) => i));
+  return { kind: 'mc', lead: '', choices: order.map(i => opts[i]), ans: order.indexOf(ans),
+    answerText: right, promptHTML: markSignals(q).replace('___','<span class="blank">_____</span>'),
+    why };
+}
 function renderBattleQ(){
   const b = battle;
   if(b.qi >= b.pool.length){ b.pool = shuffle(b.pool); b.qi = 0; }
-  const [q,opts,ans] = b.pool[b.qi];
-  // Shuffle the four answers. Written in order they gave the answer away by
-  // position — Present Continuous had it in slot 3 for eleven of twelve
+  // makeQuestion shuffles the options. Written in order they gave the answer
+  // away by position — Present Continuous had it in slot 3 for eleven of twelve
   // questions, Modal Verbs in slot 1 for all twelve — so a student could clear
   // a zone by learning the button, then came unstuck the moment it moved.
-  const order = shuffle(opts.map((_,i) => i));
-  b.shown = {opts: order.map(i => opts[i]), ans: order.indexOf(ans), why: b.pool[b.qi][3] || ''};
+  const Q = makeQuestion(b.pool[b.qi], b.kindOf ? b.kindOf() : 'mc');
+  b.shown = Object.assign({opts: Q.choices}, Q);
+  b.picked = [];
   $('battle-question').innerHTML =
-    markSignals(q).replace('___','<span class="blank">_____</span>');
+    (Q.lead ? `<span class="q-lead">${Q.lead}</span>` : '') + (Q.promptHTML || '');
   const box = $('battle-options'); box.innerHTML = '';
-  b.shown.opts.forEach((o,i) => {
+  box.className = Q.kind === 'mc' ? '' : 'wordy ' + Q.kind;
+  if(Q.kind === 'order'){
+    const line = document.createElement('div');
+    line.id = 'order-line'; line.textContent = '_____';
+    $('battle-question').appendChild(line);
+  }
+  Q.choices.forEach((o,i) => {
     const btn = document.createElement('button');
     btn.className = 'opt'; btn.type = 'button';
-    btn.innerHTML = `<span class="key">${i+1}</span>`;
+    if(Q.kind === 'mc') btn.innerHTML = `<span class="key">${i+1}</span>`;
     btn.appendChild(document.createTextNode(o));
-    btn.onclick = () => answerBattle(i, b.shown.ans, btn);
+    btn.onclick = () => Q.kind === 'order' ? pickWord(i, btn) : answerBattle(i, Q.ans, btn);
     box.appendChild(btn);
   });
   $('battle-feedback').textContent = '';
@@ -3493,6 +3738,20 @@ function renderBattleQ(){
   $('btn-next').style.display = 'none';
   if(b.hintLeft > 0) $('btn-hint').disabled = false;
   refreshHintLabel();
+}
+// Word order is answered a tap at a time. Anything but the next word in the
+// sentence ends the attempt, so the student is judged on the whole sentence
+// rather than on nine separate guesses.
+function pickWord(i, btn){
+  const b = battle; if(!b || b.locked) return;
+  const Q = b.shown, want = Q.seq[b.picked.length];
+  if(i !== want){ answerBattle(i, want, btn); return; }
+  b.picked.push(i);
+  btn.disabled = true; btn.classList.add('used');
+  const line = $('order-line');
+  if(line) line.textContent = b.picked.map(k => Q.choices[k]).join(' ');
+  sfx.open();
+  if(b.picked.length === Q.choices.length) answerBattle(i, i, btn);
 }
 function answerBattle(sel, ans, btn){
   const b = battle; if(!b || b.locked) return;
@@ -3725,7 +3984,7 @@ function feedbackHTML(right, b, why, chose){
   const head = right
     ? `<span style="color:#2f6b28">✔ ${pick(PRAISE)}</span>`
     : `<span style="color:#96271f">✖ ${pick(ENCOURAGE)}</span>` +
-      `<span class="why ans">คำตอบคือ <b>${b.shown.opts[b.shown.ans]}</b></span>`;
+      `<span class="why ans">คำตอบคือ <b>${b.shown.answerText || b.shown.opts[b.shown.ans]}</b></span>`;
   // What the student picked, named — the line that stops them picking it again
   const mine = right ? '' : describeChoice(chose);
   return head +
@@ -3828,7 +4087,15 @@ function interact(){
 }
 const cluesFound = zi => S.clues[zi].filter(Boolean).length;
 const cluesLeft = zi => S.clues[zi].length - cluesFound(zi);
+// Reading the stone shows the rule; the stone is only marked read once the
+// practice on that rule is passed. Teaching, then proving you took it in.
 function readClue(stone){
+  const Z = ZONES[zone];
+  const drills = drillsFor(zone, stone.idx);
+  if(drills.length){ openDrill(stone, drills); return; }
+  grantClue(stone);
+}
+function grantClue(stone){
   const Z = ZONES[zone];
   S.clues[zone][stone.idx] = true;
   S.xp += 10;
@@ -3844,6 +4111,89 @@ function readClue(stone){
               : '<br><span style="opacity:.75">ครบแล้ว! ท้าผู้พิทักษ์ได้เลย</span>'));
   refreshHUD(); save();
 }
+// ── the stone's practice ───────────────────────────────────────────────────
+// Every item must be right. A wrong answer explains itself and the set starts
+// again with the questions reshuffled, so the way through is understanding the
+// rule rather than remembering which button was green last time.
+let drill = null;
+function openDrill(stone, items){
+  drill = {stone, items, order: shuffle(items.map((_,i)=>i)), at: 0, wrong: 0};
+  $('drill-rule').innerHTML = ZONES[zone].rules[stone.idx];
+  $('drill-topic').textContent = ZONES[zone].topic;
+  showOverlay('screen-drill'); sfx.open();
+  renderDrillQ();
+}
+function renderDrillQ(){
+  const d = drill, item = d.items[d.order[d.at]];
+  // The stone practice uses the same four formats the monsters use, so the
+  // formats are met somewhere safe before they are met in a fight.
+  const Q = makeQuestion(item, QKINDS[(d.at + d.wrong) % QKINDS.length]);
+  d.shown = Q; d.picked = [];
+  $('drill-count').textContent = `ข้อ ${d.at+1} / ${d.items.length}`;
+  $('drill-question').innerHTML =
+    (Q.lead ? `<span class="q-lead">${Q.lead}</span>` : '') + (Q.promptHTML || '');
+  const box = $('drill-options'); box.innerHTML = '';
+  box.className = Q.kind === 'mc' ? '' : 'wordy ' + Q.kind;
+  if(Q.kind === 'order'){
+    const line = document.createElement('div');
+    line.id = 'drill-line'; line.textContent = '_____';
+    $('drill-question').appendChild(line);
+  }
+  Q.choices.forEach((o,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt'; btn.type = 'button';
+    if(Q.kind === 'mc') btn.innerHTML = `<span class="key">${i+1}</span>`;
+    btn.appendChild(document.createTextNode(o));
+    btn.onclick = () => Q.kind === 'order' ? drillWord(i, btn) : answerDrill(i, btn);
+    box.appendChild(btn);
+  });
+  $('drill-feedback').textContent = '';
+  $('btn-drill-next').style.display = 'none';
+  d.locked = false;
+}
+function drillWord(i, btn){
+  const d = drill; if(!d || d.locked) return;
+  const Q = d.shown, want = Q.seq[d.picked.length];
+  if(i !== want){ answerDrill(i, btn, true); return; }
+  d.picked.push(i);
+  btn.disabled = true; btn.classList.add('used');
+  const line = $('drill-line');
+  if(line) line.textContent = d.picked.map(k => Q.choices[k]).join(' ');
+  sfx.open();
+  if(d.picked.length === Q.choices.length) answerDrill(i, btn, false, true);
+}
+function answerDrill(sel, btn, forceWrong, forceRight){
+  const d = drill; if(!d || d.locked) return;
+  d.locked = true;
+  [...$('drill-options').children].forEach(c => c.disabled = true);
+  const right = forceRight === true ? true : (forceWrong ? false : sel === d.shown.ans);
+  btn.classList.add(right ? 'right' : 'wrong');
+  (right ? sfx.pickup : sfx.deny)();
+  $('drill-feedback').innerHTML =
+    (right ? `<span style="color:#2f6b28">✔ ${pick(PRAISE)}</span>`
+           : `<span style="color:#96271f">✖ ${pick(ENCOURAGE)}</span>` +
+             `<span class="why ans">คำตอบคือ <b>${d.shown.answerText}</b></span>`) +
+    (right ? '' : (describeChoice(d.shown.choices[sel]) ?
+        `<span class="why mine">เจ้าเลือก ${describeChoice(d.shown.choices[sel])}</span>` : '')) +
+    (d.shown.why ? `<span class="why">${d.shown.why}</span>` : '');
+  if(right){
+    d.at++;
+    if(d.at >= d.items.length){
+      $('btn-drill-next').textContent = '🗿 รับเบาะแส';
+      $('btn-drill-next').onclick = () => { hideOverlays(); const st = drill.stone; drill = null; grantClue(st); };
+    } else {
+      $('btn-drill-next').textContent = 'ข้อต่อไป →';
+      $('btn-drill-next').onclick = () => renderDrillQ();
+    }
+  } else {
+    d.wrong++; d.at = 0; d.order = shuffle(d.items.map((_,i)=>i));
+    $('btn-drill-next').textContent = '↻ เริ่มใหม่';
+    $('btn-drill-next').onclick = () => renderDrillQ();
+  }
+  $('btn-drill-next').style.display = 'inline-block';
+}
+$('btn-drill-leave').onclick = () => { drill = null; hideOverlays(); };
+
 // What each villager is for. Nothing here hands out crystals — the hamlet is
 // support, so exploring still matters.
 const COMPASS = ['เหนือ','ตะวันออกเฉียงเหนือ','ตะวันออก','ตะวันออกเฉียงใต้',
