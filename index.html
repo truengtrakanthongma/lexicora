@@ -1804,6 +1804,7 @@ function buildZone(zi){
              Math.hypot(mx*TILE-world.village.x, my*TILE-world.village.y) < (VILLAGE_R+3)*TILE)
             && tries<120);
     world.monsters.push({
+      detour:0,
       x:mx*TILE+TILE/2, y:my*TILE+TILE/2, dead:false, respawn:0,
       type:Z.mon[m % Z.mon.length], dir:Math.random()*Math.PI*2, timer:Math.random()*2, iframe:0
     });
@@ -2033,6 +2034,25 @@ function buildVillage(zi, glX, glY, pathTile){
   });
 }
 
+// Last-resort safety. Every zone measures as fully reachable, but a hero wedged
+// inside geometry — by a clamp at the map edge, or a prop blocked under their
+// feet — could never walk out again, and to a child that is simply a broken
+// game with no way back except losing their progress. Nudge them to the nearest
+// open tile instead. Costs nothing on the frames where nothing is wrong.
+function boxed(x, y){
+  return solidAt(x-7, y-3) && solidAt(x+7, y-3) &&
+         solidAt(x-7, y-14) && solidAt(x+7, y-14);
+}
+function unstick(){
+  if(!boxed(player.x, player.y)) return;
+  for(let r = TILE; r <= TILE*6; r += TILE/2){
+    for(let a = 0; a < Math.PI*2; a += Math.PI/8){
+      const x = player.x + Math.cos(a)*r, y = player.y + Math.sin(a)*r;
+      if(x < TILE || y < TILE || x > WPX-TILE || y > HPX-TILE) continue;
+      if(!boxed(x, y)){ player.x = x; player.y = y; return; }
+    }
+  }
+}
 function solidAt(px,py){
   const x = Math.floor(px/TILE), y = Math.floor(py/TILE);
   if(x<0||y<0||x>=ZW||y>=ZH) return true;
@@ -2075,6 +2095,33 @@ function resize(){
 addEventListener('resize', resize);
 
 const particles = [];
+// An expanding ring — the shape the eye reads as "something happened here".
+// Cheap: one stroked circle per frame, fading as it grows.
+function ring(x, y, color, r1 = 46, life = .5, width = 3){
+  if(REDUCED) return;
+  // Normal blending rather than additive: both draw, but 'lighter' over bright
+  // grass leaves almost nothing to see, while it reads on every zone this way.
+  particles.push({kind:'ring', x, y, color, r:2, r1, life, max:life, w:width, glow:false});
+}
+// A word that lifts off the thing it came from. The vocabulary crystal is the
+// one moment the English word and its meaning are worth reading in place
+// rather than in a corner of the screen.
+function floatText(x, y, text, color = '#fff3d8', size = 11){
+  if(REDUCED) return;
+  particles.push({kind:'text', x, y, text, color, size, vy:-26, life:1.5, max:1.5, glow:false});
+}
+// Levelling happened in three places and only one of them said anything.
+// Now it always lands the same way, wherever it was earned.
+function levelUp(){
+  S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax;
+  sfx.gear();
+  addTrauma(.25);
+  ring(player.x, player.y-16, '#ffda7b', 70, .72, 4);
+  ring(player.x, player.y-16, '#fff3cf', 44, .5, 2);
+  puff(player.x, player.y-16, '#ffe9a8', 20, 70);
+  floatText(player.x, player.y-40, `เลเวล ${S.level}!`, '#ffda7b', 15);
+  toast('⬆', `เลเวลอัป! เป็นเลเวล <b>${S.level}</b> · พลังชีวิตเพิ่มขึ้น`);
+}
 function puff(x,y,color,n=8,spd=40){
   if(REDUCED) return;
   for(let i=0;i<n;i++){
@@ -2512,8 +2559,28 @@ function drawWorld(dt){
         drew = true;
       }
       p.life -= dt; if(p.life<=0){ particles.splice(i,1); continue; }
-      p.x += p.vx*dt; p.y += p.vy*dt; p.vy += (p.grav||90)*dt;
       const k = Math.max(0, p.life/p.max);
+      if(p.kind === 'ring'){
+        // ease-out: fast at the moment of impact, slowing as it fades
+        const t = 1-k, e = 1-(1-t)*(1-t);
+        // Linear fade, not squared — a squared fade spends most of the ring's
+        // life almost transparent, which is the half nobody sees.
+        ctx.globalAlpha = k;
+        ctx.strokeStyle = p.color; ctx.lineWidth = Math.max(2, p.w*(.55+.45*k));
+        ctx.beginPath(); ctx.arc(p.x, p.y, 2+e*p.r1, 0, 7); ctx.stroke();
+        continue;
+      }
+      if(p.kind === 'text'){
+        p.y += p.vy*dt; p.vy *= .94;
+        ctx.globalAlpha = Math.min(1, k*2.2);
+        ctx.font = `700 ${p.size}px Kanit, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(24,14,6,.85)';
+        ctx.strokeText(p.text, p.x, p.y);
+        ctx.fillStyle = p.color; ctx.fillText(p.text, p.x, p.y);
+        continue;
+      }
+      p.x += p.vx*dt; p.y += p.vy*dt; p.vy += (p.grav||90)*dt;
       ctx.globalAlpha = k*k;
       ctx.fillStyle = p.color;
       const r = Math.max(1, Math.round(p.r*(.5+.5*k)));
@@ -3624,7 +3691,7 @@ function winBattle(){
     S.stars[zi] = Math.max(S.stars[zi], b.wrong===0?3 : b.wrong<=2?2 : 1);
     S.gear = Math.min(GEAR.length, S.gear+1);
     S.xp += 90; S.hp = S.hpMax;
-    while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax; }
+    while(S.xp >= xpNeed()){ levelUp(); }
     sfx.gear();
     const g = GEAR[zi], nxt = ZONES[zi+1];
     $('reward-eyebrow').textContent = 'ผู้พิทักษ์ล้มลงแล้ว';
@@ -3641,12 +3708,14 @@ function winBattle(){
     showOverlay('screen-reward');
   } else {
     S.xp += 22; S.kills++;
-    while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax; toast('⬆','เลเวลอัป! พลังชีวิตเพิ่มขึ้น'); }
+    while(S.xp >= xpNeed()){ levelUp(); }
     b.target.dead = true; b.target.respawn = 22;
     player.iframe = 1.8;
     sfx.win(); hideOverlays();
     toast('⚔','ชนะแล้ว +22 XP');
-    puff(b.target.x, b.target.y-14, ZONES[zone].accent, 14, 60);
+    puff(b.target.x, b.target.y-14, ZONES[zone].accent, 16, 64);
+    ring(b.target.x, b.target.y-14, ZONES[zone].accent, 54, .55);
+    floatText(b.target.x, b.target.y-30, '+22 XP', '#ffe9a8', 12);
     // A potion about a third of the time, and always when you are nearly out:
     // a child who keeps losing should get a way back in, not a wall.
     if(S.hp < S.hpMax && (S.hp <= 1 || Math.random() < .34))
@@ -3714,9 +3783,12 @@ function readClue(stone){
   const Z = ZONES[zone];
   S.clues[zone][stone.idx] = true;
   S.xp += 10;
-  while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax; }
+  while(S.xp >= xpNeed()){ levelUp(); }
   sfx.pickup();
-  puff(stone.x, stone.y-30, Z.accent, 12, 46);
+  puff(stone.x, stone.y-30, Z.accent, 14, 50);
+  ring(stone.x, stone.y-30, '#ffda7b', 52, .6);
+  ring(stone.x, stone.y-30, '#fff3cf', 30, .4, 2);
+  floatText(stone.x, stone.y-44, '📜 เบาะแสใหม่!', '#ffda7b', 12);
   const left = cluesLeft(zone);
   toast('🗿', `<b>${Z.rules[stone.idx]}</b>` +
         (left ? `<br><span style="opacity:.75">เหลืออีก ${left} ชิ้น</span>`
@@ -4512,6 +4584,7 @@ function update(dt){
        !solidAt(player.x-7, ny-14) && !solidAt(player.x+7, ny-14)) player.y = ny;
     player.x = clamp(player.x, TILE, WPX-TILE);
     player.y = clamp(player.y, TILE, HPX-TILE);
+    unstick();
     player.anim += dt;
     // Two contacts per eight-frame cycle. Firing on the frame change rather
     // than on a random roll means the sound and the dust land on the step.
@@ -4535,9 +4608,14 @@ function update(dt){
       S.words[zone][c.idx] = true;
       const w = ZONES[zone].words[c.idx];
       S.xp += 8;
-      while(S.xp >= xpNeed()){ S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax; }
+      while(S.xp >= xpNeed()){ levelUp(); }
       sfx.pickup();
-      puff(c.x, c.y, ZONES[zone].accent, 12, 52);
+      puff(c.x, c.y, ZONES[zone].accent, 14, 56);
+      ring(c.x, c.y, ZONES[zone].accent, 40, .5);
+      ring(c.x, c.y, '#eafcff', 24, .34, 2);
+      // Read where it was found, not only in the corner of the screen.
+      floatText(c.x, c.y-10, w[0], '#eafcff', 13);
+      floatText(c.x, c.y+2, w[1], '#ffe9a8', 10);
       toast('💎', `<b>${w[0]}</b> — ${w[1]}`);
       refreshHUD(); save();
     }
@@ -4549,6 +4627,8 @@ function update(dt){
     world.drops.splice(i,1);
     S.hp = Math.min(S.hpMax, S.hp+2);
     sfx.pickup(); puff(d.x, d.y-8, '#8fe38a', 10, 44);
+    ring(d.x, d.y-8, '#8fe38a', 30, .42, 2);
+    floatText(d.x, d.y-16, '+2 ♥', '#b6f5b0', 12);
     toast('🧪','ยาฟื้นพลัง +2');
     refreshHUD(); save();
   }
@@ -4569,15 +4649,32 @@ function update(dt){
       m.dir = Math.atan2(m.y-world.village.y, m.x-world.village.x);
       m.timer = 1.2;
     }
+    if(m.detour > 0) m.detour -= dt;
     const chasing = d < 118 && player.iframe <= 0 && vd > (VILLAGE_R+2)*TILE;
-    if(chasing) m.dir = Math.atan2(player.y-m.y, player.x-m.x);
-    else if(m.timer <= 0){ m.dir = Math.random()*Math.PI*2; m.timer = 1.4+Math.random()*2.2; }
+    // A chaser used to re-aim at the player every single frame, so the new
+    // heading picked when it hit a tree was overwritten before it could be
+    // used: the monster juddered against the trunk until the player walked
+    // away. A block now opens a short detour that the chase may not cancel.
+    if(chasing && m.detour <= 0) m.dir = Math.atan2(player.y-m.y, player.x-m.x);
+    else if(!chasing && m.timer <= 0){ m.dir = Math.random()*Math.PI*2; m.timer = 1.4+Math.random()*2.2; }
     const sp = (chasing ? 44 : 20)*dt;
     const dx = Math.cos(m.dir), dy = Math.sin(m.dir);
     const nx = m.x+dx*sp, ny = m.y+dy*sp;
     const px = m.x, py = m.y;
-    if(!solidAt(nx, m.y)) m.x = nx; else m.dir = Math.random()*Math.PI*2;
-    if(!solidAt(m.x, ny)) m.y = ny; else m.dir = Math.random()*Math.PI*2;
+    let hit = false;
+    if(!solidAt(nx, m.y)) m.x = nx; else hit = true;
+    if(!solidAt(m.x, ny)) m.y = ny; else hit = true;
+    if(hit && m.detour <= 0){
+      // Turn a quarter turn towards whichever side is actually open and commit
+      // to it, so the monster walks round the obstacle instead of into it.
+      const probe = a => !solidAt(m.x + Math.cos(a)*TILE*.9, m.y + Math.sin(a)*TILE*.9);
+      const left = m.dir - Math.PI/2, right = m.dir + Math.PI/2;
+      const openL = probe(left), openR = probe(right);
+      m.dir = openL && openR ? (Math.random() < .5 ? left : right)
+            : openL ? left : openR ? right : m.dir + Math.PI;
+      m.detour = .5 + Math.random()*.4;
+      m.timer = Math.max(m.timer, m.detour);
+    }
     // Facing row and cycle phase, so a monster walks the way it is heading.
     m.face = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0);
     const moved = Math.hypot(m.x-px, m.y-py);
