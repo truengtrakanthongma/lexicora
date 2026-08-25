@@ -1445,6 +1445,7 @@ const TILE = 32;
 const VIEW_TILES = 24;                    // tiles across the view aims for
 const SCALE_MIN = 1.25, SCALE_MAX = 2;
 let SCALE = 2;
+let DPR = 1;   // set by resize(); the camera has to snap in real device pixels
 function pickScale(){
   SCALE = clamp(VW / (VIEW_TILES * TILE), SCALE_MIN, SCALE_MAX);
 }
@@ -2107,7 +2108,7 @@ const cam = {x:0, y:0};
 const cv = $('world'), ctx = cv.getContext('2d', {alpha:false});
 let VW = 0, VH = 0;
 function resize(){
-  const dpr = Math.min(devicePixelRatio||1, 2);
+  const dpr = DPR = Math.min(devicePixelRatio||1, 2);
   VW = innerWidth; VH = innerHeight;
   pickScale();
   cv.width = Math.floor(VW*dpr); cv.height = Math.floor(VH*dpr);
@@ -2262,7 +2263,7 @@ let trauma = 0;
 const addTrauma = v => { trauma = Math.min(1, trauma + v); };
 function shakeOffset(t){
   if(REDUCED || trauma <= 0) return [0, 0];
-  const s = trauma*trauma*7, q = 1/SCALE;
+  const s = trauma*trauma*7, q = 1/(SCALE*DPR);   // same device-pixel grid as the camera
   return [Math.round(s*(noise2(t*24, 0, 11)*2-1)/q)*q,
           Math.round(s*(noise2(0, t*24, 12)*2-1)/q)*q];
 }
@@ -2380,7 +2381,16 @@ function drawWorld(dt){
   ctx.fillStyle = '#10222f'; ctx.fillRect(0,0,VW,VH);
 
   const [sx, sy] = shakeOffset(performance.now()/1000);
-  const camX = Math.round(cam.x - VW/(2*SCALE)) + sx, camY = Math.round(cam.y - VH/(2*SCALE)) + sy;
+  // Snap the camera to whole DEVICE pixels, not whole world units. One world
+  // unit is SCALE*DPR device pixels; back when SCALE was a fixed 2 that was a
+  // whole number and rounding here happened to land on the pixel grid. With
+  // the scale now following the window it is usually fractional, so every step
+  // shifted the scene by part of a pixel and nearest-neighbour sampling
+  // reshuffled which source pixel landed where — the whole screen shimmered
+  // while walking.
+  const q = SCALE * DPR;
+  const camX = Math.round((cam.x - VW/(2*SCALE)) * q)/q + sx,
+        camY = Math.round((cam.y - VH/(2*SCALE)) * q)/q + sy;
 
   ctx.save();
   ctx.scale(SCALE, SCALE);
