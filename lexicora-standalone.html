@@ -565,6 +565,16 @@ mark.signal{
 #test-score .note.ok{color:var(--emerald);font-weight:700;}
 #test-score .note.bad{color:var(--crimson);font-weight:700;}
 #test-review{max-height:38vh;max-height:38dvh;overflow-y:auto;margin-top:12px;}
+.teach-sentence{
+  display:block;font-size:1.14rem;line-height:1.7;font-weight:600;
+  text-align:center;margin-bottom:10px;
+}
+.teach-how{
+  display:block;font-size:.92rem;font-weight:400;line-height:1.6;
+  text-align:left;color:var(--ink-2);
+  background:rgba(74,47,30,.07);border-left:4px solid var(--wood-3);
+  border-radius:0 8px 8px 0;padding:9px 12px;
+}
 #drill-rule{
   text-align:center;font-weight:600;font-size:1.02rem;line-height:1.55;
   background:rgba(232,184,75,.16);border:2px solid var(--gold-dk);
@@ -3501,22 +3511,119 @@ function startBattle(kind, target){
   paintBattleBG();
   sfx.open();
 }
+// The spell has to mean something different in each format. Striking out two
+// "wrong" options is right for a list of answers, but in word order every
+// button is a word the sentence needs — striking two of them left the student
+// unable to finish the sentence at all, which is what a spell meant to help
+// should never do.
 $('btn-hint').onclick = () => {
   const b = battle;
   if(!b || b.locked || b.hintLeft <= 0) return;
   const opts = [...$('battle-options').children];
-  const ans = b.shown.ans;
-  const wrongOnes = opts.map((o,i)=>i).filter(i => i !== ans && !opts[i].disabled);
-  shuffle(wrongOnes).slice(0,2).forEach(i => {
-    opts[i].disabled = true;
-    opts[i].style.opacity = '.28';
-    opts[i].style.textDecoration = 'line-through';
-  });
+  const Q = b.shown;
+
+  if(Q.kind === 'order'){
+    // Place the next word rather than removing any. The sentence stays
+    // completable and the student is shown where it is going.
+    const next = Q.seq[b.picked.length];
+    const btn = opts[next];
+    if(btn && !btn.disabled) pickWord(next, btn);
+  } else if(Q.kind === 'tf'){
+    // A true/false has nothing to eliminate without simply answering it, so
+    // the spell points at the word to judge instead.
+    const el = $('battle-question');
+    el.innerHTML = el.innerHTML.replace(
+      new RegExp(`(^|[\\s>])(${escapeRe(Q.focusWord||'')})(?=[\\s.,?!<]|$)`),
+      '$1<span class="blank">$2</span>');
+  } else {
+    const wrongOnes = opts.map((o,i)=>i).filter(i => i !== Q.ans && !opts[i].disabled);
+    shuffle(wrongOnes).slice(0,2).forEach(i => {
+      opts[i].disabled = true;
+      opts[i].style.opacity = '.28';
+      opts[i].style.textDecoration = 'line-through';
+    });
+  }
   b.hintLeft--;
   $('btn-hint').disabled = true;
   refreshHintLabel();
   sfx.pickup();
 };
+const escapeRe = t => String(t).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+
+// ── what each stone teaches ────────────────────────────────────────────────
+// The rule alone is a heading, not a lesson: a child who did not already know
+// the rule cannot learn it from one line and then be asked to use it. Each
+// stone now shows a worked sentence with the target part marked, and the one
+// sentence of how-to that turns the rule into something you can do. Same shape
+// as the scroll's worked examples, one per rule, indexed like DRILLS.
+// [example sentence, the target inside it, how to build it]
+const TEACH = {
+  woods: [
+    ['The earth *goes* around the sun.','goes','ความจริงทั่วไปและสิ่งที่ทำเป็นประจำ ใช้ Present Simple · ประธานเอกพจน์ (The earth = It) เติม -es'],
+    ['My sister *reads* a book every night.','reads','ประธาน He / She / It หรือคำนามเอกพจน์ → กริยาเติม -s หรือ -es · ประธานอื่นใช้กริยาช่อง 1 เปล่าๆ'],
+    ['He *does not* play football.','does not','ปฏิเสธ = do not / does not + กริยาช่อง 1 · He/She/It ใช้ does not · กริยาหลังมันไม่เติม -s อีก'],
+    ['*Does* she like milk?','Does','คำถาม = Do / Does นำหน้าประธาน + กริยาช่อง 1 · He/She/It ใช้ Does · กริยาไม่เติม -s'],
+    ['They *play* football every Sunday.','play','เห็น every day, always, usually, often, never → เป็นเรื่องประจำ ใช้ Present Simple'],
+  ],
+  hills: [
+    ['She *is* a teacher.','is','verb to be = am / is / are แปลว่า "เป็น อยู่ คือ" · ตามด้วยคำนามหรือคำคุณศัพท์ ไม่ใช่กริยา'],
+    ['I *am* happy. You *are* late. He *is* tired.','am','จำเป็นคู่: I + am · He/She/It + is · You/We/They + are'],
+    ['We *are not* ready.','are not','ปฏิเสธ = เติม not ต่อท้าย am/is/are · ย่อได้เป็น isn\'t / aren\'t (am not ย่อไม่ได้)'],
+    ['*Is* he your brother?','Is','คำถาม = ย้าย am/is/are ขึ้นมาไว้หน้าประธาน แล้วใส่ ?'],
+  ],
+  desert: [
+    ['Look! It *is raining*.','is raining','สิ่งที่กำลังเกิดขึ้นตอนนี้ ใช้ Present Continuous · มักมาคู่กับ Look! หรือ Listen!'],
+    ['She *is reading* a book.','is reading','สูตร: ประธาน + am/is/are + กริยาเติม -ing · กริยาลงท้าย e ตัด e ก่อน (write → writing)'],
+    ['They *are not* watching TV.','are not','ปฏิเสธ = ใส่ not ระหว่าง is/am/are กับกริยา -ing'],
+    ['I *am doing* my homework now.','am doing','เห็น now, right now, at the moment → กำลังทำอยู่ ใช้ Present Continuous'],
+  ],
+  caves: [
+    ['We *visited* my grandmother last week.','visited','เหตุการณ์ที่จบไปแล้วในอดีต ใช้ Past Simple'],
+    ['He *walked* home. She *went* home.','went','regular เติม -ed · irregular เปลี่ยนรูปต้องท่อง (go → went, buy → bought, see → saw)'],
+    ['I *did not* watch TV last night.','did not','ปฏิเสธในอดีต = did not (didn\'t) + กริยาช่อง 1 · กริยากลับเป็นช่อง 1 เพราะ did บอกอดีตแล้ว'],
+    ['She *called* me two days ago.','called','เห็น yesterday, last night, ago, in 2020 → จบไปแล้ว ใช้ Past Simple'],
+  ],
+  snow: [
+    ['At seven last night I *was eating* dinner.','was eating','สิ่งที่กำลังทำอยู่ ณ จุดหนึ่งในอดีต ใช้ Past Continuous'],
+    ['They *were playing* in the garden.','were playing','สูตร: ประธาน + was/were + กริยาเติม -ing'],
+    ['I *was* tired. You *were* busy.','was','I/He/She/It + was · You/We/They + were'],
+    ['I *was walking* home when it *rained*.','was walking','เหตุการณ์ยาวใช้ was/were + V-ing · เหตุการณ์สั้นที่มาขัดใช้ Past Simple'],
+    ['*While* she was cooking, I was reading.','While','เห็น while, when, at 8 o\'clock, all evening → กำลังดำเนินอยู่ในอดีต'],
+  ],
+  volcano: [
+    ['I think it *will snow* tomorrow.','will snow','พูดถึงอนาคต ตัดสินใจตอนนี้ หรือคาดการณ์ ใช้ will'],
+    ['She *will come* tomorrow.','will come','สูตร: ประธาน + will + กริยาช่อง 1 · will ไม่เปลี่ยนรูปตามประธาน และกริยาไม่เติม -s'],
+    ['Look at the clouds! It *is going to* rain.','is going to','วางแผนไว้แล้ว หรือมีหลักฐานให้เห็น ใช้ am/is/are + going to + กริยาช่อง 1'],
+    ['He *will not* be late.','will not','ปฏิเสธ = will not (won\'t) + กริยาช่อง 1'],
+    ['We *will go* to Phuket next week.','will go','เห็น tomorrow, next week, soon, later, tonight → อนาคต'],
+  ],
+  ruins: [
+    ['I *have* just *finished* my homework.','have','อดีตที่ยังส่งผลถึงตอนนี้ หรือประสบการณ์ที่เคย/ไม่เคย ใช้ Present Perfect'],
+    ['She *has written* three letters.','has written','สูตร: ประธาน + have/has + กริยาช่อง 3 (write → written, eat → eaten, see → seen)'],
+    ['He *has* a car. I *have* a car.','has','He/She/It + has · I/You/We/They + have'],
+    ['I have lived here *since* 2015 · *for* ten years.','since','since + จุดเริ่มต้น (ปี วัน) · for + ช่วงเวลา · already, yet, just, ever, never ก็เป็นคำของ tense นี้'],
+  ],
+  grove: [
+    ['She *can* swim very well.','can','modal ได้แก่ can, could, may, must, should, will · เติมความหมายให้กริยาหลัก'],
+    ['He must *go* now.','go','หลัง modal ใช้กริยาช่อง 1 เสมอ ไม่เติม -s ไม่เติม -ing ไม่เติม -ed และไม่ใช้ to'],
+    ['You *should* rest. You *must* stop.','should','can = ทำได้ · must = ต้อง (จำเป็น) · should = ควร (แนะนำ) · may = อาจจะ (ไม่แน่ใจ)'],
+    ['I *cannot* drive.','cannot','ปฏิเสธ = เติม not หลัง modal → cannot (can\'t), must not (mustn\'t), should not (shouldn\'t)'],
+  ],
+  shadow: [
+    ['The film *had started* before we arrived.','had started','เหตุการณ์ที่เกิดขึ้น "ก่อน" อีกเหตุการณ์หนึ่งในอดีต ใช้ Past Perfect'],
+    ['She *had eaten* before the party.','had eaten','สูตร: ประธาน + had + กริยาช่อง 3 · had ใช้ได้กับทุกประธาน ไม่ต้องเปลี่ยนรูป'],
+    ['After he *had finished*, he *went* home.','had finished','เรื่องที่เกิดก่อนใช้ had + V3 · เรื่องที่เกิดทีหลังใช้ Past Simple · มักมี before / after / when'],
+    ['They *had not* left when I called.','had not','ปฏิเสธ = had not (hadn\'t) + กริยาช่อง 3'],
+  ],
+  castle: [
+    ['She *walks* · She *is walking* · She *walked* · She *will walk*.','walks','บททดสอบสุดท้ายรวมทุก tense ที่ผ่านมา — อ่านประโยคให้จบก่อนเลือก'],
+    ['She reads *every day*. She is reading *now*.','every day','คำบอกเวลาคือกุญแจ อ่านหาให้เจอก่อนแล้วค่อยเลือก tense'],
+    ['*every day / always* → Present Simple · *now* → Present Continuous','every day','ทำประจำใช้ Present Simple · กำลังทำอยู่ตอนนี้ใช้ Present Continuous'],
+    ['*yesterday / ago* → Past Simple · *tomorrow / will* → Future','yesterday','จบไปแล้วใช้ Past Simple · ยังไม่เกิดใช้ will + กริยาช่อง 1'],
+  ],
+};
+const teachFor = (zi, rule) => (TEACH[ZONES[zi].id] || [])[rule] || null;
 
 // ── clue-stone drills ──────────────────────────────────────────────────────
 // A stone teaches one rule; this is the practice for that rule, and the stone
@@ -3664,7 +3771,7 @@ function makeQuestion(item, kind){
     // Half the time show the sentence correct, half the time spoiled.
     const showRight = Math.random() < .5;
     const shown = showRight ? right : wrongs[Math.floor(Math.random()*wrongs.length)];
-    return { kind, promptHTML: `<b>${filled(q, shown)}</b>`,
+    return { kind, promptHTML: `<b>${filled(q, shown)}</b>`, focusWord: shown,
       lead: 'ประโยคนี้ถูกไวยากรณ์หรือไม่',
       choices: ['✓ ถูก', '✗ ผิด'], ans: showRight ? 0 : 1,
       answerText: showRight ? 'ถูก' : 'ผิด',
@@ -4121,7 +4228,24 @@ function openDrill(stone, items){
   $('drill-rule').innerHTML = ZONES[zone].rules[stone.idx];
   $('drill-topic').textContent = ZONES[zone].topic;
   showOverlay('screen-drill'); sfx.open();
-  renderDrillQ();
+  teachThenDrill(stone);
+}
+// Teach first. The stone used to show its one-line rule and go straight to
+// asking, which only works for a student who already knew the rule — exactly
+// the one who did not need the stone.
+function teachThenDrill(stone){
+  const t = teachFor(zone, stone.idx);
+  if(!t){ renderDrillQ(); return; }
+  const [sentence, , how] = t;
+  $('drill-count').textContent = 'ตัวอย่าง';
+  $('drill-question').innerHTML =
+    `<span class="teach-sentence">${sentence.replace(/\*([^*]+)\*/g, '<span class="blank">$1</span>')}</span>` +
+    `<span class="teach-how">${how}</span>`;
+  const box = $('drill-options'); box.innerHTML = ''; box.className = '';
+  $('drill-feedback').textContent = '';
+  $('btn-drill-next').textContent = 'เข้าใจแล้ว ลองทำดู →';
+  $('btn-drill-next').onclick = () => renderDrillQ();
+  $('btn-drill-next').style.display = 'inline-block';
 }
 function renderDrillQ(){
   const d = drill, item = d.items[d.order[d.at]];
