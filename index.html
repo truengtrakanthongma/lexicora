@@ -130,9 +130,13 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
   border:2px solid var(--gold-dk);box-shadow:0 4px 18px rgba(0,0,0,.5);
 }
 #minimap{width:168px;height:96px;border-radius:6px;border:1px solid rgba(255,214,150,.35);}
-#region-name{
-  font-family:'Cinzel',serif;font-weight:700;font-size:.78rem;color:#ffeec4;
-  text-align:center;margin-top:5px;letter-spacing:.06em;
+#region-name{text-align:center;margin-top:5px;}
+.region-topic{
+  display:block;font-family:'Cinzel',serif;font-weight:700;font-size:.8rem;
+  color:var(--gold-hi);letter-spacing:.05em;
+}
+.region-place{
+  display:block;font-size:.66rem;color:rgba(255,238,196,.66);letter-spacing:.04em;
 }
 #region-sky{
   display:flex;justify-content:center;align-items:center;gap:7px;
@@ -148,6 +152,9 @@ canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
 }
 #quest-strip .label-eyebrow{color:var(--gold);}
 #quest-text{color:#f2ddb8;font-size:.86rem;line-height:1.35;margin-top:2px;}
+/* the instruction reads first; the tallies are reference underneath it */
+.quest-next{display:block;color:#fff3d8;font-weight:600;line-height:1.4;}
+.quest-sub{display:block;margin-top:3px;font-size:.74rem;color:rgba(242,221,184,.72);}
 
 #hint-bar{
   position:absolute;bottom:18px;left:50%;transform:translateX(-50%);
@@ -326,6 +333,11 @@ kbd{
 .why.mine{
   background:linear-gradient(180deg,rgba(179,58,50,.13),rgba(179,58,50,.2));
   border-color:var(--crimson);margin-bottom:5px;
+}
+/* the correct answer, moved off the scolding line and into its own calm one */
+.why.ans{
+  background:linear-gradient(180deg,rgba(30,91,58,.12),rgba(30,91,58,.2));
+  border-color:var(--emerald);margin-bottom:5px;
 }
 .why{
   display:block;font-weight:500;font-size:.86rem;line-height:1.6;
@@ -560,6 +572,19 @@ mark.signal{
 #test-score .note.ok{color:var(--emerald);font-weight:700;}
 #test-score .note.bad{color:var(--crimson);font-weight:700;}
 #test-review{max-height:38vh;max-height:38dvh;overflow-y:auto;margin-top:12px;}
+.howto-list{list-style:none;margin:12px 0 0;}
+.howto-list li{
+  display:grid;grid-template-columns:8.5rem 1fr;gap:10px;align-items:baseline;
+  padding:7px 0;border-bottom:1px dashed rgba(107,82,56,.28);font-size:.92rem;
+}
+.howto-list li:last-child{border-bottom:0;}
+.howto-list li b{color:var(--wood-3);}
+@media (max-width:520px){ .howto-list li{grid-template-columns:1fr;gap:2px;} }
+.howto-note{
+  margin-top:12px;padding:9px 12px;border-radius:8px;text-align:center;
+  background:rgba(30,91,58,.12);border:1px solid rgba(30,91,58,.3);
+  color:var(--emerald);font-weight:600;font-size:.9rem;
+}
 .rev{
   padding:8px 11px;margin-bottom:7px;border-radius:8px;
   border-left:4px solid var(--emerald);
@@ -591,7 +616,10 @@ mark.signal{
   filter:drop-shadow(0 5px 8px rgba(0,0,0,.55));transition:transform .16s;
 }
 .zone-pin:hover{transform:translate(-50%,-104%) scale(1.05);}
-.zone-pin.locked{cursor:not-allowed;filter:grayscale(.85) brightness(.7) drop-shadow(0 4px 6px rgba(0,0,0,.5));}
+.zone-pass{
+  display:inline-block;margin-left:5px;padding:0 5px;border-radius:4px;
+  background:var(--emerald);color:#eafce9;font-size:.62rem;font-weight:700;
+}
 .zone-flag{
   display:flex;align-items:center;gap:7px;padding:4px 11px 4px 5px;border-radius:5px;
   background:linear-gradient(180deg,#f3e3c0,#d9bd8c);
@@ -606,8 +634,8 @@ mark.signal{
   border:1px solid var(--gold-dk);
 }
 .zone-pin.done .zone-num{background:linear-gradient(180deg,#a8e39a,#5fae53);color:#183c14;border-color:#3d7a34;}
-.zone-name{font-weight:600;font-size:.8rem;color:var(--ink);}
-.zone-topic{font-size:.66rem;color:var(--ink-2);}
+.zone-name{font-weight:400;font-size:.68rem;color:var(--ink-2);}
+.zone-topic{font-weight:700;font-size:.82rem;color:var(--ink);letter-spacing:.01em;}
 .zone-pole{width:3px;height:26px;background:linear-gradient(90deg,#6b4526,#3d2413);}
 .zone-dot{
   width:13px;height:13px;border-radius:50%;border:2px solid var(--wood);
@@ -630,7 +658,7 @@ mark.signal{
   border:2px solid var(--gold-dk);color:#ffeec4;font-size:.82rem;font-weight:600;
 }
 @media (max-width:720px){
-  .zone-name{font-size:.68rem;} .zone-topic{display:none;}
+  .zone-topic{font-size:.74rem;} .zone-name{display:none;}
   .zone-num{width:18px;height:18px;font-size:.7rem;}
   .zone-flag{padding:3px 8px 3px 4px;}
 }
@@ -722,7 +750,7 @@ mark.signal{
       <div id="map-markers"></div>
       <div id="map-title">
         <h2 class="title-epic">LEXICORA</h2>
-        <p>เลือกดินแดน</p>
+        <p>เลือกเรื่องที่อยากเรียน · เข้าได้ทุกดินแดน ไม่ต้องเรียงลำดับ</p>
       </div>
       <div id="map-footer">
         <div id="map-progress">—</div>
@@ -760,6 +788,27 @@ mark.signal{
   </div>
 
   <!-- ========================================================= LESSON -->
+  <!-- ================================================== HOW TO PLAY -->
+  <div class="overlay dim" id="screen-howto">
+    <div class="scroll-panel sheet corner-bottom" style="max-width:520px">
+      <div class="label-eyebrow" style="text-align:center">ก่อนออกเดินทาง</div>
+      <h2 class="title-epic" style="font-size:1.9rem;text-align:center">เล่นยังไง</h2>
+      <div class="rule-gold"></div>
+      <ul class="howto-list">
+        <li><b>เดิน</b><span id="howto-move">ลูกศร หรือ W A S D</span></li>
+        <li><b>คุย / เก็บของ</b><span id="howto-act">กด E เมื่อมีเครื่องหมายขึ้น</span></li>
+        <li><b>เก็บคริสตัลคำศัพท์</b><span>ขวดสีฟ้าที่วางอยู่ทั่วแผนที่ — เก็บไว้เรียนคำใหม่</span></li>
+        <li><b>อ่านศิลาเบาะแส</b><span>เสาหินสีทอง บอกกฎไวยากรณ์ที่ใช้ชนะผู้พิทักษ์</span></li>
+        <li><b>สู้มอนสเตอร์</b><span>ตอบคำถามถูก = โจมตี · ตอบผิดก็ได้เรียน มีคำอธิบายทุกข้อ</span></li>
+        <li><b>ไม่รู้คำตอบ</b><span>คุยกับ <b>นักปราชญ์</b> ในหมู่บ้าน ฝึกได้ไม่จำกัด ไม่มีผลกับคะแนน</span></li>
+      </ul>
+      <p class="howto-note">ตอบผิดไม่เป็นไรเลย — เกมนี้มีไว้ให้ลอง ไม่ได้มีไว้จับผิด 💛</p>
+      <div style="text-align:center;margin-top:14px">
+        <button class="btn btn-gold" id="btn-howto-close">เข้าใจแล้ว ไปกันเลย!</button>
+      </div>
+    </div>
+  </div>
+
   <div class="overlay dim" id="screen-lesson">
     <div class="scroll-panel sheet corner-bottom">
       <div class="label-eyebrow" style="text-align:center">ศิลาจารึกโบราณ</div>
@@ -1543,6 +1592,7 @@ function freshState(profile, cls){
     words:ZONES.map(z => z.words.map(()=>false)),
     clues:ZONES.map(z => z.rules.map(()=>false)),
     lessonSeen:ZONES.map(()=>false),
+    howtoSeen:false,          // the how-to-play card, shown once ever
     // ---- research record. Everything the teacher's report is computed from,
     // kept as raw counts so every published number can be checked by hand.
     pre:ZONES.map(()=>null),            // {score,total,at,ms} — taken once
@@ -1568,7 +1618,18 @@ function wordsFound(){ return S.words.reduce((a,r)=>a+r.filter(Boolean).length,0
 function wordsTotal(){ return ZONES.reduce((a,z)=>a+z.words.length,0); }
 // A zone opens when the one before it was both cleared and passed. The boss
 // proves you can fight; the post-test proves you learned the tense.
-function zoneUnlocked(i){ return i===0 || (S.cleared[i-1] && zonePassed(i-1)); }
+// Every zone is open from the start. The teacher runs several classes at
+// different levels and some have never been taught a given tense, so making
+// everyone grind from Present Simple locked most of the game away from most of
+// the school. The 80% mark is still recorded and still lights the pin — it is
+// the research criterion — it simply no longer bars the door.
+function zoneUnlocked(i){ return true; }
+// Where the map points the student next: the first land they have not cleared.
+// Advice, not a gate — every pin is clickable regardless.
+function suggestedZone(){
+  const i = S.cleared.findIndex(c => !c);
+  return i < 0 ? ZONES.length-1 : i;
+}
 // Judged against the test the student actually sat, not against today's
 // constants: a save made when the test was ten items long passed on ten, and
 // lengthening the test must not retroactively lock that zone again.
@@ -2671,14 +2732,17 @@ function refreshHUD(){
   $('hud-title').textContent = CLASSES[heroCls()].thai + ' · ' + RANKS[clamp(S.gear,0,RANKS.length-1)];
   $('hp-fill').style.width = (S.hp/S.hpMax*100)+'%';
   $('xp-fill').style.width = clamp(S.xp/xpNeed()*100,0,100)+'%';
-  $('region-name').textContent = Z.no+'. '+Z.name;
+  $('region-name').innerHTML = `<span class="region-topic">${Z.topic}</span>` +
+                               `<span class="region-place">${Z.no}. ${Z.name}</span>`;
   const got = S.words[zone].filter(Boolean).length;
   const clues = cluesFound(zone);
   const clueLine = `เบาะแส ${clues}/${Z.rules.length}` +
         (clues < Z.rules.length ? ' 🗿' : ' ✔');
-  $('quest-text').innerHTML = S.cleared[zone]
-    ? `ดินแดนนี้ปลดปล่อยแล้ว · คริสตัล ${got}/${Z.words.length}`
-    : `ปราบผู้พิทักษ์<br>คริสตัลคำศัพท์ ${got}/${Z.words.length}<br>${clueLine}`;
+  // A list of counters told the student where they stood but never what to do.
+  // One highlighted instruction, chosen from the same state, does.
+  $('quest-text').innerHTML =
+    `<span class="quest-next">${nextStepText()}</span>` +
+    `<span class="quest-sub">คริสตัล ${got}/${Z.words.length} · ${clueLine}</span>`;
   const pc = $('portrait').getContext('2d');
   pc.imageSmoothingEnabled = false; pc.clearRect(0,0,CH,CH);
   const im = heroImg(); if(im) pc.drawImage(im, 0, 0, CH, CH, 0, 0, CH, CH);
@@ -2697,6 +2761,20 @@ function refreshSky(){
   $('sky-weather').textContent = W.icon;
   $('sky-weather').title = W.thai;
 }
+// The single next thing to do here, in the order the zone actually asks for it.
+function nextStepText(){
+  const Z = ZONES[zone];
+  if(!S.lessonSeen[zone]) return '📜 อ่านศิลาจารึกที่ศาลเจ้าก่อน';
+  if(!S.cleared[zone]){
+    const left = cluesLeft(zone);
+    if(left > 0) return `🗿 หาศิลาเบาะแสอีก <b>${left}</b> ก้อน (จุดทองในแผนที่เล็ก)`;
+    return '⚔️ เบาะแสครบแล้ว — ไปท้าผู้พิทักษ์ได้เลย!';
+  }
+  if(!zonePassed(zone)) return `📝 สอบหลังเรียนกับนักปราชญ์ให้ได้ ${PASS_PCT}%`;
+  const got = S.words[zone].filter(Boolean).length;
+  if(got < Z.words.length) return `💎 เก็บคริสตัลให้ครบ ${Z.words.length} คำ`;
+  return '🌟 ดินแดนนี้เรียบร้อยแล้ว — เลือกดินแดนใหม่ได้เลย';
+}
 function toast(icon, text){
   const el = document.createElement('div');
   el.className = 'toast';
@@ -2713,8 +2791,10 @@ function setHint(t){
 }
 
 // ═════════════════════════════════════════════════════════════ OVERLAYS
+// Every overlay must be listed here: showOverlay/hideOverlays only touch these
+// ids, and paused() reads the same list to stop the world while one is up.
 const OV = ['screen-landing','screen-register','screen-worldmap','screen-battle','screen-sage','screen-test',
-            'screen-survey','screen-teacher','screen-lesson','screen-reward','screen-codex'];
+            'screen-survey','screen-teacher','screen-lesson','screen-reward','screen-codex','screen-howto'];
 function showOverlay(id){ OV.forEach(o => $(o).classList.toggle('show', o===id)); }
 function hideOverlays(){ OV.forEach(o => $(o).classList.remove('show')); }
 const paused = () => mode !== 'play' || OV.some(o => $(o).classList.contains('show'));
@@ -2897,11 +2977,6 @@ function drawMap(t){
     g.addColorStop(0, b.hi); g.addColorStop(1, b.base);
     c.fillStyle = g; c.fillRect(x-r*1.4, y-r*1.4, r*2.8, r*2.8);
     decorate(c, z.map.kind, x, y, r, i+1, t);
-    if(!zoneUnlocked(i)){
-      // a light mist rather than a blackout — the map should still look inviting
-      c.fillStyle = 'rgba(150,160,190,.30)'; c.fillRect(x-r*1.4, y-r*1.4, r*2.8, r*2.8);
-      c.fillStyle = 'rgba(30,26,50,.14)'; c.fillRect(x-r*1.4, y-r*1.4, r*2.8, r*2.8);
-    }
     c.restore();
     c.strokeStyle = 'rgba(74,47,30,.5)'; c.lineWidth = 2;
     blobPath(c, x, y, r, i+1); c.stroke();
@@ -2938,25 +3013,27 @@ function renderMapMarkers(){
   box.innerHTML = '';
   ZONES.forEach((z,i) => {
     const [x,y] = mapPt(z);
-    const unlocked = zoneUnlocked(i), done = S.cleared[i];
+    const done = S.cleared[i], passed = zonePassed(i);
     const pin = document.createElement('div');
-    pin.className = 'zone-pin' + (unlocked ? '' : ' locked') + (done ? ' done' : '') +
-                    (unlocked && !done && (i===0 || S.cleared[i-1]) && !S.cleared[i] ? ' current' : '');
+    // "current" is now just a suggestion of where to go next, not a gate.
+    pin.className = 'zone-pin' + (done ? ' done' : '') +
+                    (!done && i === suggestedZone() ? ' current' : '');
     pin.style.left = x+'px';
     pin.style.top = (y - z.map.r*mapRect.w*.55)+'px';
     const got = S.words[i].filter(Boolean).length;
+    // The grammar point is what the student is choosing between, so it leads.
     pin.innerHTML =
       `<div class="zone-flag">
-         <span class="zone-num">${unlocked ? (done ? '✔' : z.no) : '🔒'}</span>
+         <span class="zone-num">${done ? '✔' : z.no}</span>
          <span>
-           <span class="zone-name">${z.thai}</span>
            <span class="zone-topic" style="display:block">${z.topic}</span>
+           <span class="zone-name">${z.thai}</span>
          </span>
        </div>
-       <div class="zone-stars">${unlocked ? '★'.repeat(S.stars[i])+'☆'.repeat(3-S.stars[i])+`  ${got}/${z.words.length}` : ''}</div>
+       <div class="zone-stars">${'★'.repeat(S.stars[i])+'☆'.repeat(3-S.stars[i])}  ${got}/${z.words.length}${
+         passed ? ' <span class="zone-pass">ผ่าน '+PASS_PCT+'%</span>' : ''}</div>
        <div class="zone-pole"></div><div class="zone-dot"></div>`;
-    if(unlocked) pin.onclick = () => enterZone(i);
-    else pin.onclick = () => { sfx.deny(); toast('🔒', `ต้องผ่าน ${ZONES[i-1].thai} ก่อน`); };
+    pin.onclick = () => enterZone(i);
     box.appendChild(pin);
   });
   // A flag hangs above its anchor (translateY(-100%)), so on a short screen the
@@ -2967,8 +3044,11 @@ function renderMapMarkers(){
     const over = frame.top + 2 - pin.getBoundingClientRect().top;
     if(over > 0) pin.style.top = (parseFloat(pin.style.top) + over) + 'px';
   }
+  const passed = ZONES.filter((_,i) => zonePassed(i)).length;
   $('map-progress').innerHTML =
-    `ดินแดนที่ปลดปล่อย <b>${clearedCount()}/${ZONES.length}</b> · คำศัพท์ <b>${wordsFound()}/${wordsTotal()}</b> · Lv.<b>${S.level}</b>`;
+    `📚 เรื่องที่ผ่านเกณฑ์ <b>${passed}/${ZONES.length}</b>` +
+    ` · 🗺 ปลดปล่อยแล้ว <b>${clearedCount()}/${ZONES.length}</b>` +
+    ` · 💎 คำศัพท์ <b>${wordsFound()}/${wordsTotal()}</b> · Lv.<b>${S.level}</b>`;
 }
 
 function openMap(){
@@ -2996,11 +3076,30 @@ function enterZone(zi){
     const side = world.village.x > player.x ? 'ตะวันออก' : 'ตะวันตก';
     toast('🏘', `หมู่บ้านอยู่ทาง<b>${side}</b> · มีหมอยา นักปราชญ์ และนักสอดแนม`);
   }, 2000);
-  // The pre-test comes before anything can be learned here — that is the only
-  // way its score means what the research needs it to mean.
+  // How to play comes before anything else, once, on the very first land.
+  if(!S.howtoSeen){ setTimeout(() => openHowto(), 450); return; }
+  openZoneIntro(zi);
+}
+// The pre-test comes before anything can be learned here — that is the only
+// way its score means what the research needs it to mean.
+function openZoneIntro(zi){
   if(!S.pre[zi]) setTimeout(() => startTest('pre'), 500);
   else if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 650);
 }
+function openHowto(){
+  // Say the controls the student actually has in front of them.
+  $('howto-move').textContent = isTouch
+    ? 'ลากนิ้วบนครึ่งซ้ายของจอ' : 'ปุ่มลูกศร หรือ W A S D';
+  $('howto-act').textContent = isTouch
+    ? 'แตะปุ่มกลมสีทองมุมขวาล่าง' : 'กด E เมื่อมีเครื่องหมายขึ้นเหนือหัว';
+  showOverlay('screen-howto'); sfx.open();
+}
+$('btn-howto-close').onclick = () => {
+  S.howtoSeen = true; save();
+  hideOverlays();
+  $('hud').style.display = 'block';
+  openZoneIntro(zone);
+};
 $('btn-to-map').onclick = () => { sfx.open(); openMap(); };
 $('btn-map-codex').onclick = () => { codexTab = zone; renderCodex(); showOverlay('screen-codex'); };
 
@@ -3497,10 +3596,20 @@ function showFeedback(html){
   el.innerHTML = html;
   el.scrollIntoView({block:'nearest', behavior:'smooth'});
 }
+// Praise that varies. The same two words every time stop registering, and a
+// child who is getting them right deserves to notice that they are.
+const PRAISE = ['เก่งมาก!', 'ถูกต้อง!', 'ยอดเยี่ยม!', 'แม่นมาก!', 'ดีมากเลย!',
+                'สุดยอด!', 'เข้าใจแล้วนี่!', 'คิดได้ไวมาก!'];
+// And a wrong answer should read as "not yet", never as "you failed".
+const ENCOURAGE = ['ไม่เป็นไร ลองดูเหตุผลข้างล่างนะ', 'เกือบแล้ว! อ่านคำอธิบายอีกนิด',
+                   'ผิดได้ ค่อยๆ เรียนไปด้วยกัน', 'ข้อนี้ยากจริง มาดูกันว่าทำไม',
+                   'ไม่ต้องกังวล ครั้งหน้าต้องได้แน่'];
+const pick = a => a[Math.floor(Math.random()*a.length)];
 function feedbackHTML(right, b, why, chose){
   const head = right
-    ? '<span style="color:#2f6b28">✔ ถูกต้อง!</span>'
-    : `<span style="color:#96271f">✖ คำตอบคือ <b>${b.shown.opts[b.shown.ans]}</b></span>`;
+    ? `<span style="color:#2f6b28">✔ ${pick(PRAISE)}</span>`
+    : `<span style="color:#96271f">✖ ${pick(ENCOURAGE)}</span>` +
+      `<span class="why ans">คำตอบคือ <b>${b.shown.opts[b.shown.ans]}</b></span>`;
   // What the student picked, named — the line that stops them picking it again
   const mine = right ? '' : describeChoice(chose);
   return head +
@@ -3525,8 +3634,9 @@ function winBattle(){
     // The boss proves the fighting. The post-test is what opens the next
     // land, so the reward screen hands straight over to it.
     $('reward-text').innerHTML = `ได้รับ <b>${g.thai}</b><br>` +
-      `ต่อไปคือ <b>แบบทดสอบหลังเรียน</b> — ทำให้ได้ ${PASS_PCT}% เพื่อเปิด` +
-      (nxt ? ` <b>${nxt.thai}</b>` : `บทสรุปการเดินทาง`);
+      `ต่อไปคือ <b>แบบทดสอบหลังเรียน</b> — วัดว่าเจ้าเข้าใจ <b>${ZONES[zi].topic}</b> ` +
+      `แค่ไหน ทำได้ ${PASS_PCT}% ขึ้นไปถือว่าผ่านเกณฑ์` +
+      (nxt ? `<br>จากนั้นไปดินแดนไหนก็ได้ตามใจเลย` : `<br>แล้วไปพิชิตบทสรุปการเดินทาง`);
     $('btn-reward-close').textContent = '📝 ทำแบบทดสอบหลังเรียน';
     showOverlay('screen-reward');
   } else {
@@ -4276,7 +4386,7 @@ function renderCodex(){
   ZONES.forEach((z,i) => {
     const b = document.createElement('button');
     b.className = 'tab' + (i===codexTab ? ' active' : '');
-    b.textContent = zoneUnlocked(i) ? z.no+'. '+z.thai : '🔒';
+    b.textContent = z.no+'. '+z.thai;
     b.onclick = () => { codexTab = i; renderCodex(); };
     tabs.appendChild(b);
   });
@@ -4622,8 +4732,9 @@ function startWith(profile, cls){
   perZone('practice', ()=>({asked:0,correct:0}));
   perZone('timeMs', ()=>0);
   if(S.survey === undefined) S.survey = null;
+  if(S.howtoSeen === undefined) S.howtoSeen = false;
   if(!S.startedAt) S.startedAt = Date.now();
-  zone = clamp(clearedCount(), 0, ZONES.length-1);
+  zone = clamp(S.cleared.findIndex(c => !c), 0, ZONES.length-1);
   buildZone(zone);
   refreshHUD();
   openMap();

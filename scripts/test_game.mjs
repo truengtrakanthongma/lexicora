@@ -43,21 +43,18 @@ await page.click('#class-grid > *:first-child');
 await page.click('#btn-embark');
 await page.waitForSelector('#screen-worldmap.show');
 
-// Zones unlock in order and now also need the zone before to have been passed,
-// so a test of zone 7 would otherwise only ever see the locked pin. Mark the
-// save as cleared and passed throughout, and mark the pre-test as already sat
-// so the run lands in the world rather than in a test paper.
+// Every zone is open now, so nothing needs unlocking — but the run should land
+// in the world rather than in a test paper or the how-to card, so mark the
+// pre-test as already sat and the introduction as already read.
 await page.evaluate(() => {
   const all = JSON.parse(localStorage.getItem('lexicoraSavesV3') || '{}');
   for (const k of Object.keys(all)) {
     const s = all[k];
     s.cleared = s.cleared.map(() => true);
-    // Any value at or above the test length clears the pass gate; the harness
-    // only needs the map open, and hard-coding the length would rot whenever
-    // TEST_ITEMS or VOCAB_ITEMS changes.
     s.postBest = s.postBest.map(() => 999);
     s.pre = s.pre.map(() => ({score: 5, total: 14, at: Date.now(), ms: 1}));
     s.lessonSeen = s.lessonSeen.map(() => true);
+    s.howtoSeen = true;
   }
   localStorage.setItem('lexicoraSavesV3', JSON.stringify(all));
 });
@@ -72,6 +69,13 @@ await page.waitForSelector('#screen-worldmap.show');
 
 await page.locator('#map-markers .zone-pin').nth(ZONE).click();
 await page.waitForTimeout(900);
+// The how-to card is seeded away above; if it still shows, something reset the
+// flag — clear it so the sweep keeps going and the screenshots stay usable.
+if (await page.locator('#screen-howto.show').isVisible()) {
+  console.log('NOTE: how-to card appeared despite howtoSeen');
+  await page.click('#btn-howto-close');
+  await page.waitForTimeout(600);
+}
 // A zone can open on its pre-test or its grammar scroll; clear whichever is up.
 if (await page.locator('#screen-test.show').isVisible()) {
   for (let i = 0; i < 12 && await page.locator('#test-options .opt').first().isVisible(); i++) {
