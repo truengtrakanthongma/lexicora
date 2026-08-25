@@ -2039,17 +2039,27 @@ function buildVillage(zi, glX, glY, pathTile){
 // feet — could never walk out again, and to a child that is simply a broken
 // game with no way back except losing their progress. Nudge them to the nearest
 // open tile instead. Costs nothing on the frames where nothing is wrong.
-function boxed(x, y){
-  return solidAt(x-7, y-3) && solidAt(x+7, y-3) &&
-         solidAt(x-7, y-14) && solidAt(x+7, y-14);
+// Can the hero's whole body stand here? Same four corners the move test uses,
+// so "somewhere to escape to" means the same thing as "somewhere reachable".
+function fits(x, y){
+  return !solidAt(x-7, y-3)  && !solidAt(x+7, y-3) &&
+         !solidAt(x-7, y-14) && !solidAt(x+7, y-14);
+}
+// Stuck means no direction works — not "buried in solid rock". Testing for
+// full containment was the stricter question and would have missed a hero
+// wedged in a corner with a free tile behind them they cannot turn into.
+function wedged(){
+  for(let a = 0; a < Math.PI*2; a += Math.PI/4)
+    if(fits(player.x + Math.cos(a)*6, player.y + Math.sin(a)*6)) return false;
+  return true;
 }
 function unstick(){
-  if(!boxed(player.x, player.y)) return;
+  if(!wedged()) return;
   for(let r = TILE; r <= TILE*6; r += TILE/2){
     for(let a = 0; a < Math.PI*2; a += Math.PI/8){
       const x = player.x + Math.cos(a)*r, y = player.y + Math.sin(a)*r;
       if(x < TILE || y < TILE || x > WPX-TILE || y > HPX-TILE) continue;
-      if(!boxed(x, y)){ player.x = x; player.y = y; return; }
+      if(fits(x, y)){ player.x = x; player.y = y; return; }
     }
   }
 }
@@ -2438,6 +2448,21 @@ function drawWorld(dt){
       const c = d.o, bob = Math.sin(t*2.4 + c.x*.01)*3;
       ctx.save(); ctx.globalAlpha = .55; ctx.fillStyle = Z.accent;
       ctx.beginPath(); ctx.ellipse(c.x, c.y+16, 11, 4, 0, 0, 7); ctx.fill(); ctx.restore();
+      // A word crystal is a small glass vial on a big field of grass. The clue
+      // stones already announce themselves this way; without it the crystals
+      // were the one thing the student is asked to find that hides.
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = .30 + .16*Math.sin(t*3 + c.x*.03);
+      const cg = ctx.createRadialGradient(c.x, c.y+bob, 1, c.x, c.y+bob, 26);
+      cg.addColorStop(0, '#eafcff'); cg.addColorStop(.45, Z.accent);
+      cg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = cg; ctx.fillRect(c.x-26, c.y+bob-26, 52, 52);
+      ctx.restore();
+      // One slow rising mote, so a crystal in the corner of the eye still moves
+      if(!REDUCED && Math.random() < dt*1.1)
+        particles.push({x:c.x+(Math.random()-.5)*10, y:c.y+6, vx:0, vy:-14,
+                        grav:-6, life:1.1, max:1.1, color:'#eafcff', r:1.5, glow:true});
       const vm = PROPS[VIAL_PROP];
       if(IMG.props && vm) ctx.drawImage(IMG.props, vm.x, vm.y, vm.w, vm.h,
         Math.round(c.x-vm.w/2), Math.round(c.y-vm.h/2+bob), vm.w, vm.h);
