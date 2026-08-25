@@ -3029,6 +3029,15 @@ const OV = ['screen-landing','screen-register','screen-worldmap','screen-battle'
             'screen-survey','screen-teacher','screen-lesson','screen-reward','screen-codex','screen-howto',
             'screen-drill'];
 function showOverlay(id){ OV.forEach(o => $(o).classList.toggle('show', o===id)); }
+// Leaving an overlay means going back to whatever the student was on, which is
+// not always the world: on the map, hiding everything leaves a blank screen
+// with the world paused behind it and no key that does anything — the game
+// looks frozen and only a reload gets out. Anything that closes an overlay
+// reachable from the map must come through here.
+function closeOverlay(){
+  hideOverlays();
+  if(mode === 'map') showOverlay('screen-worldmap');
+}
 function hideOverlays(){ OV.forEach(o => $(o).classList.remove('show')); }
 const paused = () => mode !== 'play' || OV.some(o => $(o).classList.contains('show'));
 
@@ -4767,10 +4776,10 @@ $('btn-survey-send').onclick = () => {
   S.survey = surveyDraft.slice(); save();
   logEvent({type:'ตอบแบบสอบถามความพึงพอใจ', detail: surveyDraft.join(','),
     v1: Math.round(mean(surveyDraft)*100)/100});
-  hideOverlays();
+  closeOverlay();
   toast('💛', `ขอบคุณ! ค่าเฉลี่ยความพึงพอใจของเจ้า ${mean(S.survey).toFixed(2)}`);
 };
-$('btn-survey-close').onclick = () => hideOverlays();
+$('btn-survey-close').onclick = () => closeOverlay();
 
 // ── the tests ──────────────────────────────────────────────────────────────
 // One bank per zone, given twice: once on arrival and once after the boss. The
@@ -5104,10 +5113,7 @@ function renderCodex(){
        <span>มอนสเตอร์ที่ล่า <b style="color:var(--wood)">${S.kills}</b></span>
      </div>`;
 }
-$('btn-codex-close').onclick = () => {
-  hideOverlays();
-  if(mode === 'map') showOverlay('screen-worldmap');
-};
+$('btn-codex-close').onclick = () => closeOverlay();
 $('btn-quit').onclick = () => { save(); location.reload(); };
 $('btn-survey-open').onclick = () => { hideOverlays(); openSurvey(); };
 $('btn-code').onclick = () => {
