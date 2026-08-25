@@ -1705,6 +1705,77 @@ function testTotal(i){
 const pct = (n, d) => d ? n/d*100 : 0;
 function clearedCount(){ return S.cleared.filter(Boolean).length; }
 
+// ── sending the class's work to the teacher's Google Sheet ─────────────────
+// The game is a static page, so it cannot write to a spreadsheet directly. It
+// posts to an Apps Script the teacher deploys once; sheets/AppsScript.gs in the
+// repository is that script. Leave SHEET_URL empty and the game simply runs as
+// it always did — everything still lands in localStorage and the teacher page.
+const SHEET_URL = '';   // ← วาง Web app URL จาก Apps Script ตรงนี้
+const LOG_KEY = 'lexicoraOutboxV1';
+
+// A device id, so the teacher can tell two children apart if they happen to
+// share a name and number, and can see which machine a row came from.
+const deviceId = (() => {
+  try{
+    let d = localStorage.getItem('lexicoraDeviceId');
+    if(!d){ d = Math.random().toString(36).slice(2,8).toUpperCase();
+            localStorage.setItem('lexicoraDeviceId', d); }
+    return d;
+  }catch(e){ return '—'; }
+})();
+
+// Events are queued, not sent one by one. A classroom of thirty children each
+// answering a question every few seconds would otherwise open thirty requests a
+// second at one Apps Script; and a queue survives the wifi dropping, which in a
+// school it will. Nothing is ever lost to a failed send — it stays in the
+// outbox until it goes through.
+let outbox = (() => { try{ return JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); }catch(e){ return []; } })();
+let flushing = false, flushTimer = 0;
+
+function logEvent(ev){
+  if(!SHEET_URL) return;
+  const p = (S && S.profile) || {};
+  outbox.push(Object.assign({
+    at: Date.now(), name: p.name || '', klass: p.class || '', no: p.number || '',
+    role: (CLASSES[S && S.cls] || {}).thai || '', device: deviceId,
+  }, ev));
+  // Cap the outbox: if a machine is offline for a whole term, keep the newest
+  // rather than growing localStorage until it throws and breaks saving.
+  if(outbox.length > 500) outbox = outbox.slice(-500);
+  try{ localStorage.setItem(LOG_KEY, JSON.stringify(outbox)); }catch(e){}
+  clearTimeout(flushTimer);
+  flushTimer = setTimeout(flushLog, 4000);
+}
+
+async function flushLog(){
+  if(flushing || !outbox.length || !SHEET_URL) return;
+  flushing = true;
+  const batch = outbox.slice(0, 100);
+  try{
+    // text/plain avoids the CORS preflight Apps Script cannot answer; the script
+    // parses the body itself. The reply is read rather than ignored: an opaque
+    // no-cors response resolves even on 404, so a mistyped URL would have
+    // thrown the class's work away while looking like it was saving.
+    const res = await fetch(SHEET_URL, {
+      method: 'POST', keepalive: true,
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify({events: batch}),
+    });
+    const ok = res.ok && (await res.json().catch(() => ({}))).ok === true;
+    if(ok){
+      outbox = outbox.slice(batch.length);
+      try{ localStorage.setItem(LOG_KEY, JSON.stringify(outbox)); }catch(e){}
+    }
+  }catch(e){
+    // offline, or the script is down — keep every row and try again later
+  }
+  flushing = false;
+  if(outbox.length) flushTimer = setTimeout(flushLog, 15000);
+}
+// Last chance to send before the tab closes, which is when a child finishes.
+addEventListener('visibilitychange', () => { if(document.hidden) flushLog(); });
+addEventListener('pagehide', flushLog);
+
 function save(){
   try{
     const all = JSON.parse(localStorage.getItem('lexicoraSavesV3')||'{}');
@@ -3232,6 +3303,7 @@ function enterZone(zi){
   hideOverlays();
   $('hud').style.display = 'block';
   rollWeather(); seedAmbient(); refreshHUD();
+  logEvent({type:'เข้าด่าน', zone: zi+1, topic: ZONES[zi].topic, detail: ZONES[zi].thai});
   toast('🚩', 'เข้าสู่ '+ZONES[zi].thai);
   setTimeout(() => {
     if(mode !== 'play' || !world.village) return;
@@ -3735,6 +3807,7 @@ const drillsFor = (zi, rule) => (DRILLS[ZONES[zi].id] || [])[rule] || [];
 // slightly different: recognising a correct sentence, catching a wrong word,
 // and putting a sentence together from scratch.
 const QKINDS = ['mc', 'tf', 'err', 'order'];
+const FORMAT_THAI = {mc:'เติมคำในช่องว่าง', tf:'ถูก/ผิด', err:'หาคำที่ผิด', order:'เรียงคำ'};
 // One format per monster kind, so a given monster always asks its own way and
 // the student learns what to expect from it.
 const kindForMonster = t => QKINDS[t % QKINDS.length];
@@ -3750,6 +3823,9 @@ const singleWordOpts = opts => opts.filter(o => !/\s/.test(o));
 
 function makeQuestion(item, kind){
   const [q, opts, ans, why] = item;
+  // The log wants the sentence as a person would read it, not the marked-up
+  // version the screen renders.
+  const plain = q;
   const right = opts[ans];
   const wrongs = opts.filter((_, i) => i !== ans);
 
@@ -3757,7 +3833,7 @@ function makeQuestion(item, kind){
     // Half the time show the sentence correct, half the time spoiled.
     const showRight = Math.random() < .5;
     const shown = showRight ? right : wrongs[Math.floor(Math.random()*wrongs.length)];
-    return { kind, promptHTML: `<b>${filled(q, shown)}</b>`, focusWord: shown,
+    return { kind, plain, promptHTML: `<b>${filled(q, shown)}</b>`, focusWord: shown,
       lead: 'ประโยคนี้ถูกไวยากรณ์หรือไม่',
       choices: ['✓ ถูก', '✗ ผิด'], ans: showRight ? 0 : 1,
       answerText: showRight ? 'ถูก' : 'ผิด',
@@ -3771,7 +3847,7 @@ function makeQuestion(item, kind){
     const toks = words(filled(q, bad));
     const at = toks.findIndex(t => t.replace(/[.?!,]$/, '') === bad);
     if(at < 0) return makeQuestion(item, 'mc');
-    return { kind, promptHTML: '', lead: 'ประโยคนี้มีคำผิดอยู่หนึ่งคำ — แตะคำนั้น',
+    return { kind, plain, promptHTML: '', lead: 'ประโยคนี้มีคำผิดอยู่หนึ่งคำ — แตะคำนั้น',
       choices: toks, ans: at, answerText: bad,
       why: `<b>${bad}</b> ผิด · ที่ถูกคือ <b>${right}</b> · ${why}` };
   }
@@ -3781,14 +3857,14 @@ function makeQuestion(item, kind){
     // Two or three words is not a puzzle, it is a formality.
     if(toks.length < 4 || toks.length > 9) return makeQuestion(item, 'mc');
     const order = shuffle(toks.map((_, i) => i));
-    return { kind, lead: 'เรียงคำให้เป็นประโยคที่ถูกต้อง', promptHTML: '',
+    return { kind, plain, lead: 'เรียงคำให้เป็นประโยคที่ถูกต้อง', promptHTML: '',
       choices: order.map(i => toks[i]),
       seq: order.map((_, slot) => order.indexOf(slot)),   // choice index per position
       ans: order.indexOf(0), answerText: toks.join(' '), why };
   }
 
   const order = shuffle(opts.map((_, i) => i));
-  return { kind: 'mc', lead: '', choices: order.map(i => opts[i]), ans: order.indexOf(ans),
+  return { kind: 'mc', plain, lead: '', choices: order.map(i => opts[i]), ans: order.indexOf(ans),
     answerText: right, promptHTML: markSignals(q).replace('___','<span class="blank">_____</span>'),
     why };
 }
@@ -3860,6 +3936,11 @@ function answerBattle(sel, ans, btn){
   // fights are the graded work the 80/80 first number is computed from.
   const tally = b.kind === 'practice' ? S.practice[zone] : S.proc[zone];
   tally.asked++; if(right) tally.correct++;
+  logEvent({type:'answer', zone: zone+1, topic: ZONES[zone].topic,
+    context: b.kind === 'practice' ? 'ฝึกกับนักปราชญ์' : b.kind === 'boss' ? 'สู้ผู้พิทักษ์' : 'สู้มอนสเตอร์',
+    format: FORMAT_THAI[b.shown.kind] || b.shown.kind,
+    question: b.shown.plain || b.pool[b.qi][0],
+    chose: b.shown.choices[sel], answer: b.shown.answerText, correct: right});
 
   if(b.kind === 'practice'){
     btn.classList.add(right ? 'right' : 'wrong');
@@ -4089,6 +4170,8 @@ function winBattle(){
   if(b.kind === 'boss'){
     const zi = zone;
     S.cleared[zi] = true;
+    logEvent({type:'ปราบผู้พิทักษ์', zone: zi+1, topic: ZONES[zi].topic,
+      detail: 'ตอบผิดระหว่างสู้ ' + b.wrong + ' ข้อ', v1: S.stars[zi], v2: S.level});
     S.stars[zi] = Math.max(S.stars[zi], b.wrong===0?3 : b.wrong<=2?2 : 1);
     S.gear = Math.min(GEAR.length, S.gear+1);
     S.xp += 90; S.hp = S.hpMax;
@@ -4199,6 +4282,8 @@ function grantClue(stone){
   ring(stone.x, stone.y-30, '#fff3cf', 30, .4, 2);
   floatText(stone.x, stone.y-44, '📜 เบาะแสใหม่!', '#ffda7b', 12);
   const left = cluesLeft(zone);
+  logEvent({type:'ผ่านเสาศิลา', zone: zone+1, topic: Z.topic,
+    detail: Z.rules[stone.idx], v1: cluesFound(zone), v2: Z.rules.length});
   toast('🗿', `<b>${Z.rules[stone.idx]}</b>` +
         (left ? `<br><span style="opacity:.75">เหลืออีก ${left} ชิ้น</span>`
               : '<br><span style="opacity:.75">ครบแล้ว! ท้าผู้พิทักษ์ได้เลย</span>'));
@@ -4277,6 +4362,11 @@ function answerDrill(sel, btn, forceWrong, forceRight){
   d.locked = true;
   [...$('drill-options').children].forEach(c => c.disabled = true);
   const right = forceRight === true ? true : (forceWrong ? false : sel === d.shown.ans);
+  logEvent({type:'answer', zone: zone+1, topic: ZONES[zone].topic,
+    context: 'แบบฝึกหัดที่เสาศิลา',
+    format: FORMAT_THAI[d.shown.kind] || d.shown.kind,
+    question: d.shown.plain || d.items[d.order[d.at]][0],
+    chose: d.shown.choices[sel], answer: d.shown.answerText, correct: right});
   btn.classList.add(right ? 'right' : 'wrong');
   (right ? sfx.pickup : sfx.deny)();
   $('drill-feedback').innerHTML =
@@ -4675,6 +4765,8 @@ function openSurvey(){
 }
 $('btn-survey-send').onclick = () => {
   S.survey = surveyDraft.slice(); save();
+  logEvent({type:'ตอบแบบสอบถามความพึงพอใจ', detail: surveyDraft.join(','),
+    v1: Math.round(mean(surveyDraft)*100)/100});
   hideOverlays();
   toast('💛', `ขอบคุณ! ค่าเฉลี่ยความพึงพอใจของเจ้า ${mean(S.survey).toFixed(2)}`);
 };
@@ -4766,6 +4858,10 @@ function finishTest(){
     src: test.given.map(g => g.src),
     hits: test.given.map(g => right(g) ? 1 : 0).join(''),
   };
+  logEvent({type:'test', zone: test.zi+1, topic: ZONES[test.zi].topic, phase: test.kind,
+    attempt: (S.postAttempts[test.zi] || 0) + (test.kind === 'post' ? 1 : 0),
+    score, total, grammar: rec.grammar, vocab: rec.vocab,
+    minutes: Math.round(rec.ms/6000)/10, hits: rec.hits});
   if(test.kind === 'pre'){
     S.pre[zi] = rec;
   } else {
@@ -5125,6 +5221,8 @@ function update(dt){
       // Read where it was found, not only in the corner of the screen.
       floatText(c.x, c.y-10, w[0], '#eafcff', 13);
       floatText(c.x, c.y+2, w[1], '#ffe9a8', 10);
+      logEvent({type:'เก็บคริสตัลคำศัพท์', zone: zone+1, topic: ZONES[zone].topic,
+        detail: w[0] + ' = ' + w[1], v1: S.words[zone].filter(Boolean).length, v2: ZONES[zone].words.length});
       toast('💎', `<b>${w[0]}</b> — ${w[1]}`);
       refreshHUD(); save();
     }
@@ -5318,6 +5416,7 @@ function startWith(profile, cls){
   // spelling updates the row the child already has instead of starting a
   // second one beside it.
   S.profile = profile;
+  setTimeout(() => logEvent({type:'เริ่มเล่น', detail: 'ลงทะเบียนเข้าเกม'}), 0);
   if(!S.cls || !CLASSES[S.cls]) S.cls = cls;
   if(!S.words || S.words.length !== ZONES.length) S.words = ZONES.map(z => z.words.map(()=>false));
   if(!S.cleared || S.cleared.length !== ZONES.length) S.cleared = ZONES.map(()=>false);
