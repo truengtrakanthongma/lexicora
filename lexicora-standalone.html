@@ -565,6 +565,19 @@ mark.signal{
 #test-score .note.ok{color:var(--emerald);font-weight:700;}
 #test-score .note.bad{color:var(--crimson);font-weight:700;}
 #test-review{max-height:38vh;max-height:38dvh;overflow-y:auto;margin-top:12px;}
+#board-tabs{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin:10px 0;}
+#board-tabs button{
+  font-family:'Kanit',sans-serif;font-size:.76rem;font-weight:600;cursor:pointer;
+  padding:4px 9px;border-radius:6px;color:var(--ink);
+  background:linear-gradient(180deg,#fffaef,#e6d0a4);border:2px solid var(--wood-3);
+}
+#board-tabs button.active{background:linear-gradient(180deg,#ffe9a8,var(--gold));border-color:var(--gold-dk);}
+#board-body table{border-collapse:collapse;width:100%;font-size:.88rem;}
+#board-body th,#board-body td{padding:5px 7px;border-bottom:1px solid rgba(107,82,56,.24);text-align:left;}
+#board-body th{font-size:.74rem;color:var(--wood-3);letter-spacing:.04em;}
+#board-body td.num{text-align:right;font-variant-numeric:tabular-nums;}
+#board-body tr.me{background:rgba(232,184,75,.3);font-weight:700;}
+.medal{font-size:1.05rem;}
 .teach-sentence{
   display:block;font-size:1.14rem;line-height:1.7;font-weight:600;
   text-align:center;margin-bottom:10px;
@@ -788,6 +801,7 @@ mark.signal{
       <div id="map-footer">
         <div id="map-progress">—</div>
         <button class="btn" id="btn-map-codex" style="font-size:.82rem;padding:.44rem 1rem">📖 สมุดคำศัพท์</button>
+        <button class="btn btn-gold" id="btn-map-board" style="font-size:.82rem;padding:.44rem 1rem">🏆 กระดานผู้กล้า</button>
       </div>
     </div>
   </div>
@@ -821,6 +835,22 @@ mark.signal{
   </div>
 
   <!-- ========================================================= LESSON -->
+  <!-- ===================================================== SCOREBOARD -->
+  <div class="overlay dim" id="screen-board">
+    <div class="scroll-panel sheet corner-bottom" style="max-width:640px">
+      <div class="label-eyebrow" style="text-align:center">ประชันคะแนน</div>
+      <h2 class="title-epic" style="font-size:1.8rem;text-align:center">กระดานผู้กล้า</h2>
+      <div class="rule-gold"></div>
+      <div id="board-tabs"></div>
+      <div id="board-body"><p class="tnote">กำลังโหลด…</p></div>
+      <div class="label-eyebrow" style="text-align:center;margin-top:10px" id="board-when">—</div>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-gold" id="btn-board-refresh" style="font-size:.86rem;padding:.42rem 1.1rem">↻ รีเฟรช</button>
+        <button class="btn" id="btn-board-close" style="font-size:.86rem;padding:.42rem 1.1rem">ปิด</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============================================ CLUE STONE DRILL -->
   <div class="overlay dim" id="screen-drill">
     <div class="scroll-panel sheet corner-bottom" style="max-width:560px">
@@ -1724,7 +1754,7 @@ function clearedCount(){ return S.cleared.filter(Boolean).length; }
 // posts to an Apps Script the teacher deploys once; sheets/AppsScript.gs in the
 // repository is that script. Leave SHEET_URL empty and the game simply runs as
 // it always did — everything still lands in localStorage and the teacher page.
-const SHEET_URL = '';   // ← วาง Web app URL จาก Apps Script ตรงนี้
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyr6-403cuJ3MMrNK2_JkpLbbWtL-ZMr7JpCSLZpLZeLW-EC6HVzhzw92wwaRZRZpko_A/exec';
 const LOG_KEY = 'lexicoraOutboxV1';
 
 // A device id, so the teacher can tell two children apart if they happen to
@@ -1746,10 +1776,12 @@ const deviceId = (() => {
 let outbox = (() => { try{ return JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); }catch(e){ return []; } })();
 let flushing = false, flushTimer = 0;
 
+let evSeq = 0;
 function logEvent(ev){
   if(!SHEET_URL) return;
   const p = (S && S.profile) || {};
   outbox.push(Object.assign({
+    id: deviceId + '-' + Date.now().toString(36) + '-' + (evSeq++),
     at: Date.now(), name: p.name || '', klass: p.class || '', no: p.number || '',
     role: (CLASSES[S && S.cls] || {}).thai || '', device: deviceId,
   }, ev));
@@ -3041,7 +3073,7 @@ function setHint(t){
 // ids, and paused() reads the same list to stop the world while one is up.
 const OV = ['screen-landing','screen-register','screen-worldmap','screen-battle','screen-sage','screen-test',
             'screen-survey','screen-teacher','screen-lesson','screen-reward','screen-codex','screen-howto',
-            'screen-drill'];
+            'screen-drill','screen-board'];
 function showOverlay(id){ OV.forEach(o => $(o).classList.toggle('show', o===id)); }
 // Leaving an overlay means going back to whatever the student was on, which is
 // not always the world: on the map, hiding everything leaves a blank screen
@@ -3309,6 +3341,7 @@ function renderMapMarkers(){
 
 function openMap(){
   mode = 'map';
+  $('btn-map-board').style.display = SHEET_URL ? '' : 'none';
   $('hud').style.display = 'none';
   showOverlay('screen-worldmap');
   sizeMapCanvas();
@@ -4312,6 +4345,91 @@ function grantClue(stone){
               : '<br><span style="opacity:.75">ครบแล้ว! ท้าผู้พิทักษ์ได้เลย</span>'));
   refreshHUD(); save();
 }
+// ── the scoreboard ─────────────────────────────────────────────────────────
+// Ranked per zone rather than overall, so a prize can go to the best in each
+// land and a child who is strong at one tense has something to win. Order is
+// passed-the-mark first, then post-test score, then least time in that land.
+// Only the first attempt counts, or a child could simply resit until the clock
+// and the score both looked good.
+let board = {data:null, zone:0, timer:0, loading:false};
+
+// JSONP rather than fetch: an Apps Script GET redirects to another host, and a
+// script tag is the one way to read that from a page on github.io without
+// depending on how the redirect is served that day. Read-only, so a script tag
+// costs nothing that a fetch would not.
+function loadBoard(){
+  if(!SHEET_URL || board.loading) return;
+  board.loading = true;
+  const cb = '__board' + Math.random().toString(36).slice(2,8);
+  const el = document.createElement('script');
+  const done = ok => { board.loading = false; delete window[cb]; el.remove(); renderBoard(ok); };
+  window[cb] = data => { board.data = data; done(true); };
+  el.onerror = () => done(false);
+  el.src = SHEET_URL + (SHEET_URL.includes('?') ? '&' : '?') + 'board=1&cb=' + cb + '&t=' + Date.now();
+  document.head.appendChild(el);
+  setTimeout(() => { if(board.loading) done(false); }, 12000);
+}
+
+function openBoard(){
+  board.zone = zone;
+  showOverlay('screen-board'); sfx.open();
+  renderBoard(true);
+  loadBoard();
+  clearInterval(board.timer);
+  // Live enough to feel like a race without hammering one Apps Script from a
+  // whole classroom; the sheet only changes when somebody finishes a test.
+  board.timer = setInterval(() => {
+    if($('screen-board').classList.contains('show')) loadBoard(); else clearInterval(board.timer);
+  }, 20000);
+}
+
+const MEDAL = ['🥇','🥈','🥉'];
+function renderBoard(ok){
+  const tabs = $('board-tabs'); tabs.innerHTML = '';
+  ZONES.forEach((z,i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = z.no + '. ' + z.topic;
+    b.className = i === board.zone ? 'active' : '';
+    b.onclick = () => { board.zone = i; renderBoard(true); };
+    tabs.appendChild(b);
+  });
+
+  const body = $('board-body');
+  if(!SHEET_URL){
+    body.innerHTML = '<p class="tnote">ยังไม่ได้เชื่อมกระดานคะแนน — ครูต้องตั้งค่า Apps Script ก่อน</p>';
+    $('board-when').textContent = '—';
+    return;
+  }
+  if(!board.data){
+    body.innerHTML = ok ? '<p class="tnote">กำลังโหลด…</p>'
+      : '<p class="tnote">โหลดไม่สำเร็จ · ตรวจอินเทอร์เน็ตแล้วกดรีเฟรช</p>';
+    return;
+  }
+  const rows = (board.data.zones || {})[board.zone + 1] || [];
+  if(!rows.length){
+    body.innerHTML = `<p class="tnote">ยังไม่มีใครสอบหลังเรียนของ <b>${ZONES[board.zone].topic}</b><br>` +
+                     'เป็นคนแรกสิ!</p>';
+  } else {
+    const me = (S && S.profile) || {};
+    body.innerHTML = '<table><thead><tr><th>อันดับ</th><th>ชื่อ</th><th>ชั้น</th>' +
+      '<th class="num">คะแนน</th><th class="num">นาที</th></tr></thead><tbody>' +
+      rows.map(r => {
+        const mine = r.name === me.name && r.klass === me.class && r.no === me.number;
+        return `<tr class="${mine ? 'me' : ''}">
+          <td><span class="medal">${MEDAL[r.rank-1] || r.rank}</span></td>
+          <td>${r.name}${r.passed ? ' <span class="zone-pass">ผ่าน</span>' : ''}</td>
+          <td>${r.klass} / ${r.no}</td>
+          <td class="num">${r.score}/${r.total}</td>
+          <td class="num">${r.minutes || '—'}</td></tr>`;
+      }).join('') + '</tbody></table>';
+  }
+  const t = board.data.at ? new Date(board.data.at) : new Date();
+  $('board-when').textContent = 'อัปเดตเมื่อ ' + t.toLocaleTimeString('th-TH');
+}
+$('btn-map-board').onclick = () => openBoard();
+$('btn-board-refresh').onclick = () => { board.data = null; renderBoard(true); loadBoard(); };
+$('btn-board-close').onclick = () => { clearInterval(board.timer); closeOverlay(); };
+
 // ── the stone's practice ───────────────────────────────────────────────────
 // Every item must be right. A wrong answer explains itself and the set starts
 // again with the questions reshuffled, so the way through is understanding the
@@ -4884,7 +5002,10 @@ function finishTest(){
   logEvent({type:'test', zone: test.zi+1, topic: ZONES[test.zi].topic, phase: test.kind,
     attempt: (S.postAttempts[test.zi] || 0) + (test.kind === 'post' ? 1 : 0),
     score, total, grammar: rec.grammar, vocab: rec.vocab,
-    minutes: Math.round(rec.ms/6000)/10, hits: rec.hits});
+    minutes: Math.round(rec.ms/6000)/10, hits: rec.hits,
+    // Time spent in the land itself, not just sitting the paper — this is what
+    // the per-zone scoreboard races on.
+    zoneMinutes: Math.round((S.timeMs[test.zi]||0)/6000)/10});
   if(test.kind === 'pre'){
     S.pre[zi] = rec;
   } else {
