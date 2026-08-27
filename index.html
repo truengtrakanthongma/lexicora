@@ -1740,7 +1740,7 @@ function clearedCount(){ return S.cleared.filter(Boolean).length; }
 // posts to an Apps Script the teacher deploys once; sheets/AppsScript.gs in the
 // repository is that script. Leave SHEET_URL empty and the game simply runs as
 // it always did — everything still lands in localStorage and the teacher page.
-const SHEET_URL = '';   // ← วาง Web app URL จาก Apps Script ตรงนี้
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyr6-403cuJ3MMrNK2_JkpLbbWtL-ZMr7JpCSLZpLZeLW-EC6HVzhzw92wwaRZRZpko_A/exec';
 const LOG_KEY = 'lexicoraOutboxV1';
 
 // A device id, so the teacher can tell two children apart if they happen to
@@ -1762,10 +1762,12 @@ const deviceId = (() => {
 let outbox = (() => { try{ return JSON.parse(localStorage.getItem(LOG_KEY)||'[]'); }catch(e){ return []; } })();
 let flushing = false, flushTimer = 0;
 
+let evSeq = 0;
 function logEvent(ev){
   if(!SHEET_URL) return;
   const p = (S && S.profile) || {};
   outbox.push(Object.assign({
+    id: deviceId + '-' + Date.now().toString(36) + '-' + (evSeq++),
     at: Date.now(), name: p.name || '', klass: p.class || '', no: p.number || '',
     role: (CLASSES[S && S.cls] || {}).thai || '', device: deviceId,
   }, ev));

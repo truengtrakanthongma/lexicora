@@ -116,7 +116,16 @@ function doPost(e) {
     try {
       var ss = SpreadsheetApp.getActiveSpreadsheet();
       var buckets = { events: [], answers: [], tests: [] };
+      // Skip anything already filed. The game resends when it cannot confirm a
+      // save, and a browser is not always allowed to read this script's reply —
+      // so a successful write can look like a failure and come back again.
+      var cache = CacheService.getScriptCache();
+      var seen = 0;
       list.forEach(function (ev) {
+        if (ev.id) {
+          if (cache.get('ev_' + ev.id)) { seen++; return; }
+          cache.put('ev_' + ev.id, '1', 21600);   // remember for six hours
+        }
         var t = rowsFor(ev);
         if (t) buckets[t.tab].push(t.row);
       });
@@ -127,7 +136,7 @@ function doPost(e) {
         sh.getRange(sh.getLastRow() + 1, 1, buckets[k].length, buckets[k][0].length)
           .setValues(buckets[k]);
       });
-      out = { ok: true, saved: list.length };
+      out = { ok: true, saved: list.length - seen, duplicates: seen };
     } finally { lock.releaseLock(); }
   } catch (err) {
     out = { ok: false, error: String(err) };
