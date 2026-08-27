@@ -23,7 +23,8 @@ var TABS = {
                     'โจทย์','ตอบว่า','เฉลย','ถูก/ผิด','วินาทีที่ใช้','รหัสเครื่อง'] },
   tests:   { name: 'คะแนนสอบ',
              head: ['เวลา','ชื่อ','ชั้น','เลขที่','ด่าน','เรื่อง','ก่อน/หลังเรียน','ครั้งที่',
-                    'คะแนน','เต็ม','ร้อยละ','ไวยากรณ์','คำศัพท์','นาทีที่ใช้','ผลรายข้อ','รหัสเครื่อง'] },
+                    'คะแนน','เต็ม','ร้อยละ','ไวยากรณ์','คำศัพท์','นาทีทำข้อสอบ','นาทีในด่าน',
+                    'ผลรายข้อ','รหัสเครื่อง'] },
 };
 
 /** สร้างและจัดรูปแบบแผ่นงานทั้งหมด — รันครั้งเดียวตอนติดตั้ง */
@@ -135,11 +136,71 @@ function doPost(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/** เปิด URL ด้วยเบราว์เซอร์เพื่อเช็คว่าติดตั้งถูกไหม */
-function doGet() {
-  return ContentService.createTextOutput(
-    'Lexicora พร้อมรับข้อมูลแล้ว · ' + new Date().toLocaleString('th-TH')
-  );
+/**
+ * เปิดเปล่าๆ = เช็คว่าติดตั้งถูกไหม
+ * ?board=1&cb=ชื่อฟังก์ชัน = ส่งกระดานคะแนนกลับไปให้เกม
+ *
+ * ตอบกลับเป็น JSONP ไม่ใช่ JSON ธรรมดา เพราะ Apps Script เปลี่ยนเส้นทางไป
+ * googleusercontent.com ซึ่งบางกรณีเบราว์เซอร์บล็อกการอ่านข้ามโดเมน
+ * JSONP ทำงานได้ทุกกรณีและกระดานนี้เป็นข้อมูลอ่านอย่างเดียว
+ */
+function doGet(e) {
+  var q = (e && e.parameter) || {};
+  if (!q.board) {
+    return ContentService.createTextOutput(
+      'Lexicora พร้อมรับข้อมูลแล้ว · ' + new Date().toLocaleString('th-TH'));
+  }
+  var payload = JSON.stringify(buildBoard());
+  if (q.cb) {
+    return ContentService.createTextOutput(q.cb + '(' + payload + ')')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(payload)
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * อันดับแยกรายด่าน — เพื่อให้มีผู้ชนะหลายคน ไม่ใช่เก่งสุดคนเดียวได้ไปทั้งหมด
+ * เรียงตาม: ผ่านเกณฑ์ก่อน → คะแนนสอบหลังเรียนมากกว่า → ใช้เวลาในด่านน้อยกว่า
+ * ใช้ผลสอบ "ครั้งแรก" ของแต่ละคนต่อด่าน เพื่อไม่ให้คนสอบซ้ำหลายรอบได้เปรียบ
+ */
+function buildBoard() {
+  var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(TABS.tests.name);
+  if (!sh || sh.getLastRow() < 2) return { zones: {}, at: Date.now() };
+  var v = sh.getRange(2, 1, sh.getLastRow() - 1, 17).getValues();
+  var best = {};        // ด่าน → คน → ผลที่ดีที่สุด
+  v.forEach(function (r) {
+    if (String(r[6]) !== 'หลังเรียน') return;          // เอาเฉพาะสอบหลังเรียน
+    var zone = Number(r[4]); if (!zone) return;
+    var key = [r[2], r[3], r[1]].join('|');            // ชั้น|เลขที่|ชื่อ
+    var row = {
+      name: String(r[1]), klass: String(r[2]), no: String(r[3]),
+      score: Number(r[8]) || 0, total: Number(r[9]) || 0,
+      pct: Number(r[10]) || 0, minutes: Number(r[14]) || 0,
+      attempt: Number(r[7]) || 1,
+    };
+    best[zone] = best[zone] || {};
+    var cur = best[zone][key];
+    // ครั้งแรกเท่านั้น: ถ้ามีอยู่แล้วและครั้งนั้นเก่ากว่า ให้เก็บของเดิมไว้
+    if (!cur || row.attempt < cur.attempt) best[zone][key] = row;
+  });
+
+  var out = {};
+  Object.keys(best).forEach(function (zone) {
+    var list = Object.keys(best[zone]).map(function (k) { return best[zone][k]; });
+    list.sort(function (a, b) {
+      var pa = a.pct >= 80 ? 1 : 0, pb = b.pct >= 80 ? 1 : 0;
+      if (pa !== pb) return pb - pa;                    // ผ่านเกณฑ์มาก่อน
+      if (b.score !== a.score) return b.score - a.score; // คะแนนมากกว่า
+      return (a.minutes || 1e9) - (b.minutes || 1e9);    // แล้วเร็วกว่า
+    });
+    out[zone] = list.slice(0, 10).map(function (r, i) {
+      return { rank: i + 1, name: r.name, klass: r.klass, no: r.no,
+               score: r.score, total: r.total, pct: r.pct,
+               minutes: r.minutes, passed: r.pct >= 80 };
+    });
+  });
+  return { zones: out, at: Date.now() };
 }
 
 /** แปลงเหตุการณ์หนึ่งอันเป็นแถวของแผ่นที่เหมาะสม */
@@ -158,7 +219,7 @@ function rowsFor(ev) {
       [ev.zone, ev.topic, ev.phase === 'pre' ? 'ก่อนเรียน' : 'หลังเรียน',
        ev.attempt || 1, ev.score, ev.total,
        ev.total ? Math.round(ev.score / ev.total * 10000) / 100 : 0,
-       ev.grammar || '', ev.vocab || '', ev.minutes || '',
+       ev.grammar || '', ev.vocab || '', ev.minutes || '', ev.zoneMinutes || '',
        "'" + (ev.hits || ''), ev.device || '']) };
   }
   return { tab: 'events', row: [when].concat(who,
