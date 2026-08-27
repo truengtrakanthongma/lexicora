@@ -16,6 +16,7 @@ const errors = [];
 // Google Fonts is unreachable from this sandbox and the browser always probes
 // for a favicon; neither says anything about the game, so they are not failures.
 const noise = /Failed to load resource/;
+const unreachable = /favicon|fonts\.(googleapis|gstatic)|script\.google\.com/;
 page.on('console', m => {
   const t = m.text();
   // The game warns on its own about layouts it could not make playable —
@@ -27,11 +28,15 @@ page.on('pageerror', e => errors.push('pageerror: ' + e.message));
 page.on('response', r => {
   if (r.status() < 400) return;
   const u = r.url();
-  if (!/favicon|fonts\.(googleapis|gstatic)/.test(u)) errors.push(`HTTP ${r.status()} ${u}`);
+  if (!unreachable.test(u)) errors.push(`HTTP ${r.status()} ${u}`);
 });
+// This sandbox's proxy blocks script.google.com, so the game's attempts to file
+// events with the teacher's Apps Script always fail here. That is the sandbox,
+// not the game — and the sender keeps the queue and retries, which is exactly
+// what it does. Counting it would paint every sweep red and hide a real error.
 page.on('requestfailed', r => {
   const u = r.url();
-  if (!/favicon|fonts\.(googleapis|gstatic)/.test(u)) errors.push(`request failed ${u}`);
+  if (!unreachable.test(u)) errors.push(`request failed ${u}`);
 });
 
 await page.goto('http://localhost:8765/index.html');
