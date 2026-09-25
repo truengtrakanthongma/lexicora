@@ -1058,17 +1058,17 @@ const ZONES = [
     words:[['forest','ป่าไม้'],['tree','ต้นไม้'],['river','แม่น้ำ'],['bird','นก'],
            ['leaf','ใบไม้'],['path','เส้นทาง'],['morning','ตอนเช้า'],['walk','เดิน']],
     quiz:[
-      ['My brother ___ hard for his exams.',['study','studies','is studying','studied'],1,'My brother เป็นเอกพจน์บุรุษที่ 3 → เติม -s · study ลงท้าย y หน้าพยัญชนะ เปลี่ยนเป็น -ies'],
-      ['A cat ___ mice.',['catch','catches','is catching','caught'],1,'A cat เอกพจน์ → เติม -es เพราะ catch ลงท้ายด้วย -ch'],
+      ['My brother ___ hard for his exams every night.',['study','studies','is studying','studied'],1,'My brother เป็นเอกพจน์บุรุษที่ 3 → เติม -s · study ลงท้าย y หน้าพยัญชนะ เปลี่ยนเป็น -ies'],
+      ['A cat ___ mice.',['catch','catches','are catching','catching'],1,'A cat เอกพจน์ → เติม -es เพราะ catch ลงท้ายด้วย -ch'],
       ['She never ___ breakfast.',['eat','is eating','eats','ate'],2,'never บอกความถี่ = ทำเป็นประจำ → Present Simple · She เอกพจน์ → eats'],
-      ['He ___ to the gym after work.',['goes','go','is going','went'],0,'He เอกพจน์ → go เติม -es เป็น goes'],
+      ['He ___ to the gym after work every day.',['goes','go','is going','went'],0,'“every day” = ทำเป็นประจำ → Present Simple · He เอกพจน์ → go เติม -es เป็น goes'],
       ['The baby ___ when it is hungry.',['cry','cries','is crying','cried'],1,'ความจริงทั่วไป → Present Simple · baby เอกพจน์ · cry → cries'],
       ['She always ___ her hands before meals.',['wash','washes','is washing','washed'],1,'always = ทำประจำ → Present Simple · wash ลงท้าย -sh จึงเติม -es'],
-      ['He ___ the piano.',['not play','don\'t play','doesn\'t play','isn\'t playing'],2,'ปฏิเสธกับ He ใช้ doesn\'t + กริยาช่อง 1 · play ไม่เติม s แล้ว'],
-      ['Water ___ at 0 degrees Celsius.',['freeze','freezes','is freezing','froze'],1,'ความจริงทางวิทยาศาสตร์ → Present Simple · Water เอกพจน์ → freezes'],
-      ['My parents ___ in a big city.',['live','lives','are living','lived'],0,'My parents เป็นพหูพจน์ → กริยาไม่เติม s'],
+      ['He ___ the piano.',['not play','don\'t play','doesn\'t play','doesn\'t plays'],2,'ปฏิเสธกับ He ใช้ doesn\'t + กริยาช่อง 1 · play ไม่เติม s แล้ว'],
+      ['Water ___ at 0 degrees Celsius.',['freeze','freezes','are freezing','freezing'],1,'ความจริงทางวิทยาศาสตร์ → Present Simple · Water เอกพจน์ → freezes'],
+      ['My parents ___ in a big city.',['live','lives','is living','living'],0,'My parents เป็นพหูพจน์ → กริยาไม่เติม s'],
       ['___ your sister play the guitar?',['Do','Does','Is','Are'],1,'คำถาม Present Simple ประธานเอกพจน์ → Does + ประธาน + กริยาช่อง 1'],
-      ['The sun ___ in the east.',['rise','is rising','rises','rose'],2,'ความจริงทั่วไป → Present Simple · The sun เอกพจน์ → rises'],
+      ['The sun ___ in the east.',['rise','are rising','rises','rising'],2,'ความจริงทั่วไป → Present Simple · The sun เอกพจน์ → rises'],
       ['We ___ to school by bus.',['go','goes','is going','gone'],0,'We เป็นพหูพจน์ → go ไม่เติม s']
     ],
     test:[
@@ -1076,12 +1076,12 @@ const ZONES = [
       ['My friends ___ football on Sundays.',['plays','play','is playing','played'],1,1],
       ['He ___ not like fish.',['do','does','is','are'],1,2],
       ['___ they live in Bangkok?',['Do','Does','Is','Are'],0,3],
-      ['A bird ___ eggs.',['lay','lays','laying','laid'],1,1],
+      ['A bird ___ eggs.',['lay','lays','laying','are laying'],1,1],
       ['We usually ___ dinner at seven.',['has','have','having','had'],1,0],
       ['My mother ___ the dishes every day.',['wash','washes','washing','washed'],1,1],
       ['They ___ not go to school on Saturday.',['does','do','is','are'],1,2],
       ['___ your father drive a truck?',['Do','Does','Are','Is'],1,3],
-      ['Ice ___ in the sun.',['melt','melts','melting','melted'],1,0]
+      ['Ice ___ in the sun.',['melt','melts','melting','are melting'],1,0]
     ],
     worked:[
       {q:'My sister ___ to music every day.', a:'listens', steps:['หาคำชี้นำ → “every day” แปลว่าทุกวัน','ทุกวัน = ทำเป็นประจำ → ใช้ Present Simple','ประธาน My sister = She เป็นเอกพจน์บุรุษที่ 3 → กริยาต้องเติม -s','listen + s → My sister listens to music every day.']},
@@ -1166,7 +1166,7 @@ const ZONES = [
       ['She ___ her bike now.',['ride','rides','is riding','rode'],2,'“now” = ตอนนี้ · She → is · ride ตัด e ก่อนเติม ing → riding']
     ],
     test:[
-      ['Look! The bus ___ .',['come','comes','is coming','came'],2,3],
+      ['Look! The bus ___.',['come','comes','is coming','came'],2,3],
       ['We ___ lunch at the moment.',['eat','eats','are eating','ate'],2,3],
       ['I ___ to music right now.',['listen','listens','am listening','listened'],2,1],
       ['___ your brother sleeping now?',['Do','Does','Is','Are'],2,1],
@@ -1205,22 +1205,22 @@ const ZONES = [
       ['We ___ very happy yesterday.',['are','were','was','be'],1,'“yesterday” → อดีต · We พหูพจน์ → were'],
       ['___ you see that movie last night?',['Do','Does','Did','Are'],2,'คำถามในอดีต → Did + ประธาน + กริยาช่อง 1 (see ไม่เปลี่ยนรูป)'],
       ['She ___ her keys yesterday.',['lose','loses','lost','losing'],2,'“yesterday” → อดีต · lose → lost'],
-      ['He ___ a fish at the lake.',['catch','catches','caught','catching'],2,'เหตุการณ์จบไปแล้ว → อดีต · catch → caught'],
+      ['He ___ a fish at the lake yesterday.',['catch','catches','caught','catching'],2,'เหตุการณ์จบไปแล้ว → อดีต · catch → caught'],
       ['I ___ breakfast this morning.',['eat','eats','ate','eating'],2,'this morning ที่ผ่านไปแล้ว → อดีต · eat → ate'],
       ['She ___ not come to school yesterday.',['do','does','did','doing'],2,'ปฏิเสธในอดีต → did not + กริยาช่อง 1 (come ไม่เปลี่ยนรูป)'],
-      ['He ___ his best friend at the mall.',['meet','meets','met','meeting'],2,'เหตุการณ์จบไปแล้ว → อดีต · meet → met'],
+      ['He ___ his best friend at the mall last weekend.',['meet','meets','met','meeting'],2,'เหตุการณ์จบไปแล้ว → อดีต · meet → met'],
       ['They ___ home late last night.',['come','comes','came','coming'],2,'“last night” → อดีต · come → came'],
       ['I ___ my phone at home yesterday.',['leave','leaves','left','leaving'],2,'“yesterday” → อดีต · leave → left']
     ],
     test:[
       ['We ___ to the zoo last Sunday.',['go','goes','went','going'],2,3],
       ['She ___ a new dress yesterday.',['buy','buys','bought','buying'],2,3],
-      ['They ___ not finish the work.',['do','did','does','are'],1,2],
+      ['They ___ not finish the work yesterday.',['do','did','does','are'],1,2],
       ['___ he call you last night?',['Do','Does','Did','Was'],2,2],
       ['I ___ my homework two hours ago.',['do','did','done','doing'],1,3],
-      ['The film ___ at eight o\'clock.',['start','starts','started','starting'],2,1],
+      ['The film ___ at eight o\'clock last night.',['start','starts','started','starting'],2,1],
       ['He ___ a bicycle when he was ten.',['ride','rides','rode','riding'],2,1],
-      ['We ___ tired after the trip.',['is','are','was','were'],3,1],
+      ['We ___ very tired after the trip yesterday.',['is','are','was','were'],3,1],
       ['She ___ the window yesterday.',['open','opens','opened','opening'],2,3],
       ['They ___ not at school last week.',['is','are','was','were'],3,2]
     ],
@@ -1248,9 +1248,9 @@ const ZONES = [
            ['freeze','แข็งตัว'],['peak','ยอดเขา'],['warm','อบอุ่น'],['slip','ลื่น']],
     quiz:[
       ['She ___ TV when the phone rang.',['watch','watches','was watching','is watching'],2,'กำลังดูอยู่แล้วโทรศัพท์ดังขัดจังหวะ → was/were + V-ing · She → was watching'],
-      ['They ___ football when it started to rain.',['play','played','were playing','are playing'],2,'กำลังเล่นอยู่แล้วฝนตกขัดจังหวะ · They พหูพจน์ → were playing'],
-      ['I ___ my homework at 8 PM last night.',['do','did','was doing','am doing'],2,'“at 8 PM last night” = จุดเวลาหนึ่งในอดีต · I → was doing'],
-      ['He ___ when I called him.',['sleep','slept','was sleeping','sleeps'],2,'กำลังนอนอยู่ตอนถูกโทรหา · He → was sleeping'],
+      ['They ___ football when it started to rain.',['play','was playing','were playing','are playing'],2,'กำลังเล่นอยู่แล้วฝนตกขัดจังหวะ · They พหูพจน์ → were playing'],
+      ['I ___ my homework at 8 PM last night.',['do','were doing','was doing','am doing'],2,'“at 8 PM last night” = จุดเวลาหนึ่งในอดีต · I → was doing'],
+      ['He ___ when I called him.',['sleep','were sleeping','was sleeping','sleeps'],2,'กำลังนอนอยู่ตอนถูกโทรหา · He → was sleeping'],
       ['___ you cooking dinner at 7 PM yesterday?',['Do','Did','Was','Were'],3,'คำถาม: ย้าย were มาไว้หน้า you'],
       ['She ___ not listening when the teacher explained.',['do','did','was','were'],2,'She → was · รูปปฏิเสธคือ was not + V-ing'],
       ['What ___ you doing at midnight?',['do','did','was','were'],3,'คำถามกับ you → What were you + V-ing'],
@@ -1261,8 +1261,8 @@ const ZONES = [
       ['We ___ having dinner when the lights went out.',['was','were','is','are'],1,'We เป็นพหูพจน์ → were having']
     ],
     test:[
-      ['I ___ a book at 9 PM last night.',['read','reads','was reading','were reading'],2,4],
-      ['They ___ TV when I came home.',['was watching','were watching','watch','watched'],1,3],
+      ['I ___ a book at 9 PM last night.',['am reading','reads','was reading','were reading'],2,4],
+      ['They ___ TV when I came home.',['was watching','were watching','watch','are watching'],1,3],
       ['She ___ cooking while I was cleaning.',['is','was','were','are'],1,2],
       ['___ he studying at that time?',['Did','Was','Were','Is'],1,1],
       ['We ___ not sleeping at midnight.',['was','were','is','are'],1,2],
@@ -1295,9 +1295,9 @@ const ZONES = [
     words:[['fire','ไฟ'],['flame','เปลวไฟ'],['smoke','ควัน'],['ash','เถ้าถ่าน'],
            ['burn','เผาไหม้'],['danger','อันตราย'],['escape','หลบหนี'],['brave','กล้าหาญ']],
     quiz:[
-      ['I think it ___ rain tomorrow.',['will','is going to','are','was'],0,'“I think” = คาดการณ์ ณ ตอนพูด → will + กริยาช่อง 1'],
-      ['Look at those clouds! It ___ rain soon.',['will','is going to','are','was'],1,'เห็นเมฆอยู่ตรงหน้า = มีหลักฐาน → ใช้ going to'],
-      ['She ___ visit her grandma next week.',['will','is going to','are','was'],0,'“next week” = อนาคต → will + visit'],
+      ['I think it ___ rain tomorrow.',['will','are going to','are','was'],0,'“I think” = คาดการณ์ ณ ตอนพูด → will + กริยาช่อง 1'],
+      ['Look at those clouds! It ___ rain soon.',['are going to','is going to','are','was'],1,'เห็นเมฆอยู่ตรงหน้า = มีหลักฐาน → ใช้ going to'],
+      ['She ___ visit her grandma next week.',['will','going to','are','was'],0,'“next week” = อนาคต → will + visit'],
       ['___ you help me with this?',['Do','Will','Did','Are'],1,'ขอร้อง ณ ตอนพูด → Will you + กริยาช่อง 1'],
       ['They ___ not come to the party tonight.',['will','is going to','are','was'],0,'ปฏิเสธในอนาคต → will not (won\'t) + come'],
       ['He ___ going to be a scientist.',['will','is','are','was'],1,'going to ต้องมี am/is/are นำหน้า · He → is going to'],
@@ -1311,10 +1311,10 @@ const ZONES = [
     test:[
       ['She ___ be twelve next month.',['will','is','was','does'],0,4],
       ['Look at the sky! It ___ to rain.',['will','is going','was going','goes'],1,2],
-      ['They ___ not travel this year.',['will','do','are','is'],0,3],
+      ['They ___ not travel this year.',['will','does','are','is'],0,3],
       ['___ you come to my party tomorrow?',['Do','Did','Will','Are'],2,1],
       ['We ___ going to build a treehouse.',['am','is','are','be'],2,2],
-      ['I ___ help you with your bag.',['will','am','do','did'],0,1],
+      ['I ___ help you with your bag.',['will','am','is','was'],0,1],
       ['___ he going to join the club?',['Do','Is','Are','Will'],1,2],
       ['The train ___ arrive at six tonight.',['will','is','was','does'],0,4],
       ['It ___ not be easy.',['will','is','does','did'],0,3],
@@ -1342,30 +1342,30 @@ const ZONES = [
     words:[['ruin','ซากปรักหักพัง'],['ancient','โบราณ'],['temple','วิหาร'],['statue','รูปปั้น'],
            ['treasure','สมบัติ'],['secret','ความลับ'],['history','ประวัติศาสตร์'],['discover','ค้นพบ']],
     quiz:[
-      ['I ___ never seen a ghost.',['have','has','had','having'],0,'“never” ถามถึงประสบการณ์ → have/has + ช่อง 3 · I → have'],
-      ['She ___ already finished her homework.',['have','has','had','having'],1,'“already” → Present Perfect · She → has finished'],
+      ['I ___ never seen a ghost.',['have','has','am','having'],0,'“never” ถามถึงประสบการณ์ → have/has + ช่อง 3 · I → have'],
+      ['She ___ already finished her homework.',['have','has','is','having'],1,'“already” → Present Perfect · She → has finished'],
       ['___ you ever been to London?',['Do','Did','Have','Has'],2,'“ever” ถามประสบการณ์ → Have you + ช่อง 3'],
-      ['He ___ just arrived home.',['have','has','had','having'],1,'“just” = เพิ่งจะ · He → has arrived'],
-      ['We ___ known each other for ten years.',['have','has','had','having'],0,'“for ten years” = ตั้งแต่อดีตถึงตอนนี้ · We → have known'],
-      ['They ___ not seen this movie yet.',['have','has','had','having'],0,'“yet” ในประโยคปฏิเสธ · They → have not seen'],
+      ['He ___ just arrived home.',['have','has','is','having'],1,'“just” = เพิ่งจะ · He → has arrived'],
+      ['We ___ known each other for ten years.',['have','has','are','having'],0,'“for ten years” = ตั้งแต่อดีตถึงตอนนี้ · We → have known'],
+      ['They ___ not seen this movie yet.',['have','has','are','having'],0,'“yet” ในประโยคปฏิเสธ · They → have not seen'],
       ['___ she finished her project?',['Do','Does','Have','Has'],3,'she เป็นเอกพจน์ → Has she + ช่อง 3'],
-      ['The train ___ already left.',['have','has','had','having'],1,'“already” · The train เอกพจน์ → has left'],
+      ['The train ___ already left.',['have','has','does','having'],1,'“already” · The train เอกพจน์ → has left'],
       ['I have ___ my keys somewhere.',['lose','loses','lost','losing'],2,'หลัง have ต้องเป็นกริยาช่อง 3 · lose → lost'],
       ['She has ___ three books.',['write','writes','wrote','written'],3,'หลัง has ใช้ช่อง 3 · write → wrote → written'],
       ['They have ___ all the food already.',['eat','eats','ate','eaten'],3,'หลัง have ใช้ช่อง 3 · eat → ate → eaten'],
       ['He has never ___ snow.',['see','sees','saw','seen'],3,'หลัง has ใช้ช่อง 3 · see → saw → seen']
     ],
     test:[
-      ['She ___ just finished her lunch.',['have','has','had','is'],1,3],
-      ['I ___ never ridden a horse.',['have','has','had','was'],0,3],
+      ['She ___ just finished her lunch.',['have','has','does','is'],1,3],
+      ['I ___ never ridden a horse.',['have','has','am','was'],0,3],
       ['___ you done your homework yet?',['Do','Did','Have','Has'],2,3],
       ['They have ___ in Chiang Mai for five years.',['live','lives','lived','living'],2,1],
       ['He has ___ his bag on the bus.',['leave','leaves','left','leaving'],2,1],
-      ['We ___ already paid the bill.',['have','has','had','are'],0,2],
-      ['My sister ___ not called me yet.',['have','has','had','do'],1,3],
+      ['We ___ already paid the bill.',['have','has','do','are'],0,2],
+      ['My sister ___ not called me yet.',['have','has','is','do'],1,3],
       ['___ he ever eaten durian?',['Have','Has','Did','Does'],1,2],
       ['I have ___ this book three times.',['read','reads','reading','to read'],0,1],
-      ['The students ___ finished the test.',['has','have','had','is'],1,2]
+      ['The students ___ finished the test.',['has','have','do','is'],1,2]
     ],
     worked:[
       {q:'She ___ already eaten lunch.', a:'has', steps:['หาคำชี้นำ → “already” เป็นคำของ Present Perfect','โครงสร้างคือ ประธาน + have/has + กริยาช่อง 3','ประธาน She เป็นเอกพจน์บุรุษที่ 3 → has','She has already eaten lunch. · eat → ate → eaten']},
@@ -1389,30 +1389,30 @@ const ZONES = [
     words:[['magic','เวทมนตร์'],['spell','คาถา'],['fairy','นางฟ้า'],['glow','เปล่งแสง'],
            ['wish','ปรารถนา'],['power','พลัง'],['secretly','อย่างลับๆ'],['believe','เชื่อ']],
     quiz:[
-      ['I ___ swim very well.',['can','cans','to can','canning'],0,'can = ทำได้ (บอกความสามารถ)'],
-      ['You ___ study harder for the exam.',['should','shoulds','to should','shoulding'],0,'should = ควร (คำแนะนำ)'],
-      ['She ___ finish her work today. It is very important.',['must','musts','musting','to must'],0,'must = ต้อง (จำเป็นมาก)'],
-      ['Birds ___ fly, but they cannot swim well.',['can','cans','could to','canning'],0,'พูดถึงความสามารถของนก → can'],
-      ['We ___ not talk loudly in the library.',['should','shoulds','to should','shoulding'],0,'แนะนำว่าไม่ควรทำ → should not'],
-      ['___ you help me carry this box?',['Can','Cans','Canning','To can'],0,'ขอความช่วยเหลือ → Can you + กริยาช่อง 1'],
+      ['I ___ swim very well.',['can','can to','am can','cans'],0,'can = ทำได้ (บอกความสามารถ)'],
+      ['You ___ study harder for the exam.',['should','should to','are should','shoulds'],0,'should = ควร (คำแนะนำ)'],
+      ['She ___ finish her work today. It is very important.',['must','musts','must to','is must'],0,'must = ต้อง (จำเป็นมาก)'],
+      ['Birds ___ fly, but they cannot swim well.',['can','cans','can to','are can'],0,'พูดถึงความสามารถของนก → can'],
+      ['We ___ not talk loudly in the library.',['should','shoulds','should to','are'],0,'แนะนำว่าไม่ควรทำ → should not'],
+      ['___ you help me carry this box?',['Can','Cans','Are','Is'],0,'ขอความช่วยเหลือ → Can you + กริยาช่อง 1'],
       ['He can ___ three languages.',['speak','speaks','spoke','speaking'],0,'หลัง modal ใช้กริยาช่อง 1 เสมอ ไม่เติม s'],
       ['You must ___ your homework before dinner.',['do','does','did','doing'],0,'หลัง must ใช้กริยาช่อง 1 → do'],
-      ['It ___ rain later, so take an umbrella.',['may','mays','maying','to may'],0,'may = อาจจะ (ยังไม่แน่ใจ)'],
-      ['I ___ not find my keys anywhere.',['can','cans','canning','to can'],0,'cannot = หาไม่เจอ คือทำไม่ได้'],
+      ['It ___ rain later, so take an umbrella.',['may','mays','may to','is may'],0,'may = อาจจะ (ยังไม่แน่ใจ)'],
+      ['I ___ not find my keys anywhere.',['can','cans','am','is'],0,'cannot = หาไม่เจอ คือทำไม่ได้'],
       ['Students should ___ to school on time.',['come','comes','came','coming'],0,'หลัง should ใช้กริยาช่อง 1 → come'],
-      ['___ I borrow your pencil, please?',['May','Mays','Maying','To may'],0,'ขออนุญาตอย่างสุภาพ → May I']
+      ['___ I borrow your pencil, please?',['May','Mays','Am','Is'],0,'ขออนุญาตอย่างสุภาพ → May I']
     ],
     test:[
       ['You ___ wear a seatbelt in a car.',['must','may','can','could'],0,2],
       ['She can ___ a bicycle.',['ride','rides','riding','rode'],0,1],
       ['We ___ go to the beach if the weather is good.',['must','may','should not','cannot'],1,2],
-      ['___ you speak Chinese?',['Do','Can','Are','Is'],1,0],
+      ['___ you speak Chinese?',['Does','Can','Are','Is'],1,0],
       ['He should ___ more water.',['drink','drinks','drinking','drank'],0,1],
-      ['Students ___ not run in the corridor.',['should','do','are','will'],0,3],
+      ['Students ___ not run in the corridor.',['should','does','are','is'],0,3],
       ['I ___ swim when I was five.',['can','could','must','may'],1,0],
       ['___ I use your phone, please?',['Do','May','Am','Will'],1,2],
       ['You must ___ quiet in the library.',['be','is','are','being'],0,1],
-      ['She ___ not come today. She is sick.',['can','do','is','has'],0,3]
+      ['She ___ not come today. She is sick.',['can','do','is','are'],0,3]
     ],
     worked:[
       {q:'She ___ play the piano very well.', a:'can', steps:['ประโยคบอกว่าทำอะไรได้ดี → พูดถึงความสามารถ','modal ที่แปลว่าทำได้คือ can','หลัง modal ใช้กริยาช่อง 1 เสมอ ไม่เติม s','She can play the piano very well. · ไม่ใช่ plays']},
@@ -1454,7 +1454,7 @@ const ZONES = [
       ['She had ___ her lunch before the class.',['eat','eats','eaten','ate'],2,1],
       ['They had ___ the film before.',['see','sees','saw','seen'],3,1],
       ['I had not ___ him before that day.',['meet','meets','met','meeting'],2,3],
-      ['After we had ___ , we went home.',['finish','finishes','finished','finishing'],2,2],
+      ['After we had ___, we went home.',['finish','finishes','finished','finishing'],2,2],
       ['He ___ already gone when I called.',['has','had','have','was'],1,0],
       ['We had ___ there before 2015.',['be','is','been','being'],2,1],
       ['She had ___ the letter before Monday.',['write','writes','wrote','written'],3,1],
@@ -1484,15 +1484,15 @@ const ZONES = [
            ['victory','ชัยชนะ'],['courage','ความกล้าหาญ'],['final','สุดท้าย'],['legend','ตำนาน']],
     quiz:[
       ['She ___ to school every day.',['go','goes','is going','went'],1,'“every day” = ทำประจำ → Present Simple · She → goes'],
-      ['Listen! The baby ___ .',['cry','cries','is crying','cried'],2,'“Listen!” = กำลังเกิดขึ้นตอนนี้ → Present Continuous'],
+      ['Listen! The baby ___.',['cry','cries','is crying','cried'],2,'“Listen!” = กำลังเกิดขึ้นตอนนี้ → Present Continuous'],
       ['We ___ to Phuket last summer.',['travel','travels','traveled','traveling'],2,'“last summer” → Past Simple · travel เติม -ed'],
       ['I ___ call you tomorrow.',['will','am','was','have'],0,'“tomorrow” → Future Simple → will call'],
-      ['He ___ already eaten lunch.',['have','has','had','having'],1,'“already” → Present Perfect · He → has eaten'],
+      ['He ___ already eaten lunch.',['have','has','is','having'],1,'“already” → Present Perfect · He → has eaten'],
       ['They ___ playing when it started to rain.',['are','was','were','have'],2,'กำลังเล่นอยู่แล้วฝนตกขัด → Past Continuous · They → were'],
-      ['You ___ wear a helmet. It is the rule.',['must','musts','to must','musting'],0,'เป็นกฎ = จำเป็นต้องทำ → must'],
+      ['You ___ wear a helmet. It is the rule.',['must','must to','are','musts'],0,'เป็นกฎ = จำเป็นต้องทำ → must'],
       ['I ___ finished the work before he arrived.',['have','has','had','having'],2,'“before he arrived” → Past Perfect → had finished'],
       ['___ she like chocolate?',['Do','Does','Is','Are'],1,'คำถาม Present Simple ประธานเอกพจน์ → Does'],
-      ['The sun ___ in the west.',['set','sets','is setting','setted'],1,'ความจริงทั่วไป → Present Simple · The sun → sets'],
+      ['The sun ___ in the west.',['set','sets','are setting','setted'],1,'ความจริงทั่วไป → Present Simple · The sun → sets'],
       ['We ___ not go out yesterday.',['do','does','did','are'],2,'“yesterday” → Past Simple ปฏิเสธ → did not go'],
       ['Look! It ___ going to snow.',['is','are','was','will'],0,'“Look!” + มีหลักฐานให้เห็น → going to · It → is going to']
     ],
@@ -1501,16 +1501,16 @@ const ZONES = [
       ['Look! The cat ___ the fish.',['eat','eats','is eating','ate'],2,2],
       ['We ___ a movie last night.',['watch','watches','watched','will watch'],2,3],
       ['She ___ visit her aunt next week.',['will','is','was','has'],0,3],
-      ['I ___ already sent the email.',['have','has','had','am'],0,1],
+      ['I ___ already sent the email.',['have','has','do','am'],0,1],
       ['He ___ reading when the bell rang.',['is','was','were','has'],1,1],
-      ['You ___ finish this before you go.',['must','may','are','do'],0,0],
+      ['You ___ finish this before you go.',['must','must to','are','do'],0,0],
       ['Before she came, I ___ cooked dinner.',['have','has','had','was'],2,1],
       ['___ they like Thai food?',['Do','Does','Is','Are'],0,2],
-      ['Water ___ at 100 degrees.',['boil','boils','is boiling','boiled'],1,2]
+      ['Water ___ at 100 degrees.',['boil','boils','are boiling','boiling'],1,2]
     ],
     worked:[
       {q:'He ___ football every Sunday.', a:'plays', steps:['ขั้นแรกเสมอ: หาคำบอกเวลา → “every Sunday”','ทุกวันอาทิตย์ = ทำประจำ → Present Simple','ประธาน He เป็นเอกพจน์บุรุษที่ 3 → เติม -s','He plays football every Sunday.']},
-      {q:'Look! The dog ___ .', a:'is running', steps:['คำชี้นำคือ “Look!” = ดูสิ กำลังเกิดขึ้นตอนนี้','ตอนนี้ → Present Continuous ไม่ใช่ Present Simple','The dog เป็นเอกพจน์ → is + V-ing','run ซ้ำตัวท้ายก่อนเติม ing → The dog is running.']},
+      {q:'Look! The dog ___.', a:'is running', steps:['คำชี้นำคือ “Look!” = ดูสิ กำลังเกิดขึ้นตอนนี้','ตอนนี้ → Present Continuous ไม่ใช่ Present Simple','The dog เป็นเอกพจน์ → is + V-ing','run ซ้ำตัวท้ายก่อนเติม ing → The dog is running.']},
       {q:'We ___ to Chiang Mai next month.', a:'will go', steps:['คำชี้นำคือ “next month” = เดือนหน้า เป็นอนาคต','อนาคต → Future Simple','will + กริยาช่อง 1 เสมอ','We will go to Chiang Mai next month.']}
     ]
   }
@@ -3733,12 +3733,12 @@ const teachFor = (zi, rule) => (TEACH[ZONES[zi].id] || [])[rule] || null;
 // Indexed by zone id, then by the same rule index the stone carries.
 const DRILLS = {
   woods: [
-    [['The sun ___ in the east.',['rise','rises','is rising','rose'],1,'ความจริงทั่วไป → Present Simple · The sun เอกพจน์ → rises'],
-     ['Water ___ at 100 degrees.',['boil','boils','boiled','is boiling'],1,'ความจริงทางวิทยาศาสตร์ → Present Simple · Water เอกพจน์ → boils']],
+    [['The sun ___ in the east.',['rise','rises','are rising','rising'],1,'ความจริงทั่วไป → Present Simple · The sun เอกพจน์ → rises'],
+     ['Water ___ at 100 degrees.',['boil','boils','boiling','are boiling'],1,'ความจริงทางวิทยาศาสตร์ → Present Simple · Water เอกพจน์ → boils']],
     [['My sister ___ English every day.',['study','studies','studied','is studying'],1,'My sister เอกพจน์บุรุษที่ 3 → เติม -es · study ลงท้าย y หน้าพยัญชนะ → studies'],
      ['They ___ football after school.',['plays','play','is playing','played'],1,'They เป็นพหูพจน์ → ใช้กริยาช่อง 1 ไม่เติม s']],
     [['He ___ like spicy food.',['don\'t','doesn\'t','isn\'t','not'],1,'He เอกพจน์ → doesn\'t + กริยาช่อง 1'],
-     ['We ___ go to school on Sunday.',['doesn\'t','don\'t','aren\'t','didn\'t'],1,'We เป็นพหูพจน์ → don\'t + กริยาช่อง 1']],
+     ['We ___ go to school on Sunday.',['doesn\'t','don\'t','aren\'t','isn\'t'],1,'We เป็นพหูพจน์ → don\'t + กริยาช่อง 1']],
     [['___ she play the piano?',['Do','Does','Is','Are'],1,'she เอกพจน์ → Does + ประธาน + กริยาช่อง 1'],
      ['___ your parents work in Bangkok?',['Does','Do','Is','Are'],1,'your parents เป็นพหูพจน์ → Do + ประธาน + กริยาช่อง 1']],
     [['My father ___ coffee every morning.',['drink','drinks','is drinking','drank'],1,'every morning = ทำเป็นประจำ → Present Simple · My father เอกพจน์ → drinks'],
@@ -3758,7 +3758,7 @@ const DRILLS = {
     [['Look! The baby ___.',['sleep','sleeps','is sleeping','slept'],2,'Look! บอกว่ากำลังเกิดขึ้นตอนนี้ → Present Continuous'],
      ['Be quiet, I ___ to the radio.',['listen','listens','am listening','listened'],2,'กำลังทำอยู่ขณะพูด → Present Continuous · I + am + V-ing']],
     [['She ___ a letter now.',['write','writes','is writing','wrote'],2,'She + is + writing · write ตัด e ก่อนเติม -ing'],
-     ['The children ___ in the garden.',['play','plays','are playing','played'],2,'The children พหูพจน์ → are + playing']],
+     ['The children ___ in the garden now.',['play','plays','are playing','played'],2,'now = กำลังเกิดขึ้น · The children พหูพจน์ → are + playing']],
     [['He ___ not working today.',['do','does','is','are'],2,'He เอกพจน์ → is not + V-ing'],
      ['They ___ not watching TV.',['is','am','are','does'],2,'They พหูพจน์ → are not + V-ing']],
     [['I ___ my homework at the moment.',['do','does','am doing','did'],2,'at the moment = ตอนนี้ → Present Continuous'],
@@ -3767,18 +3767,18 @@ const DRILLS = {
   caves: [
     [['We ___ to the zoo last Sunday.',['go','goes','went','are going'],2,'last Sunday = จบไปแล้ว → Past Simple · go ช่อง 2 คือ went'],
      ['He ___ his keys this morning.',['lose','loses','lost','is losing'],2,'เหตุการณ์จบไปแล้ว → Past Simple · lose ช่อง 2 คือ lost']],
-    [['She ___ the door quietly.',['open','opens','opened','is opening'],2,'regular verb → เติม -ed เป็น opened'],
+    [['She ___ the door quietly last night.',['open','opens','opened','is opening'],2,'last night = อดีต · regular verb → เติม -ed เป็น opened'],
      ['They ___ a new house last year.',['buy','buys','bought','are buying'],2,'buy เป็น irregular → ช่อง 2 คือ bought']],
     [['I ___ not see him yesterday.',['do','does','did','was'],2,'ปฏิเสธในอดีต → did not + กริยาช่อง 1'],
-     ['She ___ finish her work.',['doesn\'t','didn\'t','isn\'t','wasn\'t'],1,'อดีต → didn\'t + กริยาช่อง 1 (finish ไม่เปลี่ยนรูป)']],
+     ['She ___ finish her work yesterday.',['doesn\'t','didn\'t','isn\'t','wasn\'t'],1,'yesterday = อดีต → didn\'t + กริยาช่อง 1 (finish ไม่เปลี่ยนรูป)']],
     [['He ___ to Chiang Mai two years ago.',['travel','travels','traveled','is traveling'],2,'ago = อดีต → Past Simple'],
      ['We ___ a movie last night.',['watch','watches','watched','are watching'],2,'last night = อดีต → Past Simple']],
   ],
   snow: [
-    [['At 8 o\'clock I ___ dinner.',['eat','eats','was eating','have eaten'],2,'ณ จุดหนึ่งในอดีต กำลังทำอยู่ → Past Continuous'],
-     ['They ___ football all afternoon.',['play','played','were playing','are playing'],2,'all afternoon = ดำเนินอยู่ตลอดช่วงนั้น → Past Continuous']],
-    [['She ___ reading a book.',['is','was','were','did'],1,'She เอกพจน์ → was + V-ing'],
-     ['The birds ___ singing.',['was','were','is','are'],1,'The birds พหูพจน์ → were + V-ing']],
+    [['At 8 o\'clock last night I ___ dinner.',['eat','eats','was eating','have eaten'],2,'ณ จุดหนึ่งในอดีต กำลังทำอยู่ → Past Continuous'],
+     ['They ___ football all afternoon yesterday.',['play','was playing','were playing','are playing'],2,'all afternoon yesterday = ดำเนินอยู่ตลอดช่วงนั้นในอดีต → Past Continuous · They → were']],
+    [['She ___ reading a book at 8 PM last night.',['is','was','were','did'],1,'at 8 PM last night = อดีต · She เอกพจน์ → was + V-ing'],
+     ['The birds ___ singing when I woke up.',['was','were','is','are'],1,'when I woke up = อดีต · The birds พหูพจน์ → were + V-ing']],
     [['I ___ studying at that time.',['was','were','is','are'],0,'I ใช้ was'],
      ['You ___ sleeping when I called.',['was','were','is','am'],1,'You ใช้ were เสมอ']],
     [['She was cooking when the phone ___.',['ring','rings','rang','was ringing'],2,'เหตุการณ์สั้นที่มาขัดจังหวะ → Past Simple · ring ช่อง 2 คือ rang'],
@@ -3800,7 +3800,7 @@ const DRILLS = {
   ],
   ruins: [
     [['I ___ never been to Japan.',['have','has','was','am'],0,'I ใช้ have · never = ประสบการณ์ที่ไม่เคยทำ → Present Perfect'],
-     ['She ___ just finished her work.',['have','has','had','is'],1,'She เอกพจน์ → has · just = เพิ่งเสร็จ ส่งผลถึงตอนนี้']],
+     ['She ___ just finished her work.',['have','has','does','is'],1,'She เอกพจน์ → has · just = เพิ่งเสร็จ ส่งผลถึงตอนนี้']],
     [['They have ___ the news.',['hear','hears','heard','hearing'],2,'have + กริยาช่อง 3 · hear ช่อง 3 คือ heard'],
      ['He has ___ his lunch.',['eat','eats','eaten','ate'],2,'has + กริยาช่อง 3 · eat ช่อง 3 คือ eaten']],
     [['My brother ___ lost his phone.',['have','has','are','were'],1,'My brother = He → has'],
@@ -4041,7 +4041,15 @@ function answerBattle(sel, ans, btn){
 // the verbs below, so a choice can be named rather than guessed at.
 // base, -s, ช่อง 2, ช่อง 3, -ing
 const VERBS = [
+  ['answer','answers','answered','answered','answering'],
   ['boil','boils','boiled','boiled','boiling'],
+  ['call','calls','called','called','calling'],
+  ['fix','fixes','fixed','fixed','fixing'],
+  ['knock','knocks','knocked','knocked','knocking'],
+  ['know','knows','knew','known','knowing'],
+  ['rain','rains','rained','rained','raining'],
+  ['ring','rings','rang','rung','ringing'],
+  ['walk','walks','walked','walked','walking'],
   ['buy','buys','bought','bought','buying'],
   ['catch','catches','caught','caught','catching'],
   ['clean','cleans','cleaned','cleaned','cleaning'],
@@ -4106,6 +4114,41 @@ const AUX = {
   has:  'ใช้กับ Present Perfect กับ He, She, It (ตามด้วยกริยาช่อง 3)',
   had:  'ใช้กับ Past Perfect ทุกประธาน (ตามด้วยกริยาช่อง 3)',
 };
+// Whole options that are not verb forms: negatives, time words, and the wrong
+// shapes the drills offer on purpose. Named for the same reason as the rest —
+// a child who picked "since" needs to hear what since is for.
+const PHRASES = {
+  "don't": 'เป็นรูปปฏิเสธของ Present Simple ใช้กับ I, You, We, They (ตามด้วยกริยาช่อง 1)',
+  "doesn't": 'เป็นรูปปฏิเสธของ Present Simple ใช้กับ He, She, It (ตามด้วยกริยาช่อง 1)',
+  "didn't": 'เป็นรูปปฏิเสธของ Past Simple ใช้ได้ทุกประธาน (ตามด้วยกริยาช่อง 1)',
+  "isn't": 'คือ is not ใช้กับ He, She, It',
+  "aren't": 'คือ are not ใช้กับ You, We, They',
+  "wasn't": 'คือ was not (อดีต) ใช้กับ I, He, She, It',
+  "weren't": 'คือ were not (อดีต) ใช้กับ You, We, They',
+  "haven't": 'คือ have not ของ Present Perfect ใช้กับ I, You, We, They (ตามด้วยกริยาช่อง 3)',
+  "hadn't": 'คือ had not ของ Past Perfect (ตามด้วยกริยาช่อง 3)',
+  'am not': 'ใช้กับ I เท่านั้น',
+  'not': 'อยู่ลำพังไม่ได้ ต้องมีกริยาช่วยนำหน้า เช่น do not, is not',
+  'for': 'ใช้กับช่วงระยะเวลา เช่น for ten years',
+  'since': 'ใช้กับจุดเริ่มต้นของเวลา เช่น since 2015',
+  'ago': 'ใช้กับ Past Simple เช่น two years ago',
+  'from': 'ต้องมาคู่กับ to / until เช่น from 8 to 10',
+  'in': 'ใช้กับปีหรือเดือน เช่น in 2020 บอกจุดเวลา ไม่ได้บอกช่วงเวลาที่ต่อเนื่องถึงตอนนี้',
+  'on': 'ใช้กับวันหรือวันที่ เช่น on Monday',
+  'while': 'แปลว่า "ขณะที่" ตามด้วยเหตุการณ์ที่กำลังดำเนินอยู่',
+  'when': 'แปลว่า "เมื่อ" มักตามด้วยเหตุการณ์สั้น ๆ',
+  'now': 'แปลว่า "ตอนนี้" ใช้กับ Present Continuous',
+  'after': 'แปลว่า "หลังจาก"',
+  'before': 'แปลว่า "ก่อน"',
+  'goes to': 'คือกริยา go (ไป) ไม่ใช่ going to ที่บอกอนาคต',
+  'going to': 'ขาด am / is / are นำหน้า',
+  'was going to': 'แปลว่า "ตั้งใจจะทำ" ในอดีต ไม่ใช่อนาคต',
+  'will not to': 'ผิด · หลัง will not ใช้กริยาช่อง 1 ไม่มี to',
+  'not will': 'ผิดลำดับ · ต้องเป็น will not',
+  "doesn't will": 'ผิด · will ไม่ใช้กับ do / does ปฏิเสธคือ will not',
+};
+for(const p of ["don't can",'not can','am not can',"don't must",'not must',"doesn't must"])
+  PHRASES[p] = 'ผิด · ปฏิเสธ modal ให้เติม not หลัง modal (cannot, must not) ไม่ใช้ do / does / am';
 const isVing = w => (VERB_FORM.get(w)||{}).k === 4;
 const isV1   = w => (VERB_FORM.get(w)||{}).k === 0;
 const isV3   = w => (VERB_FORM.get(w)||{}).k === 3;
@@ -4127,14 +4170,25 @@ function describeChoice(raw){
   }
   if(low === 'setted') return `“${t}” ไม่มีในภาษาอังกฤษ · set เป็น irregular ช่อง 2 คือ set`;
 
-  if(two(['is','am','are'], isVing))   return `“${t}” เป็น Present Continuous (กำลังเกิดขึ้นตอนนี้)`;
-  if(two(['was','were'], isVing))      return `“${t}” เป็น Past Continuous (กำลังทำอยู่ในอดีต)`;
+  // Which subject the helper belongs to is half of what these distractors test
+  // ("are rising" for The sun, "was playing" for They), so the line says it.
+  const BE_SUBJ = {am:'I', is:'He / She / It', are:'You / We / They', was:'I / He / She / It', were:'You / We / They'};
+  if(PHRASES[low]) return `“${t}” ${PHRASES[low]}`;
+  if(two(['is','am','are'], isVing))
+    return `“${t}” เป็น Present Continuous (กำลังเกิดขึ้นตอนนี้) · ${w[0]} ใช้กับ ${BE_SUBJ[w[0]]}`;
+  if(two(['was','were'], isVing))
+    return `“${t}” เป็น Past Continuous (กำลังทำอยู่ในอดีต) · ${w[0]} ใช้กับ ${BE_SUBJ[w[0]]}`;
+  if(two(['am','is','are'], m => MODALS.includes(m)))
+    return `“${t}” ไม่มีในภาษาอังกฤษ · ${w[1]} เป็น modal ใช้เดี่ยว ๆ ไม่มี am / is / are นำหน้า`;
+  if(two(["doesn't","don't"], m => (VERB_FORM.get(m)||{}).k === 1))
+    return `“${t}” ผิด · หลัง doesn't / don't กริยากลับเป็นช่อง 1 ไม่เติม -s (${VERB_FORM.get(w[1]).base})`;
   if(two(['have','has'], isV3))        return `“${t}” เป็น Present Perfect (ทำแล้วส่งผลถึงตอนนี้)`;
   if(two(['had'], isV3))               return `“${t}” เป็น Past Perfect (ทำก่อนอีกเหตุการณ์ในอดีต)`;
   if(two(['will'], isV1))              return `“${t}” เป็น Future Simple (จะทำในอนาคต)`;
   if(two(["don't","doesn't"], isV1))   return `“${t}” เป็นรูปปฏิเสธของ Present Simple`;
   if(two(["didn't"], isV1))            return `“${t}” เป็นรูปปฏิเสธของ Past Simple`;
-  if(/^(is|am|are)\s+going\s+to$/.test(low)) return `“${t}” เป็น going to (วางแผนไว้ หรือมีหลักฐาน)`;
+  if(/^(is|am|are)\s+going\s+to$/.test(low))
+    return `“${t}” เป็น going to (วางแผนไว้ หรือมีหลักฐาน) · ${w[0]} ใช้กับ ${BE_SUBJ[w[0]]}`;
   if(two(['not'], isV1))
     return `“${t}” ปฏิเสธแบบนี้ไม่ได้ · Present Simple ต้องมี do not / does not นำหน้ากริยาช่อง 1`;
   if(two(['to'], isV1))
@@ -5573,6 +5627,14 @@ function startWith(profile, cls){
   toast('🗺️','ยินดีต้อนรับสู่เกาะ Lexicora!');
   save();
 }
+
+// ?debug=1 gives the test scripts a handle on the internals. Without it a
+// screenshot of a boss fight means wandering the map until one turns up.
+if(params.get('debug') === '1') window.__lex = {
+  get S(){ return S; }, get zone(){ return zone; }, get battle(){ return battle; },
+  startBattle, enterZone, openMap, winBattle, answerBattle, save, refreshHUD,
+  world: () => world,
+};
 
 setupTouch();
 VIAL_PROP = (propsNamed('vial')[0] ?? 0);
