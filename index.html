@@ -283,23 +283,214 @@ kbd{
 }
 .field input:focus{outline:none;border-color:var(--gold);box-shadow:inset 0 2px 5px rgba(112,80,40,.2),0 0 0 3px rgba(232,184,75,.35);}
 
+/* -------------------------------------------------------------- sound */
+#btn-sound{
+  position:absolute;z-index:60;left:max(10px,env(safe-area-inset-left));bottom:max(10px,env(safe-area-inset-bottom));
+  width:40px;height:40px;border-radius:50%;font-size:1.1rem;line-height:1;cursor:pointer;
+  background:linear-gradient(180deg,rgba(58,36,20,.92),rgba(26,15,7,.95));color:#ffe9b8;
+  border:1px solid var(--gold-dk);box-shadow:0 0 0 2px rgba(20,11,5,.8),0 6px 16px rgba(0,0,0,.45);
+  opacity:.85;transition:transform .15s,opacity .15s;
+}
+#btn-sound:hover{opacity:1;transform:scale(1.08);}
+#btn-sound:active{transform:scale(.94);}
+/* the fight has its own full screen; the switch waits outside it */
+#stage:has(#screen-battle.show) #btn-sound,
+#stage:has(#screen-teacher.show) #btn-sound{display:none;}
+
+/* ------------------------------------------------ arriving in a land */
+#iris{
+  position:absolute;left:50%;top:50%;width:0;height:0;border-radius:50%;z-index:54;pointer-events:none;
+  transform:translate(-50%,-50%);box-shadow:0 0 0 200vmax #07090d;opacity:0;
+}
+#iris.go{animation:iris 1.1s cubic-bezier(.55,.05,.35,1) forwards;}
+@keyframes iris{0%{opacity:1;width:0;height:0;}100%{opacity:1;width:260vmax;height:260vmax;}}
+#zone-card{
+  position:absolute;left:0;right:0;top:30%;z-index:56;pointer-events:none;text-align:center;opacity:0;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+#zone-card small{font-weight:600;color:#ffe3a3;font-size:clamp(.85rem,2.2vw,1.1rem);letter-spacing:.05em;text-shadow:0 2px 8px #000;}
+#zone-card b{
+  font-family:'Cinzel',serif;font-weight:900;font-size:clamp(2rem,7vw,4.4rem);letter-spacing:.06em;color:#fff3cf;
+  text-shadow:0 0 24px rgba(0,0,0,.9),0 4px 0 #5a3a12,0 0 40px rgba(255,200,90,.45);
+}
+#zone-card span{font-weight:700;color:#fff;font-size:clamp(1rem,3vw,1.5rem);text-shadow:0 2px 10px #000;}
+#zone-card::after{
+  content:'';width:min(420px,70vw);height:3px;margin-top:8px;border-radius:2px;
+  background:linear-gradient(90deg,transparent,var(--gold) 30%,var(--gold-hi) 50%,var(--gold) 70%,transparent);
+}
+#zone-card.go{animation:zone-card 2.6s .25s cubic-bezier(.2,.8,.2,1) forwards;}
+@keyframes zone-card{
+  0%{opacity:0;transform:translateY(18px);letter-spacing:.3em;}
+  18%{opacity:1;transform:none;}
+  78%{opacity:1;}
+  100%{opacity:0;transform:translateY(-10px);}
+}
+/* ------------------------------------------------------------- finale */
+#screen-finale{background:radial-gradient(ellipse at 50% 30%,#1c2a48,#07090d 70%);overflow-y:auto;}
+#finale-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+#finale-inner{position:relative;z-index:1;text-align:center;max-width:860px;margin:auto;color:#fff3cf;}
+#finale-title{font-size:clamp(2rem,7vw,4rem);color:#ffe08a;text-shadow:0 0 30px rgba(255,190,70,.7),0 4px 0 #5a3a12;}
+#finale-text{margin:8px auto 14px;font-size:clamp(.95rem,2.4vw,1.15rem);line-height:1.6;max-width:640px;}
+#cert-img{width:min(640px,100%);border-radius:6px;box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 0 3px var(--gold-dk);}
+#finale-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px;}
+#screen-finale.show #finale-inner{animation:panel-in .8s .3s cubic-bezier(.2,.9,.25,1.1) both;}
+@media (prefers-reduced-motion:reduce){ #iris.go,#zone-card.go{animation-duration:.01s;} }
+
+/* ------------------------------------------------------------ level up */
+#levelup{
+  position:absolute;inset:0;z-index:55;pointer-events:none;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;opacity:0;
+  /* a dark band behind the words, so they read on snow and sand alike */
+  background:
+    radial-gradient(ellipse 60% 30% at center,rgba(255,200,90,.35),rgba(255,200,90,0) 70%),
+    linear-gradient(180deg,transparent 36%,rgba(14,8,3,.62) 43%,rgba(14,8,3,.62) 60%,transparent 67%);
+}
+#levelup b{
+  font-family:'Cinzel',serif;font-weight:900;font-size:clamp(2rem,7vw,4.2rem);letter-spacing:.08em;color:#fff3cf;
+  text-shadow:0 0 22px rgba(255,190,70,.95),0 4px 0 #6b3d0c,0 0 44px rgba(255,160,40,.6);
+}
+#levelup span{font-weight:700;color:#fff;font-size:clamp(.95rem,2.6vw,1.3rem);text-shadow:0 2px 8px rgba(0,0,0,.8);}
+#levelup.go{animation:lvl 2s cubic-bezier(.2,.9,.3,1) forwards;}
+@keyframes lvl{
+  0%{opacity:0;transform:scale(2.2);}
+  14%{opacity:1;transform:scale(1);}
+  75%{opacity:1;}
+  100%{opacity:0;transform:translateY(-30px);}
+}
+/* answer buttons that feel like they were pressed, and say how it went */
+.opt.right{animation:opt-right .5s cubic-bezier(.2,1.8,.4,1);}
+.opt.wrong{animation:opt-wrong .45s ease-in-out;}
+@keyframes opt-right{0%{transform:scale(.94);}45%{transform:scale(1.07);box-shadow:0 0 0 4px rgba(126,214,110,.55),0 3px 0 #3f7a35;}100%{transform:none;}}
+@keyframes opt-wrong{0%,100%{transform:none;}20%{transform:translateX(-7px);}40%{transform:translateX(6px);}60%{transform:translateX(-4px);}80%{transform:translateX(2px);}}
+@media (prefers-reduced-motion:reduce){ .opt.right,.opt.wrong,#levelup.go{animation-duration:.01s;} }
+
 /* -------------------------------------------------------------- battle */
-#battle-stage{
-  position:relative;height:190px;margin:-6px -8px 6px;border-radius:10px;overflow:hidden;
-  border:2px solid var(--wood);box-shadow:inset 0 0 34px rgba(40,20,8,.5);
+/* The fight fills the screen: a cinematic stage across the top and the
+   question in a parchment command window that overlaps its lower edge. The
+   stage has a fixed share of the height so it never jumps when an
+   explanation appears underneath and makes the panel taller. */
+#screen-battle{
+  display:none;padding:0;background:#0b0f14;
+  --top-h:clamp(160px,50vh,520px);        /* the arena; set exactly by paintBattleBG */
+}
+#screen-battle.show{display:block;}
+/* The scene fills the whole screen; the arena is its top part and the ground
+   carries on under the command window, so there is never a dead black band. */
+#battle-stage{position:absolute;inset:0;overflow:hidden;background:#0b0f14;}
+#screen-battle.show #battle-stage{animation:stage-in .55s cubic-bezier(.2,.8,.2,1);}
+@keyframes stage-in{
+  0%{filter:brightness(2.6) saturate(.3);transform:scale(1.12);}
+  100%{filter:none;transform:none;}
+}
+#battle-panel{
+  position:absolute;z-index:2;left:0;right:0;margin:0 auto;overflow-y:auto;
+  top:calc(var(--top-h) - 28px);
+  max-height:calc(100% - var(--top-h) + 28px - max(10px,env(safe-area-inset-bottom)));
+  width:min(820px,calc(100% - 20px));
+  padding:16px 24px 18px;
+}
+#screen-battle.show #battle-panel{animation:panel-in .5s .12s cubic-bezier(.2,.9,.25,1.1) both;}
+@keyframes panel-in{from{transform:translateY(60px);opacity:0;}to{transform:none;opacity:1;}}
+#battle-panel::-webkit-scrollbar{width:10px;}
+#battle-panel::-webkit-scrollbar-thumb{background:var(--wood);border-radius:5px;}
+/* The big words across the stage: who you are fighting, and how it ended. */
+#battle-banner{
+  position:absolute;left:0;right:0;top:calc(var(--top-h)*.4);transform:translateY(-50%);
+  text-align:center;pointer-events:none;opacity:0;
+  font-family:'Cinzel','Kanit',serif;font-weight:900;letter-spacing:.06em;
+  font-size:clamp(1.2rem,min(4.4vw,7vh),2.7rem);color:#fff3cf;
+  text-shadow:0 0 18px rgba(0,0,0,.9),0 3px 0 #5a3a12,0 0 34px rgba(255,200,90,.55);
+}
+#battle-banner small{
+  display:block;font-family:'Kanit',sans-serif;font-weight:600;letter-spacing:.02em;
+  font-size:.42em;color:#ffe3a3;margin-top:.2em;
+}
+#battle-banner.go{animation:banner-sweep 2.1s cubic-bezier(.2,.8,.2,1) forwards;}
+#battle-banner.win{animation:banner-hold 1.6s ease-out forwards;color:#ffe08a;}
+#battle-banner.lose{animation:banner-hold 2.4s ease-out forwards;color:#ffb3a8;}
+@keyframes banner-sweep{
+  0%{opacity:0;transform:translate(-40%,-50%) skewX(-12deg);}
+  18%{opacity:1;transform:translate(0,-50%) skewX(0);}
+  78%{opacity:1;transform:translate(0,-50%);}
+  100%{opacity:0;transform:translate(30%,-50%) skewX(8deg);}
+}
+@keyframes banner-hold{
+  0%{opacity:0;transform:translateY(-50%) scale(1.8);}
+  16%{opacity:1;transform:translateY(-50%) scale(1);}
+  80%{opacity:1;}
+  100%{opacity:0;transform:translateY(-50%) scale(1.04);}
+}
+/* Combo: grows with the streak, so the fifth in a row feels like it. */
+#combo-badge{
+  position:absolute;right:4%;top:calc(var(--top-h)*.24);pointer-events:none;opacity:0;text-align:right;
+  font-family:'Cinzel','Kanit',serif;font-weight:900;color:#ffe08a;line-height:1;
+  text-shadow:0 0 12px rgba(0,0,0,.85),0 2px 0 #6b3d0c,0 0 26px rgba(255,170,60,.7);
+}
+#combo-badge .n{font-size:calc(1.6rem + var(--lvl,0)*.28rem);}
+#combo-badge .t{display:block;font-family:'Kanit',sans-serif;font-weight:700;font-size:.9rem;color:#fff3cf;}
+#combo-badge.pop{animation:combo-pop .9s cubic-bezier(.2,1.6,.4,1) forwards;}
+#combo-badge.break{animation:combo-break .6s ease-in forwards;color:#c9c3b8;}
+@keyframes combo-pop{
+  0%{opacity:0;transform:scale(.3) rotate(-14deg);}
+  30%{opacity:1;transform:scale(1.25) rotate(4deg);}
+  55%{transform:scale(1) rotate(0);}
+  100%{opacity:1;transform:scale(1);}
+}
+@keyframes combo-break{
+  0%{opacity:1;transform:none;}
+  100%{opacity:0;transform:translateY(30px) rotate(10deg);}
+}
+@media (prefers-reduced-motion:reduce){
+  #screen-battle.show #battle-stage,#screen-battle.show #battle-panel{animation:none;}
+  #battle-banner.go,#battle-banner.win,#battle-banner.lose{animation-duration:.01s;}
 }
 /* width/height:100% matter: an absolutely positioned canvas with only inset:0
    still lays out at its intrinsic size, so it would paint a strip, not a stage */
 #battle-bg{position:absolute;inset:0;width:100%;height:100%;}
-#enemy-plate{
-  position:absolute;top:10px;left:50%;transform:translateX(-50%);
-  width:min(300px,80%);padding:5px 10px 7px;border-radius:8px;
-  background:linear-gradient(180deg,rgba(48,28,14,.9),rgba(26,15,7,.92));
+/* Fighting-game plates: you on the left, what you are fighting on the right. */
+.fighter-plate{
+  position:absolute;top:max(10px,env(safe-area-inset-top));z-index:3;
+  display:flex;align-items:center;gap:8px;
+  width:min(330px,calc(50% - 16px));padding:6px 12px 7px 6px;border-radius:10px;
+  background:linear-gradient(180deg,rgba(58,36,20,.93),rgba(26,15,7,.95));
   border:1px solid var(--gold-dk);
+  box-shadow:0 0 0 2px rgba(20,11,5,.85),0 8px 22px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,220,150,.25);
 }
-#enemy-name{
-  font-family:'Cinzel',serif;font-weight:700;color:#ffeec4;font-size:.84rem;
-  text-align:center;margin-bottom:4px;letter-spacing:.05em;
+#hero-plate{left:max(10px,env(safe-area-inset-left));}
+#enemy-plate{right:max(10px,env(safe-area-inset-right));flex-direction:row-reverse;padding:6px 6px 7px 12px;}
+#enemy-plate .fp-name{text-align:right;}
+#screen-battle.show #hero-plate{animation:plate-l .6s .15s cubic-bezier(.2,.9,.3,1.2) both;}
+#screen-battle.show #enemy-plate{animation:plate-r .6s .15s cubic-bezier(.2,.9,.3,1.2) both;}
+@keyframes plate-l{from{transform:translateX(-120%);}to{transform:none;}}
+@keyframes plate-r{from{transform:translateX(120%);}to{transform:none;}}
+.fighter-plate img{
+  width:40px;height:40px;flex:0 0 auto;border-radius:7px;image-rendering:pixelated;
+  background:radial-gradient(circle at 50% 60%,#5a3d22,#22140a);border:1px solid var(--gold-dk);
+  object-fit:cover;object-position:50% 20%;
+}
+.fp-body{flex:1;min-width:0;}
+.fp-name{
+  font-family:'Cinzel','Kanit',serif;font-weight:700;color:#ffeec4;font-size:.8rem;
+  letter-spacing:.03em;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.fp-meter{position:relative;height:10px;}
+.fp-meter i,.fp-meter .ghost{position:absolute;left:0;top:0;bottom:0;border-radius:inherit;}
+.fp-meter i{background:linear-gradient(180deg,#f07a6c,#b33a32 60%,#7d211c);transition:width .18s ease-out;}
+/* The white bar lags behind the red one, so every hit visibly takes a bite. */
+.fp-meter .ghost{background:#fff1d6;transition:width .5s .38s ease-in;}
+#battle-pips{justify-content:flex-start;margin-top:0;flex-wrap:wrap;gap:4px;}
+#battle-pips .pip{width:12px;height:12px;}
+#battle-pips .pip.lost{animation:pip-lost .7s ease-out;}
+@keyframes pip-lost{
+  0%{transform:scale(1.7);background:#fff;box-shadow:0 0 12px #ff7a6a;}
+  100%{transform:none;}
+}
+@media (max-width:520px){
+  .fighter-plate{gap:6px;padding:4px 8px 5px 4px;}
+  #enemy-plate{padding:4px 4px 5px 8px;}
+  .fighter-plate img{width:30px;height:30px;}
+  .fp-name{font-size:.7rem;margin-bottom:3px;}
+  #battle-pips .pip{width:9px;height:9px;}
 }
 .q-prompt{
   font-size:clamp(1.05rem,3.4vw,1.32rem);font-weight:600;line-height:1.55;
@@ -404,7 +595,7 @@ kbd{
   #quest-strip{top:64px;max-width:46vw;padding:7px 11px;}
   #quest-text{font-size:.76rem;}
   .sheet{padding:20px 18px 24px;}
-  #battle-stage{height:150px;}
+  #battle-panel{padding:14px 16px 16px;}
   /* short screens: keep the notes to one line until asked for */
   #battle-notes{--start-shut:1;}
   #notes-list{max-height:64px;}
@@ -415,7 +606,8 @@ kbd{
    fold. These rules are about vertical room, so they key on height. */
 @media (max-height:520px){
   .sheet{max-height:96vh;max-height:96dvh;padding:12px 16px 14px;}
-  #battle-stage{height:104px;margin:-4px -6px 4px;}
+  #screen-battle{--top-h:40vh;}
+  #battle-panel{padding:10px 14px 12px;}
   #battle-question{font-size:.94rem;margin-bottom:6px;}
   #battle-options{gap:6px;}
   .opt{padding:7px 10px;font-size:.92rem;}
@@ -757,6 +949,12 @@ mark.signal{
     <div id="btn-menu">☰</div>
   </div>
 
+  <!-- One sound switch for the whole game: music+effects → effects only → silent. -->
+  <button type="button" id="btn-sound" aria-label="เสียง">🔊</button>
+  <div id="levelup" aria-live="polite"></div>
+  <div id="iris"></div>
+  <div id="zone-card" aria-live="polite"><small id="zc-no"></small><b id="zc-name"></b><span id="zc-thai"></span></div>
+
   <!-- ======================================================== LANDING -->
   <div class="overlay show" id="screen-landing">
     <canvas id="landing-art"></canvas>
@@ -810,21 +1008,51 @@ mark.signal{
         <div id="map-progress">—</div>
         <button class="btn" id="btn-map-codex" style="font-size:.82rem;padding:.44rem 1rem">📖 สมุดคำศัพท์</button>
         <button class="btn btn-gold" id="btn-map-board" style="font-size:.82rem;padding:.44rem 1rem">🏆 กระดานผู้กล้า</button>
+        <button class="btn btn-gold" id="btn-map-cert" style="font-size:.82rem;padding:.44rem 1rem;display:none">🏅 ใบประกาศ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= FINALE -->
+  <div class="overlay" id="screen-finale">
+    <canvas id="finale-fx"></canvas>
+    <div id="finale-inner">
+      <div class="label-eyebrow" style="color:#ffe3a3">การเดินทางสิ้นสุดลงแล้ว</div>
+      <h1 class="title-epic" id="finale-title">พิชิต LEXICORA!</h1>
+      <p id="finale-text"></p>
+      <img id="cert-img" alt="ใบประกาศเกียรติคุณ">
+      <div id="finale-btns">
+        <button class="btn btn-gold" id="btn-cert-save">⬇ บันทึกใบประกาศ</button>
+        <button class="btn" id="btn-finale-close">กลับแผนที่โลก</button>
       </div>
     </div>
   </div>
 
   <!-- ========================================================= BATTLE -->
-  <div class="overlay dim" id="screen-battle">
-    <div class="scroll-panel sheet corner-bottom">
-      <div id="battle-stage">
-        <canvas id="battle-bg"></canvas>
-        <div id="enemy-plate">
-          <div id="enemy-name">—</div>
-          <div class="meter" style="height:9px"><i id="enemy-hp" style="width:100%;background:linear-gradient(180deg,#e5695c,#b33a32 60%,#7d211c)"></i></div>
+  <div class="overlay" id="screen-battle">
+    <!-- The stage is the whole top of the screen: the zone's own ground, props
+         and weather behind the two fighters, not a strip inside a scroll. -->
+    <div id="battle-stage">
+      <canvas id="battle-bg"></canvas>
+      <canvas id="battle-cv"></canvas>
+      <div class="fighter-plate" id="hero-plate">
+        <img id="hero-face" alt="">
+        <div class="fp-body">
+          <div class="fp-name" id="hero-plate-name">—</div>
+          <div class="pip-row" id="battle-pips"></div>
         </div>
-        <canvas id="battle-cv"></canvas>
       </div>
+      <div class="fighter-plate" id="enemy-plate">
+        <img id="enemy-face" alt="">
+        <div class="fp-body">
+          <div class="fp-name" id="enemy-name">—</div>
+          <div class="meter fp-meter"><b class="ghost" id="enemy-ghost"></b><i id="enemy-hp"></i></div>
+        </div>
+      </div>
+      <div id="battle-banner" aria-live="polite"></div>
+      <div id="combo-badge" aria-live="polite"></div>
+    </div>
+    <div class="scroll-panel corner-bottom" id="battle-panel">
       <div class="label-eyebrow" style="text-align:center" id="battle-topic">—</div>
       <div id="battle-notes" hidden>
         <button type="button" id="btn-notes">📓 สมุดบันทึก</button>
@@ -833,7 +1061,6 @@ mark.signal{
       <p class="q-prompt" id="battle-question">—</p>
       <div id="battle-options"></div>
       <p id="battle-feedback"></p>
-      <div class="pip-row" id="battle-pips"></div>
       <div style="text-align:center;margin-top:10px">
         <button class="btn" id="btn-flee" style="font-size:.86rem;padding:.42rem 1.1rem">หนี</button>
         <button class="btn btn-gold" id="btn-hint" style="font-size:.86rem;padding:.42rem 1.1rem;display:none">✨ เวทเปิดเผย</button>
@@ -1627,40 +1854,254 @@ function shuffle(a){
 }
 
 // ═══════════════════════════════════════════════════════════════ AUDIO
-let actx = null;
+// Everything you hear is synthesised here — no sound files, so the one-file
+// build stays small and works offline. Two buses under one master: music and
+// effects, so a student (or a teacher with thirty of them in a room) can turn
+// the music off and keep the feedback sounds, or silence both.
+let actx = null, master = null, musicBus = null, sfxBus = null, noiseBuf = null, echo = null;
+const SOUND_KEY = 'lexicoraSoundV1';
+// 2 = music and effects · 1 = effects only · 0 = silent
+let soundMode = 2;
+try{ const v = localStorage.getItem(SOUND_KEY); if(v !== null) soundMode = clamp(parseInt(v,10)||0, 0, 2); }catch(e){}
 function audio(){
-  if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; } }
+  if(!actx){
+    try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return null; }
+    master = actx.createGain(); master.connect(actx.destination);
+    // a gentle limiter, so a combo on top of the battle theme never clips
+    const comp = actx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.ratio.value = 4;
+    comp.connect(master);
+    musicBus = actx.createGain(); musicBus.connect(comp);
+    sfxBus = actx.createGain(); sfxBus.connect(comp);
+    // a shared echo for the songs that want space (caves, snow, the grove)
+    echo = actx.createDelay(1); echo.delayTime.value = .33;
+    const fb = actx.createGain(); fb.gain.value = .32;
+    const wet = actx.createGain(); wet.gain.value = .5;
+    echo.connect(fb); fb.connect(echo); echo.connect(wet); wet.connect(musicBus);
+    noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i] = Math.random()*2 - 1;
+    applySoundMode();
+  }
   // iOS starts a context suspended and suspends it again whenever the tab goes
   // to the background, so without this the game is simply silent on an iPhone
   // or iPad. resume() is a no-op once it is already running.
   if(actx.state === 'suspended') actx.resume().catch(() => {});
   return actx;
 }
+function applySoundMode(){
+  if(actx){
+    const t = actx.currentTime;
+    musicBus.gain.setTargetAtTime(soundMode === 2 ? 1 : 0, t, .15);
+    sfxBus.gain.setTargetAtTime(soundMode >= 1 ? 1 : 0, t, .05);
+  }
+  const b = $('btn-sound');
+  if(b){
+    b.textContent = ['🔇','🔈','🔊'][soundMode];
+    b.title = ['ปิดเสียงทั้งหมด','ปิดเพลง (เปิดเสียงเอฟเฟกต์)','เปิดเพลงและเสียง'][soundMode] + ' · กด M';
+    b.setAttribute('aria-label', b.title);
+  }
+}
+function cycleSound(){
+  soundMode = (soundMode + 2) % 3;          // 2 → 1 → 0 → 2
+  try{ localStorage.setItem(SOUND_KEY, String(soundMode)); }catch(e){}
+  audio(); applySoundMode();
+  if(soundMode) sfx.open();
+  if(soundMode === 2 && music.want) { const w = music.want; music.name = ''; playMusic(w); }
+}
 // The very first resume only counts if it happens inside a user gesture.
 for(const ev of ['pointerdown','touchend','keydown']){
-  addEventListener(ev, () => audio(), {once:true, passive:true});
+  addEventListener(ev, () => { audio(); if(music.want && !music.name) playMusic(music.want); }, {once:true, passive:true});
 }
 addEventListener('visibilitychange', () => { if(!document.hidden && actx) audio(); });
+
+// One enveloped oscillator — the building block of every sound below.
+function tone(t, freq, dur, o = {}){
+  const c = actx, osc = c.createOscillator(), g = c.createGain();
+  osc.type = o.wave || 'sine';
+  osc.frequency.setValueAtTime(freq, t);
+  if(o.slide) osc.frequency.exponentialRampToValueAtTime(o.slide, t + dur);
+  if(o.detune) osc.detune.value = o.detune;
+  if(o.vib){
+    const lfo = c.createOscillator(), lg = c.createGain();
+    lfo.frequency.value = 5.2; lg.gain.value = o.vib;
+    lfo.connect(lg); lg.connect(osc.frequency); lfo.start(t); lfo.stop(t + dur + .3);
+  }
+  const vol = o.vol ?? .08, a = o.attack ?? .005, r = o.release ?? dur;
+  g.gain.setValueAtTime(.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + a);
+  g.gain.exponentialRampToValueAtTime(.0001, t + a + r);
+  let node = osc;
+  if(o.lp){ const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = o.lp; osc.connect(f); node = f; }
+  node.connect(g); g.connect(o.bus || sfxBus);
+  if(o.echo && echo) g.connect(echo);
+  osc.start(t); osc.stop(t + a + r + .05);
+}
+function noise(t, dur, o = {}){
+  const c = actx, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+  src.buffer = noiseBuf;
+  f.type = o.type || 'highpass'; f.frequency.value = o.freq || 6000; if(o.q) f.Q.value = o.q;
+  if(o.sweep) f.frequency.exponentialRampToValueAtTime(o.sweep, t + dur);
+  g.gain.setValueAtTime(o.vol ?? .08, t);
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  src.connect(f); f.connect(g); g.connect(o.bus || sfxBus);
+  src.start(t, Math.random()*.5); src.stop(t + dur + .05);
+}
 function beep(freq, dur, type='sine', vol=.09, slideTo){
-  const c = audio(); if(!c) return;
-  const o = c.createOscillator(), g = c.createGain();
-  o.type = type; o.frequency.setValueAtTime(freq, c.currentTime);
-  if(slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, c.currentTime+dur);
-  g.gain.setValueAtTime(vol, c.currentTime);
-  g.gain.exponentialRampToValueAtTime(.0001, c.currentTime+dur);
-  o.connect(g); g.connect(c.destination);
-  o.start(); o.stop(c.currentTime+dur);
+  const c = audio(); if(!c || !soundMode) return;
+  tone(c.currentTime, freq, dur, {wave:type, vol, slide:slideTo});
+}
+const mtof = m => 440*Math.pow(2, (m-69)/12);
+// Plays a list of [midi, beatOffset, beats] as a phrase — jingles and fanfares.
+function phrase(notes, bpm, o = {}){
+  const c = audio(); if(!c || !soundMode) return;
+  const t0 = c.currentTime + .02, b = 60/bpm;
+  for(const [m, at, len] of notes) tone(t0 + at*b, mtof(m), len*b, {wave:o.wave||'triangle', vol:o.vol||.07, release:len*b*1.2, echo:o.echo});
 }
 const sfx = {
-  step(){ beep(90+Math.random()*30,.06,'triangle',.03); },
-  hit(){ beep(320,.16,'square',.07,110); },
-  hurt(){ beep(200,.26,'sawtooth',.08,70); },
-  pickup(){ beep(720,.1,'sine',.07); setTimeout(()=>beep(1080,.13,'sine',.06),90); },
-  win(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.2,'triangle',.07),i*110)); },
-  gear(){ [392,523,659,880].forEach((f,i)=>setTimeout(()=>beep(f,.3,'sine',.07),i*130)); },
-  open(){ beep(440,.1,'sine',.05); },
-  deny(){ beep(150,.2,'square',.06,90); }
+  step(){ const c = audio(); if(!c || !soundMode) return; noise(c.currentTime, .05, {type:'lowpass', freq:900, vol:.035}); },
+  hit(){ const c = audio(); if(!c || !soundMode) return; const t = c.currentTime;
+    noise(t, .14, {type:'bandpass', freq:1400, q:.8, vol:.16});
+    tone(t, 190, .16, {wave:'square', vol:.07, slide:70, lp:1200}); },
+  crit(){ const c = audio(); if(!c || !soundMode) return; const t = c.currentTime;
+    noise(t, .22, {type:'bandpass', freq:1000, q:.6, vol:.22, sweep:300});
+    tone(t, 140, .3, {wave:'sawtooth', vol:.09, slide:45, lp:900});
+    tone(t + .02, 1320, .18, {wave:'triangle', vol:.05}); },
+  swing(p = 1){ const c = audio(); if(!c || !soundMode) return;
+    noise(c.currentTime, .16, {type:'bandpass', freq:2400*p, q:1.4, vol:.09, sweep:900*p}); },
+  hurt(){ const c = audio(); if(!c || !soundMode) return; const t = c.currentTime;
+    tone(t, 220, .28, {wave:'sawtooth', vol:.07, slide:80, lp:900});
+    noise(t, .12, {type:'lowpass', freq:700, vol:.12}); },
+  pickup(){ phrase([[81,0,.5],[88,.45,.8]], 240, {wave:'sine', vol:.07}); },
+  win(){ phrase([[72,0,.5],[76,.5,.5],[79,1,.5],[84,1.5,1.4]], 300, {vol:.07}); },
+  gear(){ phrase([[67,0,.6],[72,.6,.6],[76,1.2,.6],[79,1.8,.6],[84,2.4,2]], 280, {vol:.07, echo:true}); },
+  open(){ beep(660, .07, 'sine', .04); },
+  deny(){ beep(150, .2, 'square', .05, 90); },
+  combo(n){ const c = audio(); if(!c || !soundMode) return; const t = c.currentTime, base = 64 + Math.min(n,8)*2;
+    [0,4,7].forEach((iv,i) => tone(t + i*.045, mtof(base+iv), .16, {wave:'square', vol:.035, lp:3000})); },
+  comboBreak(){ const c = audio(); if(!c || !soundMode) return; tone(c.currentTime, 420, .3, {wave:'triangle', vol:.05, slide:160}); },
+  battleIntro(){ const c = audio(); if(!c || !soundMode) return; const t = c.currentTime;
+    noise(t, .5, {type:'bandpass', freq:300, q:.7, vol:.14, sweep:4000});
+    phrase([[57,.5,.25],[57,.75,.25],[64,1,.9]], 280, {wave:'square', vol:.045}); },
+  bossIntro(){ const c = audio(); if(!c || !soundMode) return; const t = c.currentTime;
+    tone(t, 55, 1.4, {wave:'sawtooth', vol:.12, lp:400, attack:.05});
+    noise(t, 1.1, {type:'lowpass', freq:500, vol:.14, sweep:120});
+    phrase([[50,.6,.4],[53,1,.4],[56,1.4,1.6]], 180, {wave:'sawtooth', vol:.05}); },
+  levelUp(){ phrase([[72,0,.4],[76,.35,.4],[79,.7,.4],[84,1.05,.4],[88,1.4,1.6]], 320, {wave:'square', vol:.045, echo:true}); },
+  fanfare(){ phrase([[67,0,.5],[67,.5,.5],[67,1,.5],[72,1.5,2],[70,3.5,.5],[72,4,.5],[76,4.5,.5],[79,5,3]], 220, {vol:.08, echo:true}); },
 };
+
+$('btn-sound').onclick = e => { e.stopPropagation(); cycleSound(); };
+applySoundMode();
+
+// ── music ──────────────────────────────────────────────────────────────────
+// A small sequencer. Each land has its own mode, tempo and instruments, and a
+// melody generated once from the land's name — the same tune every visit, so
+// it becomes that place's tune.
+const SCALES = {
+  major:[0,2,4,5,7,9,11], minor:[0,2,3,5,7,8,10], dorian:[0,2,3,5,7,9,10],
+  lydian:[0,2,4,6,7,9,11], hijaz:[0,1,4,5,7,8,10], harm:[0,2,3,5,7,8,11],
+  phryg:[0,1,3,5,7,8,10], penta:[0,2,4,7,9,12,14],
+};
+const SONGS = {
+  map:     {bpm:96,  root:60, scale:'major',  prog:[0,4,5,3], lead:{wave:'triangle', oct:1, dens:.62}, pad:{wave:'triangle'}, bass:[0,8], arp:null, drums:null},
+  woods:   {bpm:84,  root:60, scale:'penta',  prog:[0,3,4,0], lead:{wave:'triangle', oct:1, dens:.5, vib:3}, pad:{wave:'sine'}, bass:[0,8], echo:true},
+  hills:   {bpm:100, root:67, scale:'major',  prog:[0,3,4,3], lead:{wave:'sine', oct:1, dens:.66, vib:4}, pad:{wave:'triangle'}, bass:[0,6,8], arp:{rate:4}},
+  desert:  {bpm:88,  root:62, scale:'hijaz',  prog:[0,0,6,0], lead:{wave:'square', oct:1, dens:.6, lp:1800}, pad:{wave:'sawtooth', lp:600}, bass:[0,3,8,11], drums:{kick:[0,8], hat:[4,12]}},
+  caves:   {bpm:70,  root:57, scale:'minor',  prog:[0,5,3,4], lead:{wave:'sine', oct:1, dens:.35}, pad:{wave:'triangle', lp:900}, bass:[0], echo:true},
+  snow:    {bpm:76,  root:64, scale:'penta',  prog:[0,3,1,4], lead:{wave:'sine', oct:2, dens:.45, bell:true}, pad:{wave:'sine'}, bass:[0,8], echo:true},
+  volcano: {bpm:124, root:52, scale:'phryg',  prog:[0,1,0,6], lead:{wave:'sawtooth', oct:1, dens:.55, lp:1600}, pad:{wave:'sawtooth', lp:500}, bass:[0,2,4,6,8,10,12,14], drums:{kick:[0,8], snare:[4,12], hat:[2,6,10,14]}},
+  ruins:   {bpm:80,  root:62, scale:'dorian', prog:[0,3,6,4], lead:{wave:'triangle', oct:1, dens:.5}, pad:{wave:'triangle', lp:1200}, bass:[0,10], echo:true},
+  grove:   {bpm:92,  root:65, scale:'lydian', prog:[0,1,4,0], lead:{wave:'sine', oct:1, dens:.5, vib:4}, pad:{wave:'sine'}, bass:[0,8], arp:{rate:2}, echo:true},
+  shadow:  {bpm:66,  root:59, scale:'minor',  prog:[0,5,6,4], lead:{wave:'triangle', oct:1, dens:.3}, pad:{wave:'sawtooth', lp:450}, bass:[0], echo:true},
+  castle:  {bpm:100, root:48, scale:'harm',   prog:[0,5,3,4], lead:{wave:'sawtooth', oct:2, dens:.55, lp:2000}, pad:{wave:'sawtooth', lp:700}, bass:[0,4,8,12], drums:{kick:[0,10], snare:[8]}},
+  battle:  {bpm:144, root:57, scale:'minor',  prog:[0,5,6,4], lead:{wave:'square', oct:1, dens:.7, lp:2600}, pad:{wave:'sawtooth', lp:800}, bass:[0,3,6,8,11,14], arp:{rate:2}, drums:{kick:[0,6,8], snare:[4,12], hat:[2,6,10,14]}},
+  boss:    {bpm:152, root:50, scale:'harm',   prog:[0,0,5,4], lead:{wave:'sawtooth', oct:1, dens:.75, lp:2200}, pad:{wave:'sawtooth', lp:600}, bass:[0,2,4,6,8,10,12,14], drums:{kick:[0,4,8,10], snare:[4,12], hat:[2,6,10,14]}},
+};
+// Four bars, then four more that answer them: the second half re-uses the
+// first but lands on the home note, the way a folk tune does.
+function composeSong(name){
+  const S0 = SONGS[name]; if(!S0) return null;
+  let seed = 0; for(const ch of name) seed = (seed*31 + ch.charCodeAt(0)) | 0;
+  let n = 0; const rnd = () => hash2(n++, 7, seed);
+  const sc = SCALES[S0.scale], bars = S0.prog.length;
+  const lead = [];
+  let deg = 2;
+  for(let bar=0; bar<bars; bar++){
+    const root = S0.prog[bar];
+    for(let st=0; st<16; st+=2){
+      if(st > 0 && rnd() > S0.lead.dens) continue;
+      const strong = st % 8 === 0;
+      if(strong) deg = root + [0,2,4][Math.floor(rnd()*3)];
+      else deg += [-2,-1,-1,1,1,2][Math.floor(rnd()*6)];
+      deg = clamp(deg, root - 3, root + 7);
+      const len = rnd() < .3 ? 4 : 2;
+      lead.push({step: bar*16 + st, deg, len});
+    }
+  }
+  // the answer: same shape, last note forced home
+  const answer = lead.map(o => ({...o, step: o.step + bars*16}));
+  if(answer.length){ const last = answer[answer.length-1]; last.deg = 0; last.len = 6; }
+  return {def:S0, sc, bars: bars*2, lead: lead.concat(answer)};
+}
+const music = {name:'', want:'', song:null, bus:null, step:0, next:0, timer:0};
+function pitch(sc, root, deg, oct){
+  const L = sc.length, o = Math.floor(deg / L), i = ((deg % L) + L) % L;
+  return mtof(root + 12*(oct + o) + sc[i]);
+}
+function playMusic(name){
+  music.want = name;
+  if(music.name === name) return;
+  const c = audio();
+  if(!c || soundMode < 2 || c.state !== 'running'){ music.name = ''; return; }
+  const song = composeSong(name); if(!song) return;
+  // fade the old song out on its own bus rather than cutting it
+  if(music.bus){ const old = music.bus; old.gain.setTargetAtTime(.0001, c.currentTime, .35); setTimeout(() => old.disconnect(), 2000); }
+  const bus = c.createGain(); bus.gain.value = .0001; bus.connect(musicBus);
+  bus.gain.setTargetAtTime(1, c.currentTime + .2, .6);
+  Object.assign(music, {name, song, bus, step:0, next: c.currentTime + .25});
+  if(!music.timer) music.timer = setInterval(musicTick, 60);
+}
+function stopMusic(){
+  music.want = ''; music.name = '';
+  if(music.bus && actx){ const old = music.bus; old.gain.setTargetAtTime(.0001, actx.currentTime, .3); setTimeout(() => old.disconnect(), 1500); }
+  music.bus = null; music.song = null;
+}
+function musicTick(){
+  if(!actx || !music.song || soundMode < 2) return;
+  const {def, sc, bars, lead} = music.song, bus = music.bus;
+  const sp = 60/def.bpm/4;                      // one sixteenth
+  while(music.next < actx.currentTime + .25){
+    const t = music.next, st = music.step % (bars*16), bar = Math.floor(st/16), inBar = st % 16;
+    const chord = def.prog[bar % def.prog.length];
+    // pad: the chord, held through the bar
+    if(inBar === 0) for(const d of [0,2,4])
+      tone(t, pitch(sc, def.root, chord + d, 0), sp*16, {wave:def.pad.wave, vol:.018, attack:.3, release:sp*15, lp:def.pad.lp || 1500, bus, detune: d*3});
+    // bass
+    if(def.bass.includes(inBar))
+      tone(t, pitch(sc, def.root, chord, -1), sp*2.5, {wave:'triangle', vol:.05, release:sp*2.5, lp:700, bus});
+    // arpeggio
+    if(def.arp && inBar % def.arp.rate === 0){
+      const d = [0,2,4,7][(inBar/def.arp.rate) % 4];
+      tone(t, pitch(sc, def.root, chord + d, 1), sp*1.5, {wave:'square', vol:.012, release:sp*1.4, lp:2400, bus, echo:def.echo});
+    }
+    // melody
+    for(const nt of lead) if(nt.step === st){
+      const f = pitch(sc, def.root, nt.deg, def.lead.oct);
+      tone(t, f, sp*nt.len, {wave:def.lead.wave, vol: def.lead.bell ? .04 : .03, attack: def.lead.bell ? .002 : .02,
+        release: def.lead.bell ? sp*nt.len*2.2 : sp*nt.len, vib:def.lead.vib, lp:def.lead.lp, bus, echo:def.echo});
+      if(def.lead.bell) tone(t, f*3, sp*nt.len, {wave:'sine', vol:.008, release:sp*2, bus});
+    }
+    // drums
+    const D = def.drums;
+    if(D){
+      if(D.kick && D.kick.includes(inBar)) tone(t, 120, .14, {wave:'sine', vol:.12, slide:42, bus});
+      if(D.snare && D.snare.includes(inBar)) noise(t, .1, {type:'bandpass', freq:1800, vol:.05, bus});
+      if(D.hat && D.hat.includes(inBar)) noise(t, .03, {type:'highpass', freq:7500, vol:.025, bus});
+    }
+    music.next += sp; music.step++;
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════ STATE
 let S = null, profileKey = null;
@@ -2285,9 +2726,15 @@ function floatText(x, y, text, color = '#fff3d8', size = 11){
 }
 // Levelling happened in three places and only one of them said anything.
 // Now it always lands the same way, wherever it was earned.
+function levelBanner(lv){
+  const el = $('levelup');
+  el.innerHTML = `<b>LEVEL UP!</b><span>เลเวล ${lv} · พลังชีวิตสูงสุดเพิ่มขึ้น</span>`;
+  el.className = ''; void el.offsetWidth; el.className = 'go';
+}
 function levelUp(){
   S.xp -= xpNeed(); S.level++; S.hpMax++; S.hp = S.hpMax;
-  sfx.gear();
+  sfx.levelUp();
+  levelBanner(S.level);
   addTrauma(.25);
   ring(player.x, player.y-16, '#ffda7b', 70, .72, 4);
   ring(player.x, player.y-16, '#fff3cf', 44, .5, 2);
@@ -3059,7 +3506,7 @@ function setHint(t){
 // ids, and paused() reads the same list to stop the world while one is up.
 const OV = ['screen-landing','screen-register','screen-worldmap','screen-battle','screen-sage','screen-test',
             'screen-survey','screen-teacher','screen-lesson','screen-reward','screen-codex','screen-howto',
-            'screen-drill','screen-board'];
+            'screen-drill','screen-board','screen-finale'];
 function showOverlay(id){ OV.forEach(o => $(o).classList.toggle('show', o===id)); }
 // Leaving an overlay means going back to whatever the student was on, which is
 // not always the world: on the map, hiding everything leaves a blank screen
@@ -3330,6 +3777,8 @@ function openMap(){
   $('btn-map-board').style.display = SHEET_URL ? '' : 'none';
   $('hud').style.display = 'none';
   showOverlay('screen-worldmap');
+  playMusic('map');
+  $('btn-map-cert').style.display = allPassed() ? '' : 'none';
   sizeMapCanvas();
   renderMapMarkers();
   save();
@@ -3337,6 +3786,7 @@ function openMap(){
 function enterZone(zi){
   sfx.open();
   zone = zi;
+  playMusic(ZONES[zi].id);
   buildZone(zi);
   const [px,py] = findSpawn();
   player.x = px; player.y = py; player.iframe = 1.5;
@@ -3352,9 +3802,11 @@ function enterZone(zi){
     const side = world.village.x > player.x ? 'ตะวันออก' : 'ตะวันตก';
     toast('🏘', `หมู่บ้านอยู่ทาง<b>${side}</b> · มีหมอยา นักปราชญ์ และนักสอดแนม`);
   }, 2000);
+  showZoneCard(zi);
   // How to play comes before anything else, once, on the very first land.
-  if(!S.howtoSeen){ setTimeout(() => openHowto(), 450); return; }
-  openZoneIntro(zi);
+  // Both wait for the land's name to have had its moment on screen.
+  if(!S.howtoSeen){ setTimeout(() => openHowto(), 1700); return; }
+  setTimeout(() => { if(mode === 'play' && zone === zi) openZoneIntro(zi); }, 1300);
 }
 // The pre-test comes before anything can be learned here — that is the only
 // way its score means what the research needs it to mean.
@@ -3392,23 +3844,242 @@ function spriteURL(img, sx, sy, sw, sh){
   x.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
   return spriteCache[key] = c.toDataURL();
 }
-function paintBattleBG(){
-  // measure the stage, not the canvas: the canvas's own size is what we set
-  const c = $('battle-bg'), stage = $('battle-stage');
-  const w = stage.clientWidth||600, h = stage.clientHeight||190;
-  c.width = w; c.height = h;
-  const x = c.getContext('2d'), Z = ZONES[zone];
-  const g = x.createLinearGradient(0,0,0,h);
-  g.addColorStop(0, Z.sky); g.addColorStop(.62, Z.accent); g.addColorStop(1, '#2b2016');
-  x.fillStyle = g; x.fillRect(0,0,w,h);
-  x.globalAlpha = .22; x.fillStyle = '#000';
-  for(let i=0;i<26;i++) x.fillRect(Math.random()*w, h*.62+Math.random()*h*.38, 26+Math.random()*40, 3);
-  x.globalAlpha = 1;
-  const rg = x.createRadialGradient(w/2, h*.55, 20, w/2, h*.55, h);
-  rg.addColorStop(0,'rgba(255,240,200,.28)'); rg.addColorStop(1,'rgba(20,12,6,.55)');
-  x.fillStyle = rg; x.fillRect(0,0,w,h);
+// ═══════════════════════════════════════════════════════ THE BATTLE STAGE
+// The stage is built from the zone the fight is in — its own terrain tiles,
+// its own trees and crags, its own weather — so a fight in the snow looks like
+// the snow the student just walked through. Everything is drawn in "art
+// pixels" at a whole-number scale, the same crisp grid as the map.
+//
+// Two canvases: #battle-bg holds the backdrop, painted once per zone and size;
+// #battle-cv is redrawn every frame with the fighters, weather and effects.
+const duel = {
+  vt:0, last:0, freezeUntil:0, raf:0, over:false,
+  hero:null, foe:null, fx:null,
+  k:2, W:300, H:150, dpr:1, cw:600, ch:300, bgKey:'',
+  air:[], sparks:[], rings:[], pops:[], motes:[], flash:0, trauma:0, introAt:0,
+};
+// The duel keeps its own clock so a hit can freeze it for a few frames — the
+// "hit-stop" that makes a blow feel like it landed — without the rest of the
+// game noticing.
+const dnow = () => duel.vt;
+const easeOut = t => 1 - Math.pow(1 - clamp(t,0,1), 3);
+const easeBack = t => { t = clamp(t,0,1); const c = 1.7; return 1 + (c+1)*Math.pow(t-1,3) + c*Math.pow(t-1,2); };
+
+function hexRGB(h){
+  const n = parseInt(String(h).replace('#',''), 16);
+  return [(n>>16)&255, (n>>8)&255, n&255];
 }
-// ── the duel stage ─────────────────────────────────────────────────────────
+function mixHex(a, b, t){
+  const A = hexRGB(a), B = hexRGB(b);
+  return 'rgb(' + A.map((v,i) => Math.round(lerp(v, B[i], t))).join(',') + ')';
+}
+function rgba(h, a){ const [r,g,b] = hexRGB(h); return `rgba(${r},${g},${b},${a})`; }
+
+// A prop washed toward a colour: distance haze for the back rows, shadow for
+// the foreground. Cached, because the backdrop asks for the same few often.
+const hazeCache = new Map();
+function hazedProp(i, colour, amount){
+  const key = i + '|' + colour + '|' + amount;
+  if(hazeCache.has(key)) return hazeCache.get(key);
+  const m = PROPS[i], c = document.createElement('canvas');
+  c.width = m.w; c.height = m.h;
+  const x = c.getContext('2d');
+  x.drawImage(IMG.props, m.x, m.y, m.w, m.h, 0, 0, m.w, m.h);
+  x.globalCompositeOperation = 'source-atop';
+  x.globalAlpha = amount; x.fillStyle = colour; x.fillRect(0, 0, m.w, m.h);
+  hazeCache.set(key, c);
+  return c;
+}
+
+function battleMetrics(){
+  const st = $('battle-stage');
+  const w = st.clientWidth || 600, h = st.clientHeight || 600;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  // The arena is the top of the screen; the command window sits below it.
+  // A landscape phone gets a bigger share, or the fighters would be ants.
+  // A narrow phone needs the room for its stacked answers.
+  const top = Math.round(h < 520 ? h*.42 : w < 520 ? clamp(h*.4, 160, 400) : clamp(h*.5, 160, 520));
+  // One art pixel = k screen pixels, sized so the arena is ~150 art pixels
+  // tall and at least ~220 wide — a fighter is then the same share of the
+  // stage on a phone and on a projector. k may be fractional as long as k×DPR
+  // is whole, so every art pixel still lands on whole device pixels.
+  const limit = Math.max(1, Math.min(top/140, w/220, 4));
+  const k = Math.max(1, Math.floor(limit*dpr)/dpr);
+  return {w, h, dpr, k, top, W: w/k, H: h/k, T: top/k};
+}
+// Where things stand, in art pixels.
+const stageFloor = () => Math.round(duel.T*.84);
+const fighterX = who => Math.round(duel.W*who.at);
+
+function paintBattleBG(){
+  const m = battleMetrics();
+  Object.assign(duel, {k:m.k, W:m.W, H:m.H, T:m.T, dpr:m.dpr, cw:m.w, ch:m.h});
+  $('screen-battle').style.setProperty('--top-h', m.top + 'px');
+  for(const id of ['battle-bg','battle-cv']){
+    const c = $(id), cw = Math.round(m.w*m.dpr), chh = Math.round(m.h*m.dpr);
+    if(c.width !== cw || c.height !== chh){ c.width = cw; c.height = chh; }
+  }
+  const key = [zone, m.w, m.h, m.dpr].join('|');
+  if(duel.bgKey !== key){ duel.bgKey = key; paintBackdrop($('battle-bg').getContext('2d'), m); }
+  seedBattleAir();
+}
+
+function paintBackdrop(x, m){
+  const Z = ZONES[zone], W = m.W, H = m.H, S2 = zone*131 + 7;
+  x.setTransform(m.k*m.dpr, 0, 0, m.k*m.dpr, 0, 0);
+  x.imageSmoothingEnabled = false;
+  x.clearRect(0, 0, W, H);
+  const T = m.T, fy = Math.round(T*.84), hz = Math.round(T*.40);
+  const dark = ['caves','shadow','castle'].includes(Z.id);
+
+  // ---- ground: the zone's own tiles, a road of its path terrain where the
+  // fighters stand, patches of its second terrain, soft LPC edges between.
+  if(IMG.terrain){
+    const gid = TERRAIN_ROWS[Z.ground], g2 = TERRAIN_ROWS[Z.ground2], pid = TERRAIN_ROWS[Z.path];
+    const pathRow = Math.max(1, Math.ceil((fy - TILE/2 - hz)/TILE));
+    const y0 = fy - TILE/2 - pathRow*TILE + 6;        // feet a little below the road's middle
+    const rows = Math.ceil((H - y0)/TILE) + 1, cols = Math.ceil(W/TILE) + 1;
+    const tile = (c, r) => {
+      if(r === pathRow) return pid;
+      if(r === pathRow + 1 && hash2(c, r, S2) < .35) return pid;   // a ragged lower edge
+      return hash2(c, r, S2+1) > .72 ? g2 : gid;
+    };
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const t = tile(c, r), v = Math.floor(hash2(c, r, S2+2)*4);
+      x.drawImage(IMG.terrain, v*TILE, t*TILE, TILE, TILE, c*TILE, y0 + r*TILE, TILE, TILE);
+    }
+    if(IMG.edges) for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      const t = tile(c, r), p = TERRAIN_PRIORITY[t];
+      for(const [dx,dy,piece] of EDGE_NEIGHBOURS){
+        const nr = r+dy, nc = c+dx;
+        if(nr<0||nc<0||nr>=rows||nc>=cols) continue;
+        const nt = tile(nc, nr);
+        if(nt === t || TERRAIN_PRIORITY[nt] <= p) continue;
+        x.drawImage(IMG.edges, EDGE_COL[piece]*TILE, nt*TILE, TILE, TILE, c*TILE, y0 + r*TILE, TILE, TILE);
+      }
+    }
+  }
+
+  // ---- sky, down to just past the horizon so the ground's top row is hidden
+  const g = x.createLinearGradient(0, 0, 0, hz + 6);
+  g.addColorStop(0, mixHex(Z.sky, dark ? '#0d0f1c' : '#27324a', dark ? .7 : .5));
+  g.addColorStop(.72, Z.sky);
+  g.addColorStop(1, mixHex(Z.sky, '#ffffff', .4));
+  x.fillStyle = g; x.fillRect(0, 0, W, hz + 6);
+  // a sun, or in the dark lands a low moon
+  const sx = W*(.72 + hash2(zone,1,S2)*.16), sy = hz*.34;
+  const sun = x.createRadialGradient(sx, sy, 1, sx, sy, hz*.9);
+  sun.addColorStop(0, dark ? 'rgba(230,236,255,.55)' : 'rgba(255,248,222,.75)');
+  sun.addColorStop(.12, dark ? 'rgba(210,220,255,.25)' : 'rgba(255,240,200,.35)');
+  sun.addColorStop(1, 'rgba(255,240,200,0)');
+  x.fillStyle = sun; x.fillRect(0, 0, W, hz + 6);
+
+  if(IMG.props){
+    const pool = propsMatching(Z.props);
+    const tall = pool.filter(i => PROPS[i].h >= 50 && PROPS[i].w <= 110);
+    const small = pool.filter(i => PROPS[i].h < 40);
+    const R = (n, s) => hash2(n, s, S2+9);
+    const put = (img, px, bottom, w, h) => x.drawImage(img, Math.round(px - w/2), Math.round(bottom - h));
+    // ---- far row: a treeline or ridge at the horizon, washed toward the sky
+    if(tall.length){
+      let n = 0;
+      for(let px = -30; px < W + 40; n++){
+        const i = tall[Math.floor(R(n,1)*tall.length)], p = PROPS[i];
+        put(hazedProp(i, Z.sky, .55), px, hz + 3 + Math.round(R(n,2)*5), p.w, p.h);
+        px += p.w*.5 + R(n,3)*14;
+      }
+      // ---- middle row: fewer, nearer, kept out from directly behind the fighters
+      for(let j=0;j<5;j++){
+        const i = tall[Math.floor(R(j,4)*tall.length)], p = PROPS[i];
+        const px = W*(j/4) + (R(j,5)-.5)*W*.1;
+        if(Math.abs(px - W*.27) < W*.1 || Math.abs(px - W*.72) < W*.1) continue;
+        put(hazedProp(i, Z.sky, .22), px, hz + 16 + Math.round(R(j,6)*8), p.w, p.h);
+      }
+    }
+    // ---- haze where the ground meets the sky, so the horizon is air, not a seam
+    const hg = x.createLinearGradient(0, hz - 14, 0, hz + 34);
+    hg.addColorStop(0, rgba(Z.sky, 0)); hg.addColorStop(.35, rgba(Z.sky, .45)); hg.addColorStop(1, rgba(Z.sky, 0));
+    x.fillStyle = hg; x.fillRect(0, hz - 14, W, 48);
+    // ---- flowers, mushrooms, tufts on the grass either side of the road
+    if(small.length) for(let j=0;j<Math.round(W/22);j++){
+      const i = small[Math.floor(R(j,7)*small.length)], p = PROPS[i];
+      const px = R(j,8)*W, band = R(j,9) < .5;
+      const by = band ? fy - 24 - R(j,10)*(fy - 24 - hz - 20) : fy + 16 + R(j,11)*(H - fy - 8);
+      if(!band && by > T + 20 && R(j,12) < .6) continue;   // thinner under the command window
+      if(Math.abs(px - W*.27) < 26 && Math.abs(by - fy) < 20) continue;
+      if(Math.abs(px - W*.72) < 30 && Math.abs(by - fy) < 20) continue;
+      put(hazedProp(i, '#000000', band ? 0 : .12), px, by, p.w, p.h);
+    }
+    // ---- foreground framing, dark, cropped by the edge — only where there
+    // is room beside the fighters for it
+    if(tall.length && W >= 300){
+      for(const [side, n] of [[-1, 21], [1, 22]]){
+        const i = tall[Math.floor(R(n,1)*tall.length)], p = PROPS[i];
+        const px = side < 0 ? p.w*.12 : W - p.w*.12;
+        put(hazedProp(i, '#0b0f14', .55), px, T + 16, p.w, p.h);
+      }
+    }
+  }
+
+  // ---- light: a warm pool on the arena, the edges falling away into shadow
+  const cx = W/2, spot = x.createRadialGradient(cx, fy, 4, cx, fy, W*.55);
+  spot.addColorStop(0, 'rgba(255,238,200,.22)'); spot.addColorStop(1, 'rgba(255,238,200,0)');
+  x.globalCompositeOperation = 'lighter';
+  x.fillStyle = spot; x.fillRect(0, 0, W, H);
+  x.globalCompositeOperation = 'source-over';
+  if(Z.id === 'volcano' || Z.id === 'shadow'){
+    const lg = x.createLinearGradient(0, H*.55, 0, H);
+    lg.addColorStop(0, 'rgba(255,90,30,0)'); lg.addColorStop(1, Z.id === 'volcano' ? 'rgba(255,90,30,.22)' : 'rgba(120,60,200,.2)');
+    x.fillStyle = lg; x.fillRect(0, H*.55, W, H*.45);
+  }
+  if(dark){ x.fillStyle = 'rgba(8,10,24,.22)'; x.fillRect(0, 0, W, H); }
+  // below the arena the ground sinks into shadow behind the command window
+  const low = x.createLinearGradient(0, fy + 6, 0, Math.max(H, T + 60));
+  low.addColorStop(0, 'rgba(8,10,14,0)'); low.addColorStop(.35, 'rgba(8,10,14,.45)'); low.addColorStop(1, 'rgba(8,10,14,.85)');
+  x.fillStyle = low; x.fillRect(0, fy + 6, W, H - fy);
+  const vig = x.createRadialGradient(W/2, T*.52, Math.min(W,T)*.35, W/2, T*.52, Math.max(W,T)*.8);
+  vig.addColorStop(0, 'rgba(0,0,0,0)'); vig.addColorStop(1, 'rgba(0,0,0,.6)');
+  x.fillStyle = vig; x.fillRect(0, 0, W, H);
+}
+
+// The weather of the map carries into the fight: if it was snowing out there,
+// it is snowing in here.
+function seedBattleAir(){
+  const Wt = WEATHER[weather] || WEATHER.clear;
+  const n = REDUCED ? 0 : Math.round(Math.min(Wt.n, 90) * clamp(duel.W*duel.H/48000, .35, 1));
+  duel.air = Array.from({length:n}, () => ({
+    x: Math.random()*duel.W, y: Math.random()*duel.H,
+    s: .5 + Math.random(), r: Math.random() < .3 ? 2 : 1, p: Math.random()*6.28,
+  }));
+}
+function drawBattleAir(x, dt, now){
+  const Wt = WEATHER[weather] || WEATHER.clear, Z = ZONES[zone];
+  const col = Wt.colour || '#fff8e6';
+  x.fillStyle = col;
+  for(const a of duel.air){
+    a.y += a.s*Wt.fall*dt*.5;
+    a.x += (Wt.drift*.35 + Math.sin(now*.8 + a.p)*6)*dt;
+    if(a.y > duel.H + 4){ a.y = -4; a.x = Math.random()*duel.W; }
+    if(a.y < -4){ a.y = duel.H + 4; a.x = Math.random()*duel.W; }
+    if(a.x > duel.W + 4) a.x = -4;
+    if(weather === 'rain'){
+      x.globalAlpha = .45; x.fillRect(Math.round(a.x), Math.round(a.y), 1, 5);
+    } else if(weather === 'fog'){
+      x.globalAlpha = .06; x.fillRect(Math.round(a.x) - 20, Math.round(a.y), 40, 8);
+    } else if(weather === 'clear'){
+      // drifting motes that catch the light
+      x.globalAlpha = .25 + .25*Math.sin(now*2 + a.p);
+      x.fillStyle = Z.id === 'volcano' ? '#ffb070' : '#fff6d8';
+      x.fillRect(Math.round(a.x), Math.round(a.y), 1, 1);
+    } else {
+      x.globalAlpha = weather === 'ember' ? .5 + .4*Math.sin(now*5 + a.p) : .7;
+      x.fillRect(Math.round(a.x), Math.round(a.y), a.r, a.r);
+    }
+  }
+  x.globalAlpha = 1;
+}
+
+// ── the fighters ───────────────────────────────────────────────────────────
 // battle_*.png rows, in order, are: attack, hurt, idle. The frame counts come
 // from the ULPC animations themselves, so nothing here is invented timing.
 const BATTLE_ROWS = {attack:0, hurt:1, idle:2};
@@ -3418,10 +4089,7 @@ const BATTLE_FRAMES = {
   mage:   {attack:7,  hurt:6, idle:9},
   mon:    {attack:6,  hurt:6, idle:9},
 };
-// The hero's arming sword only exists on the ULPC walk rows, so the swing is
-// bodywork plus the weapon arcing across the stage as its own sprite.
 const BATTLE_SPEED = {attack:15, hurt:11, idle:6};
-const duel = {t:0, hero:null, foe:null, fx:null, raf:0, over:false};
 
 function duelSprite(who, action, elapsed, loop){
   const set = BATTLE_FRAMES[who.kit];
@@ -3432,86 +4100,210 @@ function duelSprite(who, action, elapsed, loop){
 }
 
 function drawDuel(){
+  duel.raf = requestAnimationFrame(drawDuel);
   const c = $('battle-cv');
-  const w = c.clientWidth||600, h = c.clientHeight||190;
-  if(c.width !== w || c.height !== h){ c.width = w; c.height = h; }
+  if(!c.width) return;
+  const real = performance.now()/1000;
+  let dt = Math.min(.05, real - (duel.last || real));
+  duel.last = real;
+  if(real < duel.freezeUntil) dt = 0;          // hit-stop
+  duel.vt += dt;
+  const now = duel.vt;
   const x = c.getContext('2d');
+  const K = duel.k*duel.dpr;
+  x.setTransform(1,0,0,1,0,0);
+  x.clearRect(0, 0, c.width, c.height);
+  x.setTransform(K, 0, 0, K, 0, 0);
   x.imageSmoothingEnabled = false;
-  x.clearRect(0,0,w,h);
 
-  const now = performance.now()/1000;
-  const ground = h - 16;
+  // camera shake: whole device pixels, on both layers, settling smoothly
+  let ox = 0, oy = 0;
+  if(duel.trauma > 0 && !REDUCED){
+    const s = duel.trauma*duel.trauma*9;
+    ox = Math.round(s*(noise2(real*26, 0, 5)*2-1)); oy = Math.round(s*(noise2(0, real*26, 6)*2-1));
+    duel.trauma = Math.max(0, duel.trauma - (real - (duel.lastShake||real))*2.2);
+  }
+  duel.lastShake = real;
+  const shake = (ox || oy) ? `translate(${ox}px,${oy}px)` : '';
+  if(c.style.transform !== shake){ c.style.transform = shake; $('battle-bg').style.transform = shake; }
+
+  const fy = stageFloor();
+  const intro = easeBack((now - duel.introAt)/.7);
   for(const who of [duel.hero, duel.foe]){
     if(!who || !who.img) continue;
     const act = who.until > now ? who.action : 'idle';
     if(who.until <= now && who.action !== 'idle'){ who.action = 'idle'; who.start = now; }
-    const s = duelSprite(who, act, now - who.start, act === 'idle');
-    // Lunge: a smooth in-and-back over the attack, not a CSS keyframe race.
+    const size = who.size;
+    let px = fighterX(who), py = fy;
+    // walk-on: each side slides in from its own edge as the fight opens
+    px += Math.round((1 - intro) * (who.dir > 0 ? -duel.W*.6 : duel.W*.6));
     let push = 0;
-    if(act === 'attack'){
+    if(who.still){
+      // the sage just stands there, facing you
+    } else if(act === 'attack'){
       const k = clamp((now - who.start)/(BATTLE_FRAMES[who.kit].attack/BATTLE_SPEED.attack), 0, 1);
-      push = Math.sin(k*Math.PI) * 26 * who.dir;
+      push = Math.sin(k*Math.PI) * 22 * who.dir;
     } else if(act === 'hurt'){
       const k = clamp((now - who.start)/.55, 0, 1);
-      push = -Math.sin(k*Math.PI) * 18 * who.dir;
+      push = -Math.sin(k*Math.PI) * 12 * who.dir;
     }
-    const bob = (act === 'idle' && !REDUCED) ? Math.round(Math.sin(now*2.2 + who.dir)*2) : 0;
-    const px = Math.round(w*who.at + push - who.size/2);
-    const py = Math.round(ground - who.size*(CH_FOOT/CH) + bob);
+    const bob = (act === 'idle' && !REDUCED && !who.still) ? Math.round(Math.sin(now*2.2 + who.dir)) : 0;
+    const dx = Math.round(px + push - size/2);
+    const dy = Math.round(py - size*(CH_FOOT/CH) + bob);
 
+    // ground shadow, smaller while lunging off the ground
     x.save();
-    x.globalAlpha = .38; x.fillStyle = '#000';
-    x.beginPath(); x.ellipse(px + who.size/2, ground, who.size*.24, who.size*.08, 0, 0, 7);
-    x.fill(); x.restore();
+    x.globalAlpha = .4; x.fillStyle = '#000';
+    x.beginPath(); x.ellipse(px + push, py, size*.22, size*.07, 0, 0, 7); x.fill();
+    x.restore();
 
-    x.drawImage(who.img, s.frame*CH, s.row*CH, CH, CH, px, py, who.size, who.size);
-    if(who.flash > now){
-      // Tint on the scratch canvas: a destination-in pass here would clip the
-      // whole stage to this one sprite and erase the other fighter.
-      x.save();
-      x.globalAlpha = .6*(who.flash - now)/.3;
-      x.drawImage(tintSprite(who.img, s.frame*CH, s.row*CH, '#ff6a55'),
-                  px, py, who.size, who.size);
-      x.restore();
+    let alpha = 1;
+    if(who.fade) alpha = 1 - clamp((now - who.fade)/.6, 0, 1);
+    if(alpha <= 0) continue;
+    x.globalAlpha = alpha;
+    if(who.still){
+      x.drawImage(who.img, 0, who.row*CH, CH, CH, dx, dy, size, size);
+    } else {
+      const s = duelSprite(who, act, now - who.start, act === 'idle');
+      x.drawImage(who.img, s.frame*CH, s.row*CH, CH, CH, dx, dy, size, size);
+      if(who.flash > now){
+        x.globalAlpha = alpha * Math.min(1, .9*(who.flash - now)/.18);
+        x.drawImage(tintSprite(who.img, s.frame*CH, s.row*CH, '#ffffff'), dx, dy, size, size);
+      }
     }
-    if(who.fade){
-      // fading out is part of the same timeline, so a slain foe cannot linger
-      const k = clamp((now - who.fade)/.6, 0, 1);
-      x.save(); x.globalCompositeOperation = 'destination-out';
-      x.globalAlpha = k; x.fillRect(px-8, py-8, who.size+16, who.size+16);
-      x.restore();
-    }
+    x.globalAlpha = 1;
   }
 
-  // The class weapon flies across the gap between the two fighters.
+  // the class weapon crossing the gap; the monster's claw landing on you
   const fx = duel.fx;
   if(fx && IMG['fx_'+fx.name]){
     const k = (now - fx.start)/.42;
     if(k >= 1) duel.fx = null;
     else {
       const fr = Math.min(3, Math.floor(k*4));
-      const fromX = w*duel.hero.at, toX = w*duel.foe.at;
+      const from = fx.fromX ?? fighterX(duel.hero), to = fx.toX ?? (duel.foe ? fighterX(duel.foe) : from);
       x.save();
       x.globalAlpha = 1 - k*k;
-      x.drawImage(IMG['fx_'+fx.name], fr*28, 0, 28, 28,
-                  Math.round(lerp(fromX, toX, k) - 22), Math.round(ground - 84), 44, 44);
+      const cx = Math.round(lerp(from, to, fx.still ? 1 : k)), cy = fy - 30;
+      x.translate(cx, cy); if(fx.flip) x.scale(-1, 1);
+      x.drawImage(IMG['fx_'+fx.name], fr*28, 0, 28, 28, -16, -16, 32, 32);
       x.restore();
     }
   }
 
-  duel.raf = requestAnimationFrame(drawDuel);
+  // sparks: square, pixel-sized, falling — they read as pixel art, not blur
+  for(const p of duel.sparks){
+    p.life -= dt; if(p.life <= 0) continue;
+    p.vy += 260*dt; p.x += p.vx*dt; p.y += p.vy*dt;
+    x.globalAlpha = clamp(p.life/p.max, 0, 1);
+    x.fillStyle = p.col;
+    x.fillRect(Math.round(p.x), Math.round(p.y), p.r, p.r);
+  }
+  duel.sparks = duel.sparks.filter(p => p.life > 0);
+  for(const r of duel.rings){
+    const k = (now - r.t0)/r.life; if(k >= 1) continue;
+    x.globalAlpha = (1-k)*.9; x.strokeStyle = r.col; x.lineWidth = 2*(1-k) + .5;
+    x.beginPath(); x.arc(r.x, r.y, lerp(4, r.r, easeOut(k)), 0, 7); x.stroke();
+  }
+  duel.rings = duel.rings.filter(r => now - r.t0 < r.life);
+  // experience flying from the fallen foe into the hero
+  for(const m of duel.motes){
+    const k = clamp((now - m.t0)/m.life, 0, 1);
+    if(k >= 1) continue;
+    const e = k*k;
+    const tx = fighterX(duel.hero), ty = fy - 30;
+    const mx = lerp(m.x, tx, e) + Math.sin(k*Math.PI)*m.sw, my = lerp(m.y, ty, e) - Math.sin(k*Math.PI)*m.lift;
+    x.globalAlpha = 1; x.fillStyle = k > .85 ? '#ffffff' : '#ffe08a';
+    x.fillRect(Math.round(mx), Math.round(my), 2, 2);
+  }
+  duel.motes = duel.motes.filter(m => now - m.t0 < m.life);
+  x.globalAlpha = 1;
+
+  drawBattleAir(x, dt, now);
+
+  // numbers in screen pixels, so they stay sharp text rather than pixel mush
+  x.setTransform(duel.dpr, 0, 0, duel.dpr, 0, 0);
+  for(const p of duel.pops){
+    const k = (now - p.t0)/p.life; if(k >= 1) continue;
+    const up = easeOut(k)*34, sc = k < .15 ? 1 + (0.15-k)*5 : 1;
+    x.save();
+    x.translate(p.x*duel.k, p.y*duel.k - up);
+    x.scale(sc, sc);
+    x.globalAlpha = k > .7 ? 1 - (k-.7)/.3 : 1;
+    x.font = `900 ${p.size}px Cinzel, Kanit, serif`;
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.lineWidth = 5; x.strokeStyle = 'rgba(30,14,4,.9)'; x.lineJoin = 'round';
+    x.strokeText(p.text, 0, 0);
+    x.fillStyle = p.col; x.fillText(p.text, 0, 0);
+    x.restore();
+  }
+  duel.pops = duel.pops.filter(p => now - p.t0 < p.life);
+  if(duel.flash > 0){
+    x.setTransform(1,0,0,1,0,0);
+    x.globalAlpha = Math.min(.55, duel.flash);
+    x.fillStyle = '#fff8ea'; x.fillRect(0, 0, c.width, c.height);
+    x.globalAlpha = 1;
+    duel.flash = Math.max(0, duel.flash - dt*4.5);
+  }
 }
 function duelAct(who, action, seconds){
   if(!who) return;
   who.action = action;
-  who.start = performance.now()/1000;
+  who.start = dnow();
   who.until = who.start + seconds;
 }
-function duelHit(who){ if(who) who.flash = performance.now()/1000 + .3; }
+function duelHit(who){ if(who) who.flash = dnow() + .18; }
+// A blow landing: freeze, flash, shake, sparks, a ring, and the number.
+function duelImpact(who, text, opts={}){
+  if(!who) return;
+  const fy = stageFloor(), cx = fighterX(who), cy = fy - who.size*.45;
+  duelHit(who);
+  duelAct(who, 'hurt', .5);
+  if(!REDUCED){
+    duel.freezeUntil = performance.now()/1000 + (opts.big ? .11 : .07);
+    duel.trauma = Math.min(1, duel.trauma + (opts.big ? .75 : .45));
+    duel.flash = opts.big ? .55 : .3;
+    const cols = [opts.col || '#ffe08a', '#ffffff', ZONES[zone].accent];
+    for(let i=0;i<(opts.big ? 26 : 16);i++){
+      const a = Math.random()*Math.PI*2, v = 40 + Math.random()*(opts.big ? 130 : 90);
+      duel.sparks.push({x:cx, y:cy, vx:Math.cos(a)*v, vy:Math.sin(a)*v - 60, life:.35 + Math.random()*.4,
+                        max:.75, col:cols[i%3], r: Math.random() < .3 ? 2 : 1});
+    }
+    duel.rings.push({x:cx, y:cy, r: opts.big ? 34 : 24, col: opts.col || '#fff3cf', t0:dnow(), life:.32});
+  }
+  duel.pops.push({x:cx, y:cy - 18, text, col: opts.col || '#ffe08a',
+                  size: Math.round((opts.big ? 34 : 26) * Math.max(1, duel.k/2)), t0:dnow(), life:1.1});
+}
+function duelVictory(){
+  const f = duel.foe; if(!f) return;
+  f.fade = dnow();
+  if(REDUCED) return;
+  const cx = fighterX(f), cy = stageFloor() - f.size*.4;
+  for(let i=0;i<34;i++){
+    const a = Math.random()*Math.PI*2, v = 30 + Math.random()*120;
+    duel.sparks.push({x:cx, y:cy, vx:Math.cos(a)*v, vy:Math.sin(a)*v - 80, life:.5 + Math.random()*.6,
+                      max:1.1, col: i%2 ? '#ffe08a' : ZONES[zone].accent, r:2});
+  }
+  for(let i=0;i<16;i++) duel.motes.push({x: cx + (Math.random()-.5)*20, y: cy + (Math.random()-.5)*20,
+    t0: dnow() + .25 + i*.03, life: .75, sw: (Math.random()-.5)*40, lift: 20 + Math.random()*30});
+  duel.rings.push({x:cx, y:cy, r:46, col:'#ffe08a', t0:dnow(), life:.5});
+}
+function battleBanner(html, kind){
+  const b = $('battle-banner');
+  b.className = ''; b.innerHTML = html;
+  void b.offsetWidth;            // restart the animation
+  b.className = kind;
+}
 function stopDuel(){
   if(duel.raf) cancelAnimationFrame(duel.raf);
   duel.raf = 0; duel.hero = duel.foe = duel.fx = null;
+  duel.sparks = []; duel.rings = []; duel.pops = []; duel.motes = [];
+  duel.trauma = 0; duel.flash = 0;
+  $('battle-banner').className = '';
+  $('combo-badge').className = '';
+  $('battle-cv').style.transform = $('battle-bg').style.transform = '';
 }
+addEventListener('resize', () => { if(battle && $('screen-battle').classList.contains('show')) paintBattleBG(); });
 
 // ── what exploring earned you, brought into the fight ──────────────────────
 // The rules you found out in the map, listed beside the question. The ones you
@@ -3531,7 +4323,8 @@ function renderNotes(isBoss){
   $('btn-notes').textContent =
     `📓 สมุดบันทึก · ${cluesFound(zone)}/${Z.rules.length}`;
   // Short screens open it on demand so it can never push the answers off view.
-  const shut = getComputedStyle(box).getPropertyValue('--start-shut').trim() === '1';
+  // With nothing found yet there is nothing to read, so it starts closed.
+  const shut = !cluesFound(zone) || getComputedStyle(box).getPropertyValue('--start-shut').trim() === '1';
   box.classList.toggle('shut', shut);
   $('btn-notes').setAttribute('aria-expanded', String(!shut));
 }
@@ -3580,25 +4373,41 @@ function startBattle(kind, target){
     : (() => { const k = kindForMonster(target && target.type || 0); return () => k; })();
   battle = {kind, target, hp:maxHP, hpMax:maxHP, pool:shuffle(Z.quiz), qi:0, locked:false,
             wrong:0, kindOf, hintLeft: isPractice ? 0 : (C.hint ? 1 : 0) + clueHints};
-  $('enemy-name').textContent = isPractice ? `ฝึกซ้อมกับนักปราชญ์ · ${Z.topic}`
+  $('enemy-name').textContent = isPractice ? 'นักปราชญ์'
     : isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}` : `มอนสเตอร์แห่ง${Z.thai}`;
   $('battle-topic').textContent = Z.topic;
   // Practice always has the notes open: it is a lesson, not an exam.
   renderNotes(isBoss || isPractice);
-  $('enemy-plate').style.display = isPractice ? 'none' : '';
+  $('enemy-plate').querySelector('.fp-meter').style.display = isPractice ? 'none' : '';
   $('battle-pips').style.display = isPractice ? 'none' : '';
   $('btn-flee').textContent = isPractice ? 'พอแล้ว' : 'หนี';
+  $('hero-plate-name').textContent = `${S.profile.name} · Lv.${S.level}`;
+  battle.combo = 0; battle.bestCombo = 0;
+  $('combo-badge').className = '';
 
-  const t0 = performance.now()/1000;
-  const kit = heroCls();
-  duel.hero = {kit, img:IMG['battle_'+kit+heroStage()], rowBase:0, at:.24, dir:1,
-               size:104, action:'idle', start:t0, until:0, flash:0, fade:0};
-  duel.foe = isPractice ? null
+  const t0 = dnow();
+  const kit = heroCls(), heroSheet = IMG['battle_'+kit+heroStage()];
+  duel.hero = {kit, img:heroSheet, rowBase:0, at:.27, dir:1,
+               size:64, action:'idle', start:t0, until:0, flash:0, fade:0};
+  // Practice has the sage standing opposite: the lesson has a teacher in it.
+  duel.foe = isPractice
+    ? {kit:'mon', img:IMG.villagers, still:true, row: NPC_KINDS.findIndex(n => n.key === 'sage')*4 + 1,
+       at:.72, dir:-1, size:64, action:'idle', start:t0, until:0, flash:0, fade:0}
     : {kit:'mon', img: isBoss ? IMG.battle_boss : IMG.battle_mon,
-       rowBase: (isBoss ? Z.boss : target.type)*3, at:.74, dir:-1,
-       size: isBoss ? 128 : 108, action:'idle', start:t0, until:0, flash:0, fade:0};
+       rowBase: (isBoss ? Z.boss : target.type)*3, at:.72, dir:-1,
+       size: isBoss ? 96 : 64, action:'idle', start:t0, until:0, flash:0, fade:0};
   duel.fx = null;
-  if(!duel.raf) drawDuel();
+  duel.sparks = []; duel.rings = []; duel.pops = []; duel.motes = [];
+  duel.introAt = t0;
+  $('hero-face').src = heroSheet ? spriteURL(heroSheet, 0, BATTLE_ROWS.idle*CH, CH, CH) : '';
+  $('enemy-face').src = duel.foe.still
+    ? spriteURL(IMG.villagers, 0, (duel.foe.row - 1 + 0)*CH, CH, CH)   // the sage, facing out
+    : spriteURL(duel.foe.img, 0, (duel.foe.rowBase + BATTLE_ROWS.idle)*CH, CH, CH);
+  $('enemy-ghost').style.width = $('enemy-hp').style.width = '100%';
+  if(!duel.raf){ duel.last = 0; drawDuel(); }
+  battleBanner(isBoss ? `ผู้พิทักษ์แห่ง${Z.thai}<small>${Z.topic} · ทุกรูปแบบคำถาม</small>`
+    : isPractice ? `ฝึกซ้อม<small>${Z.topic} · ไม่เสียพลังชีวิต</small>`
+    : `มอนสเตอร์ขวางทาง!<small>ด่านนี้ถามแบบ: ${FORMAT_THAI[kindForMonster(target && target.type || 0)]}</small>`, 'go');
 
   // shown whenever there is a charge to spend, not only for the mage
   $('btn-hint').style.display = battle.hintLeft > 0 ? 'inline-block' : 'none';
@@ -3609,7 +4418,8 @@ function startBattle(kind, target){
   // after the overlay is up, so the stage has a real width to measure — sized
   // while hidden it fell back to a guess and left a bare strip down one side
   paintBattleBG();
-  sfx.open();
+  isBoss ? sfx.bossIntro() : isPractice ? sfx.open() : sfx.battleIntro();
+  playMusic(isBoss ? 'boss' : isPractice ? Z.id : 'battle');
 }
 // The spell has to mean something different in each format. Striking out two
 // "wrong" options is right for a list of answers, but in word order every
@@ -3910,6 +4720,29 @@ function makeQuestion(item, kind){
     answerText: right, promptHTML: markSignals(q).replace('___','<span class="blank">_____</span>'),
     why };
 }
+// Hearts on the hero's plate. After a hit the one just lost flashes out.
+function renderPips(justLost){
+  const pips = $('battle-pips'); pips.innerHTML = '';
+  for(let i=0;i<S.hpMax;i++){
+    const d = document.createElement('div');
+    d.className = 'pip' + (i < S.hp ? ' on' : '') + (justLost && i === S.hp ? ' lost' : '');
+    pips.appendChild(d);
+  }
+}
+const COMBO_WORDS = ['', '', 'ดีมาก!', 'สุดยอด!', 'ร้อนแรง!', 'ไร้เทียมทาน!', 'ตำนาน!'];
+function showCombo(n){
+  const el = $('combo-badge');
+  if(n < 2){ el.className = ''; return; }
+  el.style.setProperty('--lvl', Math.min(6, n));
+  el.innerHTML = `<span class="n">คอมโบ ×${n}</span><span class="t">${COMBO_WORDS[Math.min(6, n)]}${n >= 3 ? ' · โจมตีแรงขึ้น' : ''}</span>`;
+  el.className = ''; void el.offsetWidth; el.className = 'pop';
+  sfx.combo(n);
+}
+function breakCombo(){
+  const el = $('combo-badge');
+  el.className = ''; void el.offsetWidth; el.className = 'break';
+  sfx.comboBreak();
+}
 function renderBattleQ(){
   const b = battle;
   if(b.qi >= b.pool.length){ b.pool = shuffle(b.pool); b.qi = 0; }
@@ -3938,13 +4771,8 @@ function renderBattleQ(){
     box.appendChild(btn);
   });
   $('battle-feedback').textContent = '';
-  $('enemy-hp').style.width = (b.hp/b.hpMax*100)+'%';
-  const pips = $('battle-pips'); pips.innerHTML = '';
-  for(let i=0;i<S.hpMax;i++){
-    const d = document.createElement('div');
-    d.className = 'pip' + (i < S.hp ? ' on' : '');
-    pips.appendChild(d);
-  }
+  $('enemy-hp').style.width = $('enemy-ghost').style.width = Math.max(0, b.hp/b.hpMax*100)+'%';
+  renderPips(false);
   b.locked = false;
   $('btn-next').style.display = 'none';
   if(b.hintLeft > 0) $('btn-hint').disabled = false;
@@ -4001,33 +4829,59 @@ function answerBattle(sel, ans, btn){
   const SWING = .42, LAND = .30;
   if(right){
     btn.classList.add('right');
-    b.hp -= C.dmg; sfx.hit();
+    // Answers in a row build a combo; the third and beyond hit harder. It is
+    // a feeling, not a grade: S.proc above has already counted this answer
+    // exactly as it would have without it.
+    b.combo = (b.combo || 0) + 1; b.bestCombo = Math.max(b.bestCombo || 0, b.combo);
+    const crit = b.combo >= 3;
+    const dmg = C.dmg + (crit ? 1 : 0);
+    b.hp -= dmg;
+    sfx.swing();
+    showCombo(b.combo);
     duelAct(duel.hero, 'attack', SWING);
-    duel.fx = {name:C.fx, start:performance.now()/1000};
+    duel.fx = {name:C.fx, start:dnow()};
     setTimeout(() => {
       if(!battle) return;
-      $('enemy-hp').style.width = Math.max(0,b.hp/b.hpMax*100)+'%';
-      duelHit(duel.foe);
-      duelAct(duel.foe, 'hurt', .5);
+      const pct = Math.max(0, b.hp/b.hpMax*100) + '%';
+      $('enemy-hp').style.width = pct; $('enemy-ghost').style.width = pct;
+      duelImpact(duel.foe, crit ? `−${dmg}!` : `−${dmg}`, {big:crit, col: crit ? '#ffcf4a' : '#fff3cf'});
+      crit ? sfx.crit() : sfx.hit();
     }, LAND*1000);
     showFeedback(feedbackHTML(true, b, why, b.shown.opts[sel]));
     if(b.hp <= 0){
-      setTimeout(() => { if(duel.foe) duel.foe.fade = performance.now()/1000; }, 700);
-      setTimeout(winBattle, 1300);
+      setTimeout(() => {
+        if(!battle) return;
+        duelVictory(); sfx.win();
+        battleBanner(b.kind === 'boss' ? 'ผู้พิทักษ์พ่ายแพ้!' : 'ชนะ!', 'win');
+      }, 720);
+      setTimeout(winBattle, b.kind === 'boss' ? 2300 : 1800);
       return;
     }
   } else {
     btn.classList.add('wrong'); b.wrong++;
     [...$('battle-options').children][ans].classList.add('right');
-    S.hp--; sfx.hurt(); refreshHUD();
+    if((b.combo || 0) >= 2) breakCombo();
+    b.combo = 0;
+    S.hp--; refreshHUD();
     duelAct(duel.foe, 'attack', SWING);
+    sfx.swing(.8);
     setTimeout(() => {
       if(!battle) return;
-      duelHit(duel.hero);
-      duelAct(duel.hero, 'hurt', .5);
+      duel.fx = {name:'slash', start:dnow(), still:true, flip:true,
+                 fromX: fighterX(duel.hero), toX: fighterX(duel.hero)};
+      duelImpact(duel.hero, '−1', {col:'#ff8a7a'});
+      renderPips(true);
+      sfx.hurt();
     }, LAND*1000);
     showFeedback(feedbackHTML(false, b, why, b.shown.opts[sel]));
-    if(S.hp <= 0){ setTimeout(loseBattle, 2600); return; }
+    if(S.hp <= 0){
+      setTimeout(() => {
+        if(!battle) return;
+        if(duel.hero) duel.hero.fade = dnow();
+        battleBanner('ล้มลงแล้ว…<small>ฟื้นขึ้นมาใหม่ได้เสมอ</small>', 'lose');
+      }, 900);
+      setTimeout(loseBattle, 2800); return;
+    }
   }
   b.qi++;
   // A wrong answer gets longer on screen than a right one: there is more to
@@ -4272,7 +5126,8 @@ function winBattle(){
     S.gear = Math.min(GEAR.length, S.gear+1);
     S.xp += 90; S.hp = S.hpMax;
     while(S.xp >= xpNeed()){ levelUp(); }
-    sfx.gear();
+    stopMusic(); sfx.fanfare();
+    setTimeout(() => playMusic(ZONES[zi].id), 3200);
     const g = GEAR[zi], nxt = ZONES[zi+1];
     $('reward-eyebrow').textContent = 'ผู้พิทักษ์ล้มลงแล้ว';
     $('reward-title').textContent = ZONES[zi].thai;
@@ -4287,15 +5142,18 @@ function winBattle(){
     $('btn-reward-close').textContent = '📝 ทำแบบทดสอบหลังเรียน';
     showOverlay('screen-reward');
   } else {
-    S.xp += 22; S.kills++;
+    // a streak in the fight is worth a little extra: 4 XP per answer past the first
+    const bonus = Math.min(20, 4*Math.max(0, (b.bestCombo||0) - 1));
+    S.xp += 22 + bonus; S.kills++;
     while(S.xp >= xpNeed()){ levelUp(); }
+    playMusic(ZONES[zone].id);
     b.target.dead = true; b.target.respawn = 22;
     player.iframe = 1.8;
     sfx.win(); hideOverlays();
-    toast('⚔','ชนะแล้ว +22 XP');
+    toast('⚔', bonus ? `ชนะแล้ว +22 XP · โบนัสคอมโบ +${bonus}` : 'ชนะแล้ว +22 XP');
     puff(b.target.x, b.target.y-14, ZONES[zone].accent, 16, 64);
     ring(b.target.x, b.target.y-14, ZONES[zone].accent, 54, .55);
-    floatText(b.target.x, b.target.y-30, '+22 XP', '#ffe9a8', 12);
+    floatText(b.target.x, b.target.y-30, `+${22 + bonus} XP`, '#ffe9a8', 12);
     // A potion about a third of the time, and always when you are nearly out:
     // a child who keeps losing should get a way back in, not a wall.
     if(S.hp < S.hpMax && (S.hp <= 1 || Math.random() < .34))
@@ -4305,6 +5163,7 @@ function winBattle(){
 }
 function loseBattle(){
   battle = null; stopDuel();
+  playMusic(ZONES[zone].id);
   S.hp = S.hpMax;
   const [px,py] = findSpawn();
   player.x = px; player.y = py; player.iframe = 2.4;
@@ -4322,11 +5181,13 @@ $('btn-flee').onclick = () => {
   if(battle.kind === 'practice'){
     const t = S.practice[zone];
     battle = null; stopDuel(); hideOverlays(); save();
+    playMusic(ZONES[zone].id);
     toast('📓', `ฝึกซ้อมจบ · ตอบถูก <b>${t.correct}/${t.asked}</b> ข้อ`);
     return;
   }
   battle.target.iframe = 1.4; battle = null; stopDuel();
   hideOverlays(); player.iframe = 1.4;
+  playMusic(ZONES[zone].id);
 };
 
 // ═══════════════════════════════════════════════════════════ INTERACTION
@@ -5110,7 +5971,9 @@ $('btn-test-close').onclick = () => {
     // Almost nobody finishes ten zones inside a study period, so waiting for
     // the end meant the satisfaction data came back empty.
     const passed = ZONES.filter((_,i) => S.cleared[i] && zonePassed(i)).length;
-    if(!S.survey && passed >= SURVEY_AFTER_ZONES) setTimeout(openSurvey, 1400);
+    // the last land passed: the ending comes first, the questionnaire after it
+    if(passed === ZONES.length && !S.finaleSeen) setTimeout(openFinale, 1200);
+    else if(!S.survey && passed >= SURVEY_AFTER_ZONES) setTimeout(openSurvey, 1400);
   }
   // The pre-test hands straight over to the teaching it was measuring against.
   else if(!S.lessonSeen[zi]) setTimeout(() => openLesson(zi), 250);
@@ -5173,6 +6036,7 @@ $('btn-reward-close').onclick = () => {
 const keys = {};
 addEventListener('keydown', e => {
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  if((e.key === 'm' || e.key === 'M') && !/INPUT|TEXTAREA/.test((e.target||{}).tagName||'')){ cycleSound(); return; }
   keys[e.key.toLowerCase()] = true;
   // In a duel, 1-4 answer the question — nobody should have to reach for the
   // mouse mid-fight, and the number matches the option's position on screen.
@@ -5576,6 +6440,7 @@ function buildResumeList(){
   }
 }
 $('btn-begin').onclick = () => {
+  audio(); playMusic('map');
   audio(); showOverlay('screen-register'); buildClassPicker(); buildResumeList();
   $('in-name').focus(); sfx.open();
 };
@@ -5628,11 +6493,186 @@ function startWith(profile, cls){
   save();
 }
 
+// ═══════════════════════════════════════════════ ARRIVING, AND THE ENDING
+// Entering a land opens like a scene in a film: an iris out of black and the
+// land's name, so each of the ten feels like a place rather than a level.
+function showZoneCard(zi){
+  const Z = ZONES[zi];
+  $('zc-no').textContent = `ดินแดนที่ ${Z.no} · ${Z.topic}`;
+  $('zc-name').textContent = Z.name;
+  $('zc-thai').textContent = Z.thai;
+  for(const id of ['iris','zone-card']){
+    const el = $(id); el.className = ''; void el.offsetWidth; el.className = 'go';
+  }
+}
+
+// Every land passed: fireworks, then a certificate the student can keep.
+function allPassed(){ return ZONES.every((_,i) => S.cleared[i] && zonePassed(i)); }
+function starsTotal(){ return S.stars.reduce((a,b) => a + b, 0); }
+async function openFinale(){
+  const name = S.profile.name;
+  // the certificate is drawn in the game's fonts, so wait for them (offline
+  // they never come, and it falls back to the system's Thai font)
+  try{ await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]); }catch(e){}
+  $('finale-text').innerHTML =
+    `<b>${escapeHTML(name)}</b> ผ่านครบทั้ง ${ZONES.length} ดินแดนแล้ว · เก็บดาวได้ <b>${starsTotal()}</b> ดวง · เลเวล <b>${S.level}</b><br>` +
+    `คำสาปแห่งกาลเวลาถูกทำลาย เกาะ Lexicora กลับมามีชีวิตอีกครั้งเพราะเจ้า`;
+  $('cert-img').src = drawCertificate().toDataURL('image/png');
+  showOverlay('screen-finale');
+  stopMusic(); sfx.fanfare();
+  setTimeout(() => { if($('screen-finale').classList.contains('show')) playMusic('map'); }, 4200);
+  if(!S.finaleSeen){
+    S.finaleSeen = true; save();
+    logEvent({type:'จบการผจญภัย', detail:`ผ่านครบ ${ZONES.length} ดินแดน`, v1: starsTotal(), v2: S.level});
+  }
+  fireworks();
+}
+function escapeHTML(t){ return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+$('btn-finale-close').onclick = () => {
+  hideOverlays(); openMap();
+  if(!S.survey) setTimeout(openSurvey, 600);
+};
+$('btn-map-cert').onclick = () => openFinale();
+
+function fireworks(){
+  const c = $('finale-fx'), x = c.getContext('2d');
+  const fit = () => { c.width = c.clientWidth; c.height = c.clientHeight; };
+  fit();
+  const parts = [], rockets = [];
+  const cols = ['#ffe08a','#ff9a6a','#8fe0ff','#b8ff9a','#ffb3e6','#ffffff'];
+  let last = performance.now(), nextLaunch = 0;
+  (function loop(t){
+    if(!$('screen-finale').classList.contains('show')) return;
+    requestAnimationFrame(loop);
+    if(c.width !== c.clientWidth) fit();
+    const dt = Math.min(.05, (t - last)/1000); last = t;
+    if(!REDUCED && t > nextLaunch){
+      rockets.push({x: c.width*(.15 + Math.random()*.7), y: c.height, vy: -(c.height*.9 + Math.random()*c.height*.4),
+                    col: cols[Math.floor(Math.random()*cols.length)], fuse: .9 + Math.random()*.5});
+      nextLaunch = t + 380 + Math.random()*520;
+      if(Math.random() < .5) beep(180 + Math.random()*60, .25, 'triangle', .02, 600);
+    }
+    x.globalCompositeOperation = 'destination-out';
+    x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(0, 0, c.width, c.height);
+    x.globalCompositeOperation = 'lighter';
+    for(const r of rockets){
+      r.fuse -= dt; r.y += r.vy*dt; r.vy *= .985;
+      x.fillStyle = '#fff3cf'; x.fillRect(r.x, r.y, 2, 6);
+      if(r.fuse <= 0){
+        const n = 60 + Math.floor(Math.random()*40);
+        for(let i=0;i<n;i++){
+          const a = Math.PI*2*i/n, v = 90 + Math.random()*150;
+          parts.push({x:r.x, y:r.y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, life:1.2 + Math.random()*.6, col:r.col});
+        }
+      }
+    }
+    for(let i=rockets.length-1;i>=0;i--) if(rockets[i].fuse <= 0) rockets.splice(i,1);
+    for(const p of parts){
+      p.life -= dt; p.vy += 90*dt; p.vx *= .985; p.vy *= .985;
+      p.x += p.vx*dt; p.y += p.vy*dt;
+      x.globalAlpha = Math.max(0, Math.min(1, p.life));
+      x.fillStyle = p.col; x.fillRect(p.x, p.y, 2.5, 2.5);
+    }
+    x.globalAlpha = 1;
+    for(let i=parts.length-1;i>=0;i--) if(parts[i].life <= 0) parts.splice(i,1);
+  })(last);
+}
+
+// The certificate is drawn, not photographed, so it prints sharp: A4
+// landscape proportions, the student's own hero and the ten pieces of gear
+// they won, and a line left blank for the teacher to sign.
+function drawCertificate(){
+  const W = 1600, H = 1131, c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  // parchment
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#fbf1d8'); g.addColorStop(.6, '#f1dfb4'); g.addColorStop(1, '#e3c890');
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const glow = x.createRadialGradient(W/2, H*.42, 60, W/2, H*.42, W*.7);
+  glow.addColorStop(0, 'rgba(255,255,255,.55)'); glow.addColorStop(1, 'rgba(160,110,40,.18)');
+  x.fillStyle = glow; x.fillRect(0, 0, W, H);
+  // frames: wood, gold, wood — the same kit as every panel in the game
+  const frame = (inset, w, col) => { x.lineWidth = w; x.strokeStyle = col; x.strokeRect(inset, inset, W - inset*2, H - inset*2); };
+  frame(26, 16, '#4a2f1e'); frame(44, 5, '#e8b84b'); frame(56, 2, '#a8791f'); frame(70, 1.5, '#a8791f');
+  x.fillStyle = '#e8b84b';
+  for(const [cx, cy] of [[70,70],[W-70,70],[70,H-70],[W-70,H-70]]){
+    x.save(); x.translate(cx, cy); x.rotate(Math.PI/4); x.fillRect(-13, -13, 26, 26);
+    x.fillStyle = '#4a2f1e'; x.fillRect(-6, -6, 12, 12); x.restore(); x.fillStyle = '#e8b84b';
+  }
+  x.textAlign = 'center'; x.textBaseline = 'alphabetic';
+  x.fillStyle = '#6b4526'; x.font = '700 30px Cinzel, serif';
+  x.fillText('LEXICORA · THE WORDKEEPER\'S JOURNEY', W/2, 150);
+  x.fillStyle = '#3a2716'; x.font = '700 84px Kanit, sans-serif';
+  x.fillText('ใบประกาศเกียรติคุณ', W/2, 250);
+  x.fillStyle = '#a8791f'; x.font = '700 30px Cinzel, serif';
+  x.fillText('CERTIFICATE OF ACHIEVEMENT', W/2, 298);
+  // gold rule
+  const rg = x.createLinearGradient(W*.25, 0, W*.75, 0);
+  rg.addColorStop(0, 'rgba(168,121,31,0)'); rg.addColorStop(.5, '#e8b84b'); rg.addColorStop(1, 'rgba(168,121,31,0)');
+  x.fillStyle = rg; x.fillRect(W*.25, 322, W*.5, 4);
+  x.fillStyle = '#6b5238'; x.font = '400 34px Kanit, sans-serif';
+  x.fillText('มอบให้ไว้เพื่อแสดงว่า', W/2, 392);
+  x.fillStyle = '#2e1b10'; x.font = '700 76px Kanit, sans-serif';
+  x.fillText(S.profile.name, W/2, 480);
+  x.fillStyle = '#6b5238'; x.font = '400 32px Kanit, sans-serif';
+  x.fillText(`ชั้น ${S.profile.class} · เลขที่ ${S.profile.number}`, W/2, 530);
+  x.fillStyle = '#3a2716'; x.font = '400 34px Kanit, sans-serif';
+  x.fillText(`ได้ผจญภัยผ่านครบทั้ง ${ZONES.length} ดินแดน และสอบหลังเรียนผ่านเกณฑ์ทุกเรื่อง`, W/2, 600);
+  x.fillText('ในการเรียนรู้ด้วยตนเอง เรื่อง กาลในภาษาอังกฤษ (English Tenses)', W/2, 648);
+  // hero, and the gear won in each land
+  x.imageSmoothingEnabled = false;
+  const hero = heroImg();
+  if(hero) x.drawImage(hero, 0, 2*CH, CH, CH, W/2 - 330 - 96, 670, 192, 192);
+  if(IMG.gear) for(let i=0;i<ZONES.length;i++){
+    const col = i % 5, row = Math.floor(i/5);
+    const gx = W/2 - 170 + col*84, gy = 690 + row*78;
+    x.fillStyle = 'rgba(74,47,30,.12)'; x.fillRect(gx - 4, gy - 4, 72, 72);
+    x.drawImage(IMG.gear, (i%6)*32, 0, 32, 32, gx, gy, 64, 64);
+  }
+  x.textAlign = 'left'; x.fillStyle = '#a8791f'; x.font = '700 40px Kanit, sans-serif';
+  x.fillText(`★ ${starsTotal()} / ${ZONES.length*3}`, W/2 + 290, 745);
+  x.fillStyle = '#6b5238'; x.font = '400 28px Kanit, sans-serif';
+  x.fillText(`เลเวล ${S.level} · ${RANKS[Math.min(RANKS.length-1, S.level-1)] || ''}`, W/2 + 290, 790);
+  // date and signature
+  x.textAlign = 'center';
+  const date = new Date().toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric'});
+  x.fillStyle = '#6b5238'; x.font = '400 30px Kanit, sans-serif';
+  x.fillText(`ให้ไว้ ณ วันที่ ${date}`, W*.3, 950);
+  x.strokeStyle = '#6b5238'; x.lineWidth = 1.5;
+  x.beginPath(); x.moveTo(W*.58, 940); x.lineTo(W*.84, 940); x.stroke();
+  x.fillText('ครูผู้สอน', W*.71, 985);
+  x.fillStyle = '#8a6a48'; x.font = '400 24px Kanit, sans-serif';
+  x.fillText('โรงเรียนบ้านหัวถนน · ปีการศึกษา 2569', W/2, 1052);
+  return c;
+}
+// Saved through the host when published, or as a plain download when the
+// file is opened on its own — same two roads as the teacher's CSV.
+$('btn-cert-save').onclick = async () => {
+  const btn = $('btn-cert-save');
+  const say = m => { btn.textContent = m; setTimeout(() => { btn.textContent = '⬇ บันทึกใบประกาศ'; }, 2400); };
+  const blob = await new Promise(r => drawCertificate().toBlob(r, 'image/png'));
+  if(!blob){ say('บันทึกไม่ได้'); return; }
+  // ASCII only: Chrome quietly renames a download with Thai in it to "download"
+  const tag = `${S.profile.class}-${S.profile.number}`.replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  const fname = `Lexicora-certificate${tag ? '-' + tag : ''}.png`;
+  const host = window.claude && window.claude.use ? await window.claude.use('downloads').catch(() => null) : null;
+  if(host){
+    try{ await host.save({filename: fname, data: blob}); say('✔ บันทึกแล้ว'); }
+    catch(err){ if(!(err && err.code === 'declined')) say('บันทึกไม่ได้ · กดค้างที่รูปแล้วเลือกบันทึกภาพ'); }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = fname; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  say('✔ บันทึกแล้ว');
+};
+
 // ?debug=1 gives the test scripts a handle on the internals. Without it a
 // screenshot of a boss fight means wandering the map until one turns up.
 if(params.get('debug') === '1') window.__lex = {
   get S(){ return S; }, get zone(){ return zone; }, get battle(){ return battle; },
-  startBattle, enterZone, openMap, winBattle, answerBattle, save, refreshHUD,
+  startBattle, enterZone, openMap, winBattle, answerBattle, save, refreshHUD, openFinale, drawCertificate, levelUp,
   world: () => world,
 };
 
