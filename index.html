@@ -384,8 +384,8 @@ kbd{
 }
 #battle-panel{
   position:absolute;z-index:2;left:0;right:0;margin:0 auto;overflow-y:auto;
-  top:calc(var(--top-h) - 28px);
-  max-height:calc(100% - var(--top-h) + 28px - max(10px,env(safe-area-inset-bottom)));
+  top:calc(var(--top-h) - var(--overlap,28px));
+  max-height:calc(100% - var(--top-h) + var(--overlap,28px) - max(10px,env(safe-area-inset-bottom)));
   width:min(820px,calc(100% - 20px));
   padding:16px 24px 18px;
 }
@@ -606,8 +606,12 @@ kbd{
    fold. These rules are about vertical room, so they key on height. */
 @media (max-height:520px){
   .sheet{max-height:96vh;max-height:96dvh;padding:12px 16px 14px;}
-  #screen-battle{--top-h:40vh;}
+  /* a phone on its side: the arena is short, so the window must not cover
+     the fighters' feet, and the title drops below the two plates */
+  #screen-battle{--top-h:42vh;--overlap:2px;}
   #battle-panel{padding:10px 14px 12px;}
+  #battle-banner{top:calc(var(--top-h)*.6);font-size:1.15rem;}
+  #combo-badge{top:calc(var(--top-h)*.42);}
   #battle-question{font-size:.94rem;margin-bottom:6px;}
   #battle-options{gap:6px;}
   .opt{padding:7px 10px;font-size:.92rem;}
@@ -6193,7 +6197,7 @@ function tick(now){
 }
 // Overlays without `dim` cover the screen completely; the dimmed ones let the
 // world show through behind them and still need it drawn.
-const OPAQUE_OV = ['screen-test','screen-teacher','screen-worldmap'];
+const OPAQUE_OV = ['screen-test','screen-teacher','screen-worldmap','screen-battle','screen-finale'];
 const opaqueOverlay = () => OPAQUE_OV.some(o => $(o).classList.contains('show'));
 
 function update(dt){
@@ -6672,6 +6676,7 @@ $('btn-cert-save').onclick = async () => {
 // screenshot of a boss fight means wandering the map until one turns up.
 if(params.get('debug') === '1') window.__lex = {
   get S(){ return S; }, get zone(){ return zone; }, get battle(){ return battle; },
+  get test(){ return test; }, get mode(){ return mode; }, music, get soundMode(){ return soundMode; },
   startBattle, enterZone, openMap, winBattle, answerBattle, save, refreshHUD, openFinale, drawCertificate, levelUp,
   world: () => world,
 };
