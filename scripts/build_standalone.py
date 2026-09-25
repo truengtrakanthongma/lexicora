@@ -5,9 +5,9 @@ published as an Artifact is served alone, with a CSP that blocks every host but
 Google Fonts, so anything it needs has to already be inside the file. This
 script inlines the prop metadata and turns each atlas into a data: URI.
 
-The Artifact runtime supplies <!doctype html>, <head> and <body> itself, so the
-output carries only what goes inside them - the <title>, the font link, the
-stylesheet and the markup.
+The output is the doctype, charset and viewport, then the <title>, the font
+link, the stylesheet and the markup - enough to open straight from a flash
+drive, and harmless inside the Artifact runtime's own wrapper.
 
 Run:  python3 scripts/build_standalone.py [out.html]
 """
@@ -105,7 +105,14 @@ left = re.findall(r"""['"](assets/[A-Za-z0-9_./-]+)['"]""", body)
 if left:
     sys.exit("still referencing files on disk: " + ", ".join(sorted(set(left))))
 
-out = head_kept + "\n" + body
+# The same file is also handed out on flash drives and over LINE, where no
+# wrapper supplies anything: without a doctype it opens in quirks mode, and
+# without a charset a browser that does not guess reads every Thai word as
+# mojibake. A wrapper that does supply them simply ignores these.
+PREAMBLE = ('<!DOCTYPE html>\n<meta charset="UTF-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0, '
+            'maximum-scale=1.0, user-scalable=no, viewport-fit=cover">\n')
+out = PREAMBLE + head_kept + "\n" + body
 with open(OUT, "w", encoding="utf-8") as f:
     f.write(out)
 
