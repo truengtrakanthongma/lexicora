@@ -57,7 +57,8 @@ body = body.replace('<script src="assets/words/photos.js"></script>',
 def data_uri(rel):
     path = os.path.join(ROOT, rel)
     with open(path, "rb") as f:
-        mime = "image/jpeg" if rel.endswith((".jpg", ".jpeg")) else "image/png"
+        mime = ("image/jpeg" if rel.endswith((".jpg", ".jpeg"))
+                else "image/svg+xml" if rel.endswith(".svg") else "image/png")
         return f"data:{mime};base64," + base64.b64encode(f.read()).decode("ascii")
 
 
@@ -101,7 +102,7 @@ def sub_literal(m):
     return quote + data_uri(rel) + quote
 
 
-body = re.sub(r"(['\"])(assets/[A-Za-z0-9_./-]+\.(?:png|jpg))\1", sub_literal, body)
+body = re.sub(r"(['\"])(assets/[A-Za-z0-9_./-]+\.(?:png|jpg|svg))\1", sub_literal, body)
 
 if missing:
     sys.exit("missing assets: " + ", ".join(sorted(set(missing))))

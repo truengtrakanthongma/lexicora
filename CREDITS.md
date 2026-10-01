@@ -94,21 +94,23 @@ Game code, level design, grammar lessons, worked examples, the explanation
 written for every quiz item, the per-zone pre/post-test banks and the
 satisfaction questionnaire are original work for this project.
 
-## Word-card photographs (Wikimedia Commons)
+## Word-card pictures (Fluent Emoji, MIT)
 
-The vocabulary cards can show a photograph of each picturable word. These are
-**not** LPC art and are used only on the word cards, never in the game world.
+All 80 vocabulary cards carry a cartoon picture from **Fluent Emoji** by
+Microsoft (https://github.com/microsoft/fluentui-emoji), under the **MIT
+licence**; the full notice is in `assets/words/LICENSE-fluent-emoji.txt` and
+the game names the source on every enlarged card. These pictures are used only
+on the word cards - the game world itself is still LPC art throughout.
 
-- Fetched by `scripts/fetch_word_photos.py` from the lead image of the English
-  Wikipedia article for the word (or a Commons file named in its `OVERRIDE`).
-- Only Public domain, CC0, CC BY and CC BY-SA files are accepted; anything else
-  is skipped.
-- Author, licence and the Commons file page for every photo are recorded in
-  `assets/words/photos.js`, and the game prints that credit under the photo on
-  the enlarged card, as CC BY / CC BY-SA require.
-- Words that cannot be photographed (happy, believe, already …) have no photo
-  and show an emblem instead.
+- `scripts/build_word_icons.mjs` holds the word-to-picture table and writes
+  `assets/words/<word>.svg` plus the manifest `assets/words/photos.js`.
+- Pictures were picked for the word's meaning in the game and checked by eye
+  on a contact sheet (e.g. *torch* is a flame, not a flashlight; *before* is a
+  "previous" button, not the word BACK).
 
-At the time of writing the manifest is empty: the build environment could not
-reach Wikimedia. Run the script with network access, look at every image, and
-rebuild the standalone file.
+### Photographs (optional, not used)
+
+`scripts/fetch_word_photos.py` can fetch Wikimedia Commons photographs instead
+(Public domain / CC0 / CC BY / CC BY-SA only, with author and licence recorded
+for the on-card credit). It has not been run: the build environment could not
+reach Wikimedia.
