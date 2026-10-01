@@ -649,6 +649,18 @@ kbd{
 .class-card canvas{width:64px;height:64px;image-rendering:pixelated;display:block;margin:0 auto 4px;}
 .class-card b{display:block;font-family:'Cinzel',serif;font-size:.86rem;color:var(--wood);}
 .class-card span{display:block;font-size:.66rem;color:var(--ink-2);line-height:1.35;margin-top:2px;}
+.class-card.sel{animation:card-sel .35s cubic-bezier(.2,1.6,.4,1);}
+@keyframes card-sel{0%{transform:scale(.94);}100%{transform:none;}}
+.cstat{display:flex;align-items:center;justify-content:center;gap:3px;margin-top:3px;}
+.cstat em{font-style:normal;font-size:.6rem;color:var(--ink-2);width:46px;text-align:right;margin-right:2px;}
+.cstat i{width:10px;height:5px;border-radius:2px;background:rgba(74,47,30,.18);}
+.cstat i.on{background:linear-gradient(180deg,var(--gold-hi),var(--gold-dk));}
+/* the registration sheet sits on the same dusk as the title screen */
+#screen-register{
+  background:
+    radial-gradient(ellipse 120% 76% at 50% 6%,rgba(255,226,160,.28),transparent 62%),
+    linear-gradient(180deg,#1d324d 0%,#3d5f80 45%,#8a7a5c 80%,#2c3f27 100%);
+}
 
 /* ------------------------------------------------------------ duel stage */
 /* The duel is drawn on one canvas rather than shoved around with CSS: the
@@ -938,10 +950,11 @@ mark.signal{
 #map-canvas{position:absolute;inset:0;width:100%;height:100%;}
 #map-markers{position:absolute;inset:0;}
 #map-title{
-  position:absolute;top:14px;left:50%;transform:translateX(-50%);text-align:center;
-  z-index:5;pointer-events:none;
+  position:absolute;top:10px;left:50%;transform:translateX(-50%);text-align:center;
+  z-index:5;pointer-events:none;padding:6px 22px 8px;border-radius:14px;
+  background:radial-gradient(ellipse at center,rgba(10,22,40,.75),rgba(10,22,40,0) 75%);
 }
-#map-title h2{font-size:clamp(1.6rem,5vw,2.6rem);line-height:1;}
+#map-title h2{font-size:clamp(1.4rem,4vw,2.2rem);line-height:1;}
 #map-title p{
   font-family:'Cinzel',serif;font-weight:700;letter-spacing:.26em;text-transform:uppercase;
   color:#ffeec4;font-size:.68rem;margin-top:4px;text-shadow:0 2px 8px rgba(0,0,0,.8);
@@ -983,7 +996,34 @@ mark.signal{
   animation:pin-pulse 1.4s ease-in-out infinite;
 }
 @keyframes pin-pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,120,80,.7);}50%{box-shadow:0 0 0 9px rgba(255,120,80,0);}}
-.zone-stars{font-size:.62rem;color:#7a5a2a;letter-spacing:1px;}
+.zone-stars{font-size:.66rem;color:#ffe08a;letter-spacing:1px;text-shadow:0 1px 3px #000;margin-top:2px;}
+.zone-prog{display:block;height:4px;margin-top:3px;border-radius:2px;background:rgba(74,47,30,.2);overflow:hidden;}
+.zone-prog i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dk),var(--gold-hi));}
+.zone-ribbon{
+  margin-bottom:-3px;padding:1px 9px;border-radius:6px 6px 0 0;font-size:.64rem;font-weight:800;color:#fff;
+  background:linear-gradient(180deg,#ff7a5a,#c8402a);box-shadow:0 0 12px rgba(255,120,80,.6);
+  animation:pin-bob 1.6s ease-in-out infinite;
+}
+@keyframes pin-bob{0%,100%{transform:translateY(0);}50%{transform:translateY(-3px);}}
+#map-hero{
+  position:absolute;width:48px;height:48px;image-rendering:pixelated;pointer-events:none;
+  transform:translate(-30%,-88%);filter:drop-shadow(0 4px 4px rgba(0,0,0,.6));
+  animation:pin-bob 2.2s ease-in-out infinite;
+}
+#map-peek{
+  position:absolute;z-index:8;transform:translateX(-50%) translateY(6px);opacity:0;pointer-events:none;
+  display:flex;gap:10px;align-items:center;width:290px;padding:10px 12px;border-radius:12px;
+  background:linear-gradient(180deg,rgba(58,36,20,.96),rgba(26,15,7,.97));border:1px solid var(--gold-dk);
+  box-shadow:0 0 0 2px rgba(20,11,5,.85),0 14px 30px rgba(0,0,0,.55);color:#ffeec4;transition:opacity .15s,transform .15s;
+}
+#map-peek.show{opacity:1;transform:translateX(-50%);}
+#map-peek img{width:64px;height:64px;image-rendering:pixelated;flex:none;
+  background:radial-gradient(circle at 50% 60%,#5a3d22,#22140a);border-radius:10px;border:1px solid var(--gold-dk);}
+#map-peek small{display:block;font-size:.66rem;color:#d9c39a;}
+#map-peek b{display:block;font-family:'Cinzel','Kanit',serif;font-size:1rem;color:#ffe08a;}
+#map-peek .th{display:block;font-size:.78rem;margin-bottom:4px;}
+.pk-row{display:flex;gap:10px;font-size:.74rem;}
+.pk-state{margin-top:4px;font-size:.76rem;font-weight:700;color:#fff3cf;}
 #map-footer{
   position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
   display:flex;gap:10px;align-items:center;z-index:5;flex-wrap:wrap;justify-content:center;
@@ -992,6 +1032,36 @@ mark.signal{
   padding:7px 15px;border-radius:999px;
   background:linear-gradient(180deg,rgba(58,36,20,.94),rgba(32,19,10,.96));
   border:2px solid var(--gold-dk);color:#ffeec4;font-size:.82rem;font-weight:600;
+}
+#map-list{display:none;}
+@media (max-width:560px){
+  /* phones: the map keeps numbered flags only; the strip below does the choosing */
+  .zone-flag > span:last-child,.zone-stars,.zone-ribbon{display:none;}
+  .zone-flag{padding:3px;}
+  .zone-pin{pointer-events:none;}
+  #map-title p{display:none;}
+  #map-list{
+    display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;width:100vw;padding:2px 12px 6px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  #map-list::-webkit-scrollbar{display:none;}
+  .ml-card{
+    flex:0 0 138px;scroll-snap-align:start;text-align:left;padding:8px 10px;border-radius:10px;cursor:pointer;
+    background:linear-gradient(180deg,#f3e3c0,#d9bd8c);border:2px solid var(--wood);color:var(--ink);
+    box-shadow:0 4px 10px rgba(0,0,0,.4);font-family:inherit;position:relative;
+  }
+  .ml-card b{display:block;font-size:.84rem;line-height:1.2;margin-top:2px;}
+  .ml-th{display:block;font-size:.68rem;color:var(--ink-2);}
+  .ml-no{
+    display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;font-weight:900;font-size:.74rem;
+    background:linear-gradient(180deg,var(--gold-hi),var(--gold));border:1px solid var(--gold-dk);
+  }
+  .ml-card.passed .ml-no{background:linear-gradient(180deg,#a8e39a,#5fae53);border-color:#3d7a34;}
+  .ml-card.suggested{border-color:#c8402a;box-shadow:0 0 0 2px rgba(255,122,90,.6),0 4px 10px rgba(0,0,0,.4);}
+  .ml-card.suggested::after{content:'แนะนำ';position:absolute;top:-8px;right:8px;padding:0 6px;border-radius:5px;
+    font-size:.6rem;font-weight:800;color:#fff;background:#c8402a;}
+  .ml-stars{display:block;font-size:.66rem;color:#a8791f;margin-top:2px;}
+  #map-progress{font-size:.72rem;padding:5px 12px;}
 }
 @media (max-width:720px){
   .zone-topic{font-size:.74rem;} .zone-name{display:none;}
@@ -1095,7 +1165,9 @@ mark.signal{
         <h2 class="title-epic">LEXICORA</h2>
         <p>เลือกเรื่องที่อยากเรียน · เข้าได้ทุกดินแดน ไม่ต้องเรียงลำดับ</p>
       </div>
+      <div id="map-peek" aria-hidden="true"></div>
       <div id="map-footer">
+        <div id="map-list" role="list"></div>
         <div id="map-progress">—</div>
         <button class="btn" id="btn-map-codex" style="font-size:.82rem;padding:.44rem 1rem">📖 สมุดคำศัพท์</button>
         <button class="btn btn-gold" id="btn-map-board" style="font-size:.82rem;padding:.44rem 1rem">🏆 กระดานผู้กล้า</button>
@@ -3836,26 +3908,57 @@ function renderMapMarkers(){
     pin.style.top = (y - z.map.r*mapRect.w*.55)+'px';
     const got = S.words[i].filter(Boolean).length;
     // The grammar point is what the student is choosing between, so it leads.
+    // how much of the land has been found: crystals and clue stones together
+    const found = got + cluesFound(i), of = z.words.length + z.rules.length;
+    const suggested = !done && i === suggestedZone();
     pin.innerHTML =
+      (suggested ? '<div class="zone-ribbon">แนะนำ</div>' : '') +
       `<div class="zone-flag">
          <span class="zone-num">${done ? '✔' : z.no}</span>
          <span>
            <span class="zone-topic" style="display:block">${z.topic}</span>
            <span class="zone-name">${z.thai}</span>
+           <span class="zone-prog"><i style="width:${Math.round(found/of*100)}%"></i></span>
          </span>
        </div>
-       <div class="zone-stars">${'★'.repeat(S.stars[i])+'☆'.repeat(3-S.stars[i])}  ${got}/${z.words.length}${
+       <div class="zone-stars">${'★'.repeat(S.stars[i])+'☆'.repeat(3-S.stars[i])}${
          passed ? ' <span class="zone-pass">ผ่าน '+PASS_PCT+'%</span>' : ''}</div>
        <div class="zone-pole"></div><div class="zone-dot"></div>`;
     pin.onclick = () => enterZone(i);
+    pin.onpointerenter = e => { if(e.pointerType === 'mouse') showMapPeek(i, pin); };
+    pin.onpointerleave = () => $('map-peek').classList.remove('show');
     box.appendChild(pin);
   });
+  // On a phone the flags crowd into one another, so the lands are also laid
+  // out as a strip of cards to swipe through — one tap each, nothing on top.
+  const list = $('map-list'); list.innerHTML = '';
+  ZONES.forEach((z, i) => {
+    const got = S.words[i].filter(Boolean).length, found = got + cluesFound(i), of = z.words.length + z.rules.length;
+    const card = document.createElement('button');
+    card.type = 'button'; card.setAttribute('role', 'listitem');
+    card.className = 'ml-card' + (zonePassed(i) ? ' passed' : '') + (!S.cleared[i] && i === suggestedZone() ? ' suggested' : '');
+    card.innerHTML = `<span class="ml-no">${zonePassed(i) ? '✔' : z.no}</span><b>${z.topic}</b><span class="ml-th">${z.thai}</span>
+      <span class="zone-prog"><i style="width:${Math.round(found/of*100)}%"></i></span>
+      <span class="ml-stars">${'★'.repeat(S.stars[i])+'☆'.repeat(3-S.stars[i])}</span>`;
+    card.onclick = () => enterZone(i);
+    list.appendChild(card);
+  });
+  const sug = list.querySelector('.suggested');
+  if(sug) requestAnimationFrame(() => { list.scrollLeft = Math.max(0, sug.offsetLeft - 16); });
+  // the hero stands by the land they were last in
+  const hz = ZONES[zone], [hx, hy] = mapPt(hz), heroTok = document.createElement('img');
+  heroTok.id = 'map-hero'; heroTok.alt = '';
+  heroTok.src = heroImg() ? spriteURL(heroImg(), 0, 0, CH, CH) : '';
+  heroTok.style.left = (hx + 16) + 'px'; heroTok.style.top = hy + 'px';
+  box.appendChild(heroTok);
   // A flag hangs above its anchor (translateY(-100%)), so on a short screen the
   // northern islands push it off the top of the frame. Its own height is only
   // known after layout, hence a measured nudge rather than a guess at the top.
   const frame = box.getBoundingClientRect();
-  for(const pin of box.children){
-    const over = frame.top + 2 - pin.getBoundingClientRect().top;
+  // keep clear of the title band at the top as well as the frame's edge
+  const band = $('map-title').getBoundingClientRect().bottom + 6;
+  for(const pin of box.querySelectorAll('.zone-pin')){
+    const over = Math.max(frame.top + 2, band) - pin.getBoundingClientRect().top;
     if(over > 0) pin.style.top = (parseFloat(pin.style.top) + over) + 'px';
   }
   const passed = ZONES.filter((_,i) => zonePassed(i)).length;
@@ -3865,6 +3968,27 @@ function renderMapMarkers(){
     ` · 💎 คำศัพท์ <b>${wordsFound()}/${wordsTotal()}</b> · Lv.<b>${S.level}</b>`;
 }
 
+// Hovering a land with a mouse shows what is waiting there before you go in:
+// its guardian, and how far you have got.
+function showMapPeek(i, pin){
+  const z = ZONES[i], el = $('map-peek');
+  const got = S.words[i].filter(Boolean).length;
+  const pre = S.pre[i] ? Math.round(pct(S.pre[i].score, S.pre[i].total)) + '%' : '—';
+  const post = S.post[i] ? Math.round(pct(S.postBest[i], S.post[i].total)) + '%' : '—';
+  const state = zonePassed(i) ? '✅ ผ่านแล้ว' : S.cleared[i] ? '📝 ยังไม่ผ่านสอบหลังเรียน' : S.pre[i] ? '⚔ กำลังผจญภัย' : '✨ ยังไม่เคยเข้า';
+  const boss = IMG.battle_boss ? spriteURL(IMG.battle_boss, 0, (z.boss*3 + BATTLE_ROWS.idle)*CH, CH, CH) : '';
+  el.innerHTML =
+    `<img src="${boss}" alt="">
+     <div><small>ดินแดนที่ ${z.no} · ${z.name}</small><b>${z.topic}</b><span class="th">${z.thai}</span>
+       <div class="pk-row"><span>💎 ${got}/${z.words.length}</span><span>🗿 ${cluesFound(i)}/${z.rules.length}</span><span>${'★'.repeat(S.stars[i])+'☆'.repeat(3-S.stars[i])}</span></div>
+       <div class="pk-row"><span>ก่อนเรียน ${pre}</span><span>หลังเรียน ${post}</span></div>
+       <div class="pk-state">${state}</div></div>`;
+  const r = pin.getBoundingClientRect(), wrap = $('map-wrap').getBoundingClientRect();
+  const left = clamp(r.left + r.width/2 - wrap.left, 150, wrap.width - 150);
+  el.style.left = left + 'px';
+  el.style.top = (r.bottom - wrap.top + 8) + 'px';
+  el.classList.add('show');
+}
 function openMap(){
   mode = 'map';
   $('btn-map-board').style.display = SHEET_URL ? '' : 'none';
@@ -6497,38 +6621,100 @@ function update(dt){
 // ══════════════════════════════════════════════════════════════ LANDING
 function landingScene(){
   const c = $('landing-art');
-  const fit = () => { c.width = innerWidth; c.height = innerHeight; };
+  let dpr = 1, k = 2, W = 0, H = 0, ground = null;
+  const fit = () => {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    c.width = Math.round(innerWidth*dpr); c.height = Math.round(innerHeight*dpr);
+    // whole art pixels on whole device pixels, ~20 tiles of meadow across
+    k = Math.max(1, Math.floor(clamp(innerWidth/640, 1, 3)*dpr)/dpr);
+    W = innerWidth/k; H = innerHeight/k;
+    ground = null;
+  };
   fit(); addEventListener('resize', fit);
   const x = c.getContext('2d');
   const stars = Array.from({length:70}, () => ({x:Math.random(), y:Math.random()*.45, r:Math.random()*1.6+.4, p:Math.random()*6}));
-  const birds = Array.from({length:5}, () => ({x:Math.random(), y:.2+Math.random()*.2, s:.01+Math.random()*.015, p:Math.random()*6}));
-  (function loop(){
+  // The meadow is painted once per size from the same LPC tiles and trees as
+  // the first land, then the walkers move across it every frame.
+  function paintGround(){
+    const g = document.createElement('canvas');
+    g.width = c.width; g.height = c.height;
+    const gx = g.getContext('2d');
+    gx.setTransform(k*dpr, 0, 0, k*dpr, 0, 0); gx.imageSmoothingEnabled = false;
+    const top = Math.round(H*.8), road = top + TILE;
+    const grass = TERRAIN_ROWS.grass, dirt = TERRAIN_ROWS.dirt;
+    const rows = Math.ceil((H - top)/TILE) + 1, cols = Math.ceil(W/TILE) + 1;
+    const tile = (cc, r) => r === 1 ? dirt : grass;
+    if(IMG.terrain) for(let r=0;r<rows;r++) for(let cc=0;cc<cols;cc++)
+      gx.drawImage(IMG.terrain, Math.floor(hash2(cc,r,77)*4)*TILE, tile(cc,r)*TILE, TILE, TILE, cc*TILE, top + r*TILE, TILE, TILE);
+    if(IMG.edges) for(let r=0;r<rows;r++) for(let cc=0;cc<cols;cc++){
+      const t = tile(cc, r);
+      for(const [dx,dy,piece] of EDGE_NEIGHBOURS){
+        const nr = r+dy, nc = cc+dx; if(nr<0||nc<0||nr>=rows||nc>=cols) continue;
+        const nt = tile(nc, nr);
+        if(nt === t || TERRAIN_PRIORITY[nt] <= TERRAIN_PRIORITY[t]) continue;
+        gx.drawImage(IMG.edges, EDGE_COL[piece]*TILE, nt*TILE, TILE, TILE, cc*TILE, top + r*TILE, TILE, TILE);
+      }
+    }
+    // evening light on the meadow: warm at the horizon, dark toward us
+    const dusk = gx.createLinearGradient(0, top, 0, H);
+    dusk.addColorStop(0, 'rgba(255,170,90,.22)'); dusk.addColorStop(.35, 'rgba(30,40,24,.28)'); dusk.addColorStop(1, 'rgba(12,18,10,.7)');
+    gx.fillStyle = dusk; gx.fillRect(0, top, W, H - top);
+    // a soft dusk over the grass where it meets the sky
+    const fade = gx.createLinearGradient(0, top - 4, 0, top + 18);
+    fade.addColorStop(0, 'rgba(217,185,138,.9)'); fade.addColorStop(1, 'rgba(217,185,138,0)');
+    gx.fillStyle = fade; gx.fillRect(0, top - 4, W, 22);
+    // a treeline behind, washed into the evening air
+    if(IMG.props){
+      const trees = propsMatching(['tree_summer','tree_spring']);
+      let n = 0;
+      for(let px = -20; px < W + 40; n++){
+        const i = trees[Math.floor(hash2(n,3,91)*trees.length)], p = PROPS[i];
+        // leave the middle open, where the title sits
+        if(Math.abs(px - W/2) > W*.2)
+          gx.drawImage(hazedProp(i, '#7d8f5c', .35), Math.round(px - p.w/2), Math.round(top + 6 - p.h));
+        px += p.w*.55 + hash2(n,4,91)*30;
+      }
+    }
+    // the road, darker toward the bottom of the screen
+    const low = gx.createLinearGradient(0, road + TILE, 0, H);
+    low.addColorStop(0, 'rgba(20,30,18,0)'); low.addColorStop(1, 'rgba(20,30,18,.55)');
+    gx.fillStyle = low; gx.fillRect(0, road + TILE, W, H);
+    return {canvas: g, road};
+  }
+  // three heroes on the road, and a goblin who has not given up on them
+  const party = [
+    {img:'hero3', lag:0}, {img:'archer2', lag:44}, {img:'mage1', lag:88},
+    {mon:0, lag:170},
+  ];
+  let walk = 0;
+  (function loop(t){
     requestAnimationFrame(loop);
     if(!$('screen-landing').classList.contains('show')) return;
-    const t = performance.now()/1000, w = c.width, h = c.height;
-    x.clearRect(0,0,w,h);
+    const s = t/1000;
+    if(!ground) ground = paintGround();
+    x.setTransform(1,0,0,1,0,0);
+    x.clearRect(0, 0, c.width, c.height);
     x.save();
-    for(const s of stars){
-      x.globalAlpha = .28+Math.sin(t*1.6+s.p)*.24;
+    for(const st of stars){
+      x.globalAlpha = .28+Math.sin(s*1.6+st.p)*.24;
       x.fillStyle = '#fff6dc';
-      x.fillRect(s.x*w, s.y*h, s.r, s.r);
+      x.fillRect(st.x*c.width, st.y*c.height, st.r*dpr, st.r*dpr);
     }
     x.restore();
-    for(const b of [{y:.70,col:'#4d6b4a',amp:22,f:.0016,sp:.02},
-                    {y:.80,col:'#3c5a3d',amp:30,f:.0012,sp:.035},
-                    {y:.90,col:'#2c452f',amp:20,f:.0022,sp:.05}]){
-      x.fillStyle = b.col; x.beginPath(); x.moveTo(0,h);
-      for(let px=0; px<=w; px+=8) x.lineTo(px, h*b.y + Math.sin(px*b.f + t*b.sp*6)*b.amp);
-      x.lineTo(w,h); x.closePath(); x.fill();
+    x.drawImage(ground.canvas, 0, 0);
+    x.setTransform(k*dpr, 0, 0, k*dpr, 0, 0); x.imageSmoothingEnabled = false;
+    walk = REDUCED ? W*.3 : (s*26) % (W + 300);
+    const fr = REDUCED ? 0 : 1 + Math.floor(s*9) % 8;
+    const feet = ground.road + TILE*.6;
+    for(const m of party){
+      const px = Math.round(walk - m.lag - 40), py = Math.round(feet - CH_FOOT);
+      if(px < -CH || px > W + CH) continue;
+      x.globalAlpha = .35; x.fillStyle = '#000';
+      x.beginPath(); x.ellipse(px + CH/2, feet, 13, 4, 0, 0, 7); x.fill(); x.globalAlpha = 1;
+      if(m.mon !== undefined){ if(IMG.monsters) x.drawImage(IMG.monsters, fr*CH, monRow(m.mon, 2)*CH, CH, CH, px, py, CH, CH); }
+      else { const im = IMG[m.img] || IMG.hero0; if(im) x.drawImage(im, fr*CH, 2*CH, CH, CH, px, py, CH, CH); }
     }
-    for(const bd of birds){
-      bd.x += bd.s*.004; if(bd.x > 1.1) bd.x = -.1;
-      const bx = bd.x*w, by = bd.y*h + Math.sin(t+bd.p)*10;
-      x.strokeStyle = 'rgba(40,30,20,.5)'; x.lineWidth = 2;
-      const flap = Math.sin(t*6+bd.p)*5;
-      x.beginPath(); x.moveTo(bx-8, by); x.lineTo(bx, by-flap); x.lineTo(bx+8, by); x.stroke();
-    }
-  })();
+  })(performance.now());
 }
 
 // ═════════════════════════════════════════════════════════════════ BOOT
@@ -6540,14 +6726,37 @@ function buildClassPicker(){
     const card = document.createElement('div');
     card.className = 'class-card' + (k===pickedClass ? ' sel' : '');
     card.title = C.perk;
-    card.innerHTML = `<canvas width="64" height="64"></canvas><b>${C.thai}</b><span>${C.perk}</span>`;
-    const cx = card.querySelector('canvas').getContext('2d');
-    cx.imageSmoothingEnabled = false;
-    const im = IMG[k+'1'] || IMG[k+'0'];
-    if(im) cx.drawImage(im, 0, 0, CH, CH, 0, 0, CH, CH);
+    // three small meters say the same thing as the perk line, at a glance
+    const bar = (label, n, of) => `<div class="cstat"><em>${label}</em>${
+      Array.from({length:of}, (_,i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div>`;
+    card.innerHTML = `<canvas width="64" height="64" data-k="${k}"></canvas><b>${C.thai}</b>` +
+      bar('พลังชีวิต', 1 + C.bonusHP, 3) + bar('โจมตี', C.dmg + (k === 'archer' ? 1 : 0), 3) + bar('เวท', C.hint ? 3 : 1, 3) +
+      `<span>${C.perk}</span>`;
     card.onclick = () => { pickedClass = k; sfx.open(); buildClassPicker(); };
     grid.appendChild(card);
   });
+  if(!classAnim) classAnim = requestAnimationFrame(animateClasses);
+}
+// The class cards play the fighters' own ULPC battle animations: the one you
+// picked swings its weapon, the others wait their turn.
+let classAnim = 0;
+function animateClasses(t){
+  classAnim = 0;
+  if(!$('screen-register').classList.contains('show')) return;
+  classAnim = requestAnimationFrame(animateClasses);
+  for(const cv of $('class-grid').querySelectorAll('canvas')){
+    const k = cv.dataset.k, im = IMG['battle_' + k + '1'] || IMG['battle_' + k + '0'];
+    if(!im) continue;
+    const sel = k === pickedClass, set = BATTLE_FRAMES[k];
+    // picked: attack, then a breath of idle, on a loop
+    const cyc = (t/1000) % 1.8, attacking = sel && cyc < set.attack/BATTLE_SPEED.attack && !REDUCED;
+    const row = attacking ? BATTLE_ROWS.attack : BATTLE_ROWS.idle;
+    const fr = attacking ? Math.floor(cyc*BATTLE_SPEED.attack) % set.attack
+             : REDUCED ? 0 : Math.floor(t/1000*BATTLE_SPEED.idle) % set.idle;
+    const cx = cv.getContext('2d'); cx.imageSmoothingEnabled = false;
+    cx.clearRect(0, 0, 64, 64);
+    cx.drawImage(im, fr*CH, row*CH, CH, CH, 0, 0, 64, 64);
+  }
 }
 
 // Retyping a name is where a student's record gets split in two. Offering the
