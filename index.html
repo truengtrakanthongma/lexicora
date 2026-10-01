@@ -327,6 +327,15 @@ kbd{
   78%{opacity:1;}
   100%{opacity:0;transform:translateY(-10px);}
 }
+/* ------------------------------------------------- quest progress pips */
+.quest-pips{display:flex;gap:12px;flex-wrap:wrap;margin-top:5px;font-size:.72rem;}
+.quest-pips > span{display:flex;align-items:center;gap:3px;}
+.qp{width:9px;height:9px;border-radius:2px;background:rgba(255,238,196,.18);border:1px solid rgba(255,214,150,.35);}
+.qp.clue{transform:rotate(45deg);width:8px;height:8px;}
+.qp.on.clue{background:linear-gradient(180deg,#ffe9a8,#e8b84b);border-color:#a8791f;box-shadow:0 0 6px rgba(255,210,90,.6);}
+.qp.gem{border-radius:50%;}
+.qp.on.gem{background:radial-gradient(circle at 35% 30%,#fff,#7fd7ff 45%,#2a8bc0);border-color:#1f6a94;}
+
 /* ------------------------------------------------------------- finale */
 #screen-finale{background:radial-gradient(ellipse at 50% 30%,#1c2a48,#07090d 70%);overflow-y:auto;}
 #finale-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
@@ -554,6 +563,53 @@ kbd{
 .word-chip b{display:block;font-family:'Cinzel',serif;color:var(--wood);font-size:.98rem;}
 .word-chip span{font-size:.82rem;color:var(--ink-2);}
 .word-chip.locked{opacity:.42;filter:grayscale(.6);}
+/* word cards: picture on top, word and meaning underneath */
+#codex-body .word-grid{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));}
+.word-card-sm{
+  display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px 9px;border-radius:10px;
+  background:linear-gradient(180deg,#fffaef,#ecdcb9);border:2px solid var(--wood-3);box-shadow:0 3px 0 #a5825a;
+  font-family:inherit;cursor:pointer;transition:transform .12s;
+}
+.word-card-sm:hover{transform:translateY(-3px) rotate(-1deg);}
+.word-card-sm b{font-family:'Cinzel',serif;color:var(--wood);font-size:.95rem;margin-top:4px;}
+.word-card-sm span{font-size:.78rem;color:var(--ink-2);}
+.word-card-sm.locked{cursor:default;opacity:.6;filter:grayscale(.5);}
+.wpic{width:84px;height:84px;border-radius:9px;overflow:hidden;flex:none;border:2px solid var(--wood);
+  background:#2a1a0e;box-shadow:inset 0 0 0 2px rgba(255,230,170,.35);}
+.wpic img{width:100%;height:100%;object-fit:cover;display:block;}
+.wpic.emblem{display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,#fff8,transparent 45%),radial-gradient(circle,var(--a),#2a1a0e 120%);}
+.wpic.emblem span,#word-card .wpic.emblem span{display:block;font-family:'Cinzel',serif;font-weight:900;font-size:2.2rem;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6);}
+#word-card .wpic.emblem span{font-size:1.8rem;}
+.wpic.big.emblem span{font-size:7rem;}
+.wpic.back{display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:900;font-size:2rem;color:#e8b84b;
+  background:repeating-linear-gradient(45deg,#3a2414 0 8px,#4a2f1e 8px 16px);}
+.wpic.big{width:min(260px,70vw);height:min(260px,70vw);border-radius:14px;}
+.word-zoom{position:fixed;inset:0;z-index:30;display:grid;place-items:center;background:rgba(10,6,3,.7);}
+.wz-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 22px 16px;border-radius:16px;
+  background:linear-gradient(180deg,#fffaef,#ecdcb9);border:3px solid var(--wood);box-shadow:0 0 0 3px var(--gold-dk),0 24px 60px rgba(0,0,0,.6);
+  animation:combo-pop .45s cubic-bezier(.2,1.5,.4,1);max-width:92vw;}
+.wz-card b{font-family:'Cinzel',serif;font-size:2rem;color:var(--wood);}
+.wz-card > span{font-size:1.1rem;color:var(--ink-2);}
+.wz-card small{font-size:.66rem;color:var(--ink-2);max-width:280px;text-align:center;}
+/* the card that slides in when a crystal is picked up */
+#word-card{
+  position:absolute;z-index:45;left:max(14px,env(safe-area-inset-left));top:196px;display:flex;align-items:center;gap:10px;
+  padding:10px 14px 10px 10px;border-radius:12px;max-width:min(320px,80vw);pointer-events:auto;
+  background:linear-gradient(180deg,#fffaef,#ecdcb9);border:2px solid var(--wood);
+  box-shadow:0 0 0 2px var(--gold-dk),0 12px 28px rgba(0,0,0,.5);transform:translateX(-130%);opacity:0;
+}
+#word-card.go{animation:wc-in .5s cubic-bezier(.2,1.3,.4,1) forwards;}
+#word-card.out{transform:none;opacity:1;animation:wc-out .35s ease-in forwards;}
+@keyframes wc-in{to{transform:none;opacity:1;}}
+@keyframes wc-out{to{transform:translateX(-130%);opacity:0;}}
+#word-card small{position:absolute;top:-10px;left:12px;padding:1px 8px;border-radius:6px;font-weight:800;font-size:.66rem;
+  color:#fff;background:linear-gradient(180deg,#5ab7e8,#2a7fb0);}
+#word-card .wpic{width:64px;height:64px;}
+#word-card b{display:block;font-family:'Cinzel',serif;font-size:1.3rem;color:var(--wood);line-height:1.1;}
+#word-card span{display:block;color:var(--ink-2);font-size:.92rem;}
+#word-card .say{margin-top:4px;border:1px solid var(--wood-3);background:#fff8e6;border-radius:8px;cursor:pointer;padding:1px 8px;}
+@media (max-width:560px){ #word-card{top:auto;bottom:96px;left:10px;} }
 
 /* --------------------------------------------------------- reward pop */
 #reward-icon{
@@ -1114,6 +1170,7 @@ mark.signal{
   <div id="levelup" aria-live="polite"></div>
   <div id="iris"></div>
   <div id="stamp" aria-live="polite"></div>
+  <div id="word-card" aria-live="polite"></div>
   <div id="zone-card" aria-live="polite"><small id="zc-no"></small><b id="zc-name"></b><span id="zc-thai"></span></div>
 
   <!-- ======================================================== LANDING -->
@@ -1428,6 +1485,7 @@ mark.signal{
   </div>
 </div>
 <script src="assets/props.js"></script>
+<script src="assets/words/photos.js"></script>
 <script>
 (() => {
 'use strict';
@@ -1951,6 +2009,9 @@ const EDGE_NEIGHBOURS = [
 ];
 // Prop metadata comes from assets/props.js, emitted by scripts/build_assets.py
 const PROPS = window.LEXICORA_PROPS || [];
+// word → {src, artist, license, url}; words without a fitting photo (happy,
+// believe, already…) are simply absent and get an emblem instead
+const WORD_PHOTOS = window.LEXICORA_WORD_PHOTOS || {};
 const propsNamed = pre => PROPS.map((p,i)=>[p,i]).filter(([p]) => p.n.startsWith(pre)).map(([,i]) => i);
 function propsMatching(prefixes){
   const out = [];
@@ -3479,7 +3540,63 @@ function drawWorld(dt){
   g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(18,10,26,.5)');
   ctx.fillStyle = g; ctx.fillRect(0,0,VW,VH);
 
+  drawCompass(camX, camY, t);
   if(trauma > 0) trauma = Math.max(0, trauma - dt*1.9);
+}
+
+// ── the compass ────────────────────────────────────────────────────────────
+// The quest line says what to do next; this says where. When that place is
+// off screen an arrow on the edge points at it, with how far it is, so a child
+// who has wandered off is never more than a glance from the way back.
+function questTarget(){
+  const Z = ZONES[zone], near = list => {
+    let best = null, bd = Infinity;
+    for(const o of list){ const d = Math.hypot(o.x - player.x, o.y - player.y); if(d < bd){ bd = d; best = o; } }
+    return best;
+  };
+  if(!S.lessonSeen[zone] && world.shrine) return {o:world.shrine, icon:'📜'};
+  if(!S.cleared[zone]){
+    const c = near(world.clues.filter(c => !S.clues[zone][c.idx]));
+    if(c) return {o:c, icon:'🗿'};
+    return world.boss ? {o:world.boss, icon:'⚔️'} : null;
+  }
+  if(!zonePassed(zone)){
+    const sage = (world.npcs||[]).find(n => NPC_KINDS[n.kind] && NPC_KINDS[n.kind].key === 'sage');
+    return sage ? {o:sage, icon:'📜'} : null;
+  }
+  const cr = near(world.crystals.filter(c => !S.words[zone][c.idx]));
+  return cr ? {o:cr, icon:'💎'} : null;
+}
+function drawCompass(camX, camY, t){
+  const q = questTarget(); if(!q) return;
+  const sx = (q.o.x - camX)*SCALE, sy = (q.o.y - camY - 16)*SCALE;
+  const m = 46;
+  if(sx > m && sx < VW - m && sy > m + 60 && sy < VH - m) return;   // on screen: the thing itself is the sign
+  const cx = VW/2, cy = VH/2, dx = sx - cx, dy = sy - cy;
+  // where the line from the centre to the target leaves the safe box
+  const hw = VW/2 - m, hh = VH/2 - m - 30;
+  const k = Math.min(hw/Math.abs(dx || 1e-6), hh/Math.abs(dy || 1e-6));
+  const ax = cx + dx*k, ay = cy + 15 + dy*k, ang = Math.atan2(dy, dx);
+  const pulse = REDUCED ? 0 : Math.sin(t*4)*3;
+  const tiles = Math.round(Math.hypot(q.o.x - player.x, q.o.y - player.y)/TILE);
+  ctx.save();
+  ctx.translate(Math.round(ax), Math.round(ay));
+  ctx.save(); ctx.rotate(ang); ctx.translate(18 + pulse, 0);
+  ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-6, -10); ctx.lineTo(-2, 0); ctx.lineTo(-6, 10); ctx.closePath();
+  ctx.fillStyle = '#ffd25a'; ctx.strokeStyle = '#3a2408'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+  ctx.stroke(); ctx.fill();
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(0, 0, 17, 0, 7);
+  ctx.fillStyle = 'rgba(26,15,7,.86)'; ctx.fill();
+  ctx.lineWidth = 2; ctx.strokeStyle = '#e8b84b'; ctx.stroke();
+  ctx.font = '16px system-ui, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(q.icon, 0, 1);
+  ctx.font = '700 11px Kanit, sans-serif'; ctx.fillStyle = '#fff3cf';
+  ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,10,4,.9)';
+  // the distance sits on the side away from the arrow, so the two never overlap
+  const lx = -Math.cos(ang)*34, ly = -Math.sin(ang)*30 + 1;
+  ctx.strokeText(`${tiles} ก้าว`, lx, ly); ctx.fillText(`${tiles} ก้าว`, lx, ly);
+  ctx.restore();
 }
 
 // One soft blob, built once and reused for every fog bank.
@@ -3616,9 +3733,11 @@ function refreshHUD(){
         (clues < Z.rules.length ? ' 🗿' : ' ✔');
   // A list of counters told the student where they stood but never what to do.
   // One highlighted instruction, chosen from the same state, does.
+  const pips = (n, of, cls) => Array.from({length:of}, (_,i) => `<i class="${cls}${i < n ? ' on' : ''}"></i>`).join('');
   $('quest-text').innerHTML =
     `<span class="quest-next">${nextStepText()}</span>` +
-    `<span class="quest-sub">คริสตัล ${got}/${Z.words.length} · ${clueLine}</span>`;
+    `<span class="quest-pips"><span title="${clueLine}">🗿 ${pips(clues, Z.rules.length, 'qp clue')}</span>` +
+    `<span title="คริสตัล ${got}/${Z.words.length}">💎 ${pips(got, Z.words.length, 'qp gem')}</span></span>`;
   const pc = $('portrait').getContext('2d');
   pc.imageSmoothingEnabled = false; pc.clearRect(0,0,CH,CH);
   const im = heroImg(); if(im) pc.drawImage(im, 0, 0, CH, CH, 0, 0, CH, CH);
@@ -6359,7 +6478,63 @@ function toggleCodex(){
   if(battle) return;
   codexTab = zone; renderCodex(); showOverlay('screen-codex'); sfx.open();
 }
+// ── word cards ─────────────────────────────────────────────────────────────
+// A word met as a picture sticks better than a word met as a pair of strings,
+// so every crystal is a card: the photo when there is one, an emblem in the
+// land's colour when the word is not something you can photograph.
+function wordPic(zi, i, big){
+  const w = ZONES[zi].words[i], ph = WORD_PHOTOS[w[0]];
+  if(ph) return `<div class="wpic${big ? ' big' : ''}"><img src="${ph.src}" alt="${w[0]}" loading="lazy"></div>`;
+  return `<div class="wpic emblem${big ? ' big' : ''}" style="--a:${ZONES[zi].accent}"><span>${w[0][0].toUpperCase()}</span></div>`;
+}
+function photoCredit(word){
+  const ph = WORD_PHOTOS[word];
+  return ph ? `ภาพ: ${escapeHTML(ph.artist)} · ${escapeHTML(ph.license)} · Wikimedia Commons` : '';
+}
+// The browser's own voice, where it has an English one. Nothing is sent
+// anywhere; offline machines without a voice simply get no button.
+const canSpeak = 'speechSynthesis' in window && typeof SpeechSynthesisUtterance === 'function';
+function sayWord(word){
+  if(!canSpeak || !soundMode) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(word);
+    u.lang = 'en-US'; u.rate = .85;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+let wordCardTimer = 0;
+function showWordCard(zi, i){
+  const w = ZONES[zi].words[i], el = $('word-card');
+  const n = S.words[zi].filter(Boolean).length;
+  el.innerHTML = `<small>คำใหม่! ${n}/${ZONES[zi].words.length}</small>${wordPic(zi, i)}
+    <div><b>${w[0]}</b><span>${w[1]}</span>${canSpeak ? '<button type="button" class="say" aria-label="ฟังเสียง">🔊</button>' : ''}</div>`;
+  const say = el.querySelector('.say');
+  if(say) say.onclick = e => { e.stopPropagation(); sayWord(w[0]); };
+  el.className = ''; void el.offsetWidth; el.className = 'go';
+  clearTimeout(wordCardTimer);
+  wordCardTimer = setTimeout(() => { el.className = 'out'; }, 3400);
+  sayWord(w[0]);
+}
+function openWordZoom(zi, i){
+  const w = ZONES[zi].words[i], box = $('codex-body');
+  const old = box.querySelector('.word-zoom'); if(old) old.remove();
+  const z = document.createElement('div');
+  z.className = 'word-zoom';
+  z.innerHTML = `<div class="wz-card">${wordPic(zi, i, true)}<b>${w[0]}</b><span>${w[1]}</span>
+    ${canSpeak ? '<button type="button" class="btn btn-gold say">🔊 ฟังเสียง</button>' : ''}
+    <small>${photoCredit(w[0])}</small>
+    <button type="button" class="panel-x" aria-label="ปิด">✕</button></div>`;
+  z.onclick = e => { if(e.target === z || e.target.classList.contains('panel-x')) z.remove(); };
+  const say = z.querySelector('.say'); if(say) say.onclick = () => sayWord(w[0]);
+  box.appendChild(z);
+  sayWord(w[0]);
+}
 function renderCodex(){
+  setTimeout(() => {
+    for(const b of $('codex-body').querySelectorAll('.word-card-sm[data-w]'))
+      b.onclick = () => openWordZoom(codexTab, +b.dataset.w);
+  });
   const tabs = $('codex-tabs'); tabs.innerHTML = '';
   ZONES.forEach((z,i) => {
     const b = document.createElement('button');
@@ -6376,8 +6551,8 @@ function renderCodex(){
      </div>
      <div class="word-grid">` +
     Z.words.map((w,i) => S.words[codexTab][i]
-      ? `<div class="word-chip"><b>${w[0]}</b><span>${w[1]}</span></div>`
-      : `<div class="word-chip locked"><b>? ? ?</b><span>ยังไม่พบ</span></div>`).join('') +
+      ? `<button type="button" class="word-card-sm" data-w="${i}">${wordPic(codexTab, i)}<b>${w[0]}</b><span>${w[1]}</span></button>`
+      : `<div class="word-card-sm locked"><div class="wpic back">?</div><b>? ? ?</b><span>ยังไม่พบ</span></div>`).join('') +
     `</div>
      <div class="rule-gold tight"></div>
      <div style="display:flex;justify-content:space-between;align-items:baseline">
@@ -6521,7 +6696,7 @@ function update(dt){
       floatText(c.x, c.y+2, w[1], '#ffe9a8', 10);
       logEvent({type:'เก็บคริสตัลคำศัพท์', zone: zone+1, topic: ZONES[zone].topic,
         detail: w[0] + ' = ' + w[1], v1: S.words[zone].filter(Boolean).length, v2: ZONES[zone].words.length});
-      toast('💎', `<b>${w[0]}</b> — ${w[1]}`);
+      showWordCard(zone, c.idx);
       refreshHUD(); save();
     }
   }
@@ -7011,6 +7186,7 @@ $('btn-cert-save').onclick = async () => {
 if(params.get('debug') === '1') window.__lex = {
   get S(){ return S; }, get zone(){ return zone; }, get battle(){ return battle; },
   get test(){ return test; }, get mode(){ return mode; }, music, get soundMode(){ return soundMode; },
+  get player(){ return player; }, get cam(){ return cam; }, showWordCard, questTarget,
   startBattle, enterZone, openMap, winBattle, answerBattle, save, refreshHUD, openFinale, drawCertificate, levelUp,
   openLesson, startTest, readClue, grantClue, renderTeacher, renderCodex, showOverlay,
   world: () => world,

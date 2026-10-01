@@ -47,12 +47,18 @@ head_kept = "\n".join(keep)
 props_js = open(os.path.join(ROOT, "assets", "props.js"), encoding="utf-8").read()
 body = body.replace('<script src="assets/props.js"></script>',
                     "<script>\n" + props_js.strip() + "\n</script>")
+# the word photos' manifest goes in the same way; its .jpg paths are turned
+# into data: URIs below along with every other image
+photos_js = open(os.path.join(ROOT, "assets", "words", "photos.js"), encoding="utf-8").read()
+body = body.replace('<script src="assets/words/photos.js"></script>',
+                    "<script>\n" + photos_js.strip() + "\n</script>")
 
 # ---- inline every atlas the loader names -----------------------------------
 def data_uri(rel):
     path = os.path.join(ROOT, rel)
     with open(path, "rb") as f:
-        return "data:image/png;base64," + base64.b64encode(f.read()).decode("ascii")
+        mime = "image/jpeg" if rel.endswith((".jpg", ".jpeg")) else "image/png"
+        return f"data:{mime};base64," + base64.b64encode(f.read()).decode("ascii")
 
 
 inlined, missing = 0, []
@@ -95,7 +101,7 @@ def sub_literal(m):
     return quote + data_uri(rel) + quote
 
 
-body = re.sub(r"(['\"])(assets/[A-Za-z0-9_./-]+\.png)\1", sub_literal, body)
+body = re.sub(r"(['\"])(assets/[A-Za-z0-9_./-]+\.(?:png|jpg))\1", sub_literal, body)
 
 if missing:
     sys.exit("missing assets: " + ", ".join(sorted(set(missing))))
