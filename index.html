@@ -1134,7 +1134,9 @@ mark.signal{
   border:2px solid var(--gold-dk);color:#ffeec4;font-size:.82rem;font-weight:600;
 }
 #map-list{display:none;}
-@media (max-width:560px){
+/* phones either way up: upright they are narrow, on their side they are short,
+   and both crowd the flags into each other */
+@media (max-width:560px), (max-height:520px){
   /* phones: the map keeps numbered flags only; the strip below does the choosing */
   .zone-flag > span:last-child,.zone-stars,.zone-ribbon{display:none;}
   .zone-flag{padding:3px;}
@@ -1162,6 +1164,11 @@ mark.signal{
     font-size:.6rem;font-weight:800;color:#fff;background:#c8402a;}
   .ml-stars{display:block;font-size:.66rem;color:#a8791f;margin-top:2px;}
   #map-progress{font-size:.72rem;padding:5px 12px;}
+}
+@media (max-height:520px){
+  .ml-card{flex-basis:118px;padding:5px 8px;}
+  .ml-card .ml-th,.ml-card .ml-stars{display:none;}
+  .ml-card b{font-size:.76rem;}
 }
 @media (max-width:720px){
   .zone-topic{font-size:.74rem;} .zone-name{display:none;}
