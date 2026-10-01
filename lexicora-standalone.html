@@ -575,7 +575,9 @@ kbd{
 .wpic img{width:100%;height:100%;object-fit:cover;display:block;}
 .wpic.emblem{display:grid;place-items:center;
   background:radial-gradient(circle at 35% 30%,#fff8,transparent 45%),radial-gradient(circle,var(--a),#2a1a0e 120%);}
-.wpic.emblem span{font-family:'Cinzel',serif;font-weight:900;font-size:2.2rem;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6);}
+.wpic.emblem span,#word-card .wpic.emblem span{display:block;font-family:'Cinzel',serif;font-weight:900;font-size:2.2rem;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.6);}
+#word-card .wpic.emblem span{font-size:1.8rem;}
+.wpic.big.emblem span{font-size:7rem;}
 .wpic.back{display:grid;place-items:center;font-family:'Cinzel',serif;font-weight:900;font-size:2rem;color:#e8b84b;
   background:repeating-linear-gradient(45deg,#3a2414 0 8px,#4a2f1e 8px 16px);}
 .wpic.big{width:min(260px,70vw);height:min(260px,70vw);border-radius:14px;}
@@ -761,7 +763,51 @@ mark.signal{
 #screen-teacher{background:#f6efdd;overflow-y:auto;align-items:flex-start;padding:0;}
 #teacher-wrap{width:min(1180px,96vw);margin:0 auto;padding:22px 16px 60px;color:var(--ink);}
 #teacher-summary{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0 18px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0 18px;
+}
+@media (max-width:760px){ #teacher-summary{grid-template-columns:repeat(2,1fr);} }
+#teacher-actions{display:flex;justify-content:flex-end;margin-top:-6px;}
+.tcard .st{display:inline-block;margin-top:4px;font-style:normal;font-size:.7rem;font-weight:800;padding:1px 7px;border-radius:999px;}
+.st.ok{color:#1f4d1c;background:#d6f0c8;border:1px solid #3f7a35;}
+.st.no{color:#6d1a14;background:#f6d2cc;border:1px solid #b33a32;}
+/* per-land chart */
+#teacher-chart{background:#fffaf0;border:1px solid rgba(74,47,30,.25);border-radius:10px;padding:10px 12px 8px;}
+.chart-legend{display:flex;gap:16px;font-size:.78rem;color:var(--ink-2);margin-bottom:4px;}
+.chart-legend i,.chart-tip i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;}
+.chart-wrap{position:relative;}
+.chart-wrap svg{width:100%;height:auto;display:block;overflow:visible;}
+.chart-wrap .grid{stroke:rgba(74,47,30,.12);stroke-width:1;}
+.chart-wrap .pass{stroke:#3a2716;stroke-width:1.5;stroke-dasharray:5 4;}
+.chart-wrap .ax{font-size:10px;fill:#6b5238;font-family:Kanit,sans-serif;}
+.chart-wrap .ax.num{font-weight:700;fill:#3a2716;}
+.chart-wrap .ax.small{font-size:8.5px;}
+.chart-wrap .hit{fill:transparent;cursor:crosshair;}
+.chart-wrap .hit.on{fill:rgba(74,47,30,.06);}
+.chart-tip{position:absolute;pointer-events:none;min-width:170px;padding:7px 10px;border-radius:8px;font-size:.76rem;
+  background:#2e1b10;color:#fff3cf;box-shadow:0 8px 20px rgba(0,0,0,.3);}
+.chart-tip b{display:block;margin-bottom:3px;}
+.chart-tip span{display:block;}
+.chart-table summary{cursor:pointer;font-size:.78rem;color:var(--wood);margin-top:6px;}
+.chart-table table{border-collapse:collapse;width:100%;font-size:.78rem;margin-top:6px;font-variant-numeric:tabular-nums;}
+.chart-table th,.chart-table td{border:1px solid rgba(74,47,30,.25);padding:4px 8px;text-align:center;}
+.chart-table th{background:linear-gradient(180deg,#e9d9b6,#dcc79a);}
+/* headers stay put while the class list scrolls */
+#teacher-table th{position:sticky;top:0;z-index:1;}
+/* ---- printing the report for the research write-up ---- */
+@media print{
+  @page{size:A4;margin:14mm;}
+  html,body{height:auto;overflow:visible;background:#fff;}
+  #stage{position:static;overflow:visible;background:#fff;}
+  #stage > *:not(#screen-teacher){display:none !important;}
+  #screen-teacher{position:static;display:block !important;background:#fff;overflow:visible;}
+  #teacher-wrap{width:100%;padding:0;}
+  #teacher-actions,.no-print{display:none !important;}
+  .tcard,#teacher-chart,.ia-zone,tr{break-inside:avoid;}
+  #teacher-table th{position:static;}
+  .chart-table{display:block;} .chart-table summary{display:none;}
+  .chart-table[open] table,.chart-table table{display:table;}
+  .title-epic{color:#3a2716 !important;-webkit-text-fill-color:#3a2716 !important;text-shadow:none !important;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
 .tcard{
   padding:10px 12px;border-radius:10px;border:2px solid var(--wood-3);
@@ -1084,7 +1130,9 @@ mark.signal{
   border:2px solid var(--gold-dk);color:#ffeec4;font-size:.82rem;font-weight:600;
 }
 #map-list{display:none;}
-@media (max-width:560px){
+/* phones either way up: upright they are narrow, on their side they are short,
+   and both crowd the flags into each other */
+@media (max-width:560px), (max-height:520px){
   /* phones: the map keeps numbered flags only; the strip below does the choosing */
   .zone-flag > span:last-child,.zone-stars,.zone-ribbon{display:none;}
   .zone-flag{padding:3px;}
@@ -1112,6 +1160,11 @@ mark.signal{
     font-size:.6rem;font-weight:800;color:#fff;background:#c8402a;}
   .ml-stars{display:block;font-size:.66rem;color:#a8791f;margin-top:2px;}
   #map-progress{font-size:.72rem;padding:5px 12px;}
+}
+@media (max-height:520px){
+  .ml-card{flex-basis:118px;padding:5px 8px;}
+  .ml-card .ml-th,.ml-card .ml-stars{display:none;}
+  .ml-card b{font-size:.76rem;}
 }
 @media (max-width:720px){
   .zone-topic{font-size:.74rem;} .zone-name{display:none;}
@@ -1396,11 +1449,16 @@ mark.signal{
       <h2 class="title-epic" style="font-size:1.7rem">รายงานผลการเรียน · Lexicora</h2>
       <div class="rule-gold"></div>
       <p class="tnote" id="teacher-setup">—</p>
+      <div id="teacher-actions"><button class="btn btn-gold" id="btn-print" type="button">🖨 พิมพ์รายงาน</button></div>
       <div id="teacher-summary"></div>
+      <div class="label-eyebrow" style="margin-top:6px">คะแนนเฉลี่ยก่อนเรียน–หลังเรียน รายดินแดน (ร้อยละ)</div>
+      <div id="teacher-chart"></div>
+      <div class="label-eyebrow" style="margin-top:18px">รายบุคคล</div>
       <div id="teacher-table"></div>
       <div class="label-eyebrow" style="margin-top:20px">วิเคราะห์รายข้อ (ค่าความยาก p)</div>
       <p class="tnote">p = สัดส่วนนักเรียนที่ตอบข้อนั้นถูก · <b>แดง</b> = ยากเกินไป (p&lt;.20) · <b>เขียว</b> = ง่ายเกินไป (p&gt;.80) · ข้อคำศัพท์สร้างจากคลังคำของด่าน จึงไม่อยู่ในตารางนี้</p>
       <div id="teacher-items"></div>
+      <div class="no-print">
       <div class="label-eyebrow" style="margin-top:20px">ส่งออกข้อมูล (CSV)</div>
       <p class="tnote">กดคัดลอก แล้ววางใน Excel หรือ Google Sheets — เลือก “แยกข้อความเป็นคอลัมน์” ด้วยเครื่องหมายจุลภาค</p>
       <textarea id="teacher-csv" readonly rows="6"></textarea>
@@ -1414,6 +1472,7 @@ mark.signal{
       <div style="margin-top:8px">
         <button class="btn btn-gold" id="btn-import">รวมผล</button>
         <span id="import-msg" class="tnote"></span>
+      </div>
       </div>
     </div>
   </div>
@@ -1483,7 +1542,7 @@ window.LEXICORA_PROPS=[{"n":"tree_spring0","x":2,"y":110,"w":94,"h":93,"s":1,"fw
 <script>
 // Photographs for the word cards, from Wikimedia Commons. Written by
 // scripts/fetch_word_photos.py; every entry carries the credit its licence
-// asks for, and the game shows it on the enlarged card.
+// asks for, and the game shows it on the enlarged word card.
 window.LEXICORA_WORD_PHOTOS = {};
 </script>
 <script>
@@ -3613,7 +3672,9 @@ function drawCompass(camX, camY, t){
   ctx.fillText(q.icon, 0, 1);
   ctx.font = '700 11px Kanit, sans-serif'; ctx.fillStyle = '#fff3cf';
   ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(20,10,4,.9)';
-  ctx.strokeText(`${tiles} ก้าว`, 0, 28); ctx.fillText(`${tiles} ก้าว`, 0, 28);
+  // the distance sits on the side away from the arrow, so the two never overlap
+  const lx = -Math.cos(ang)*34, ly = -Math.sin(ang)*30 + 1;
+  ctx.strokeText(`${tiles} ก้าว`, lx, ly); ctx.fillText(`${tiles} ก้าว`, lx, ly);
   ctx.restore();
 }
 
@@ -6039,7 +6100,9 @@ function renderTeacher(){
     }).filter(Boolean)
     .sort((a,b) => (a.cls+a.no).localeCompare(b.cls+b.no, 'th', {numeric:true}));
   const R = classReport(rows);
-  const card = (v, label, cls='') => `<div class="tcard ${cls}"><b>${v}</b><span>${label}</span></div>`;
+  // pass / fail is said in words and an icon, never by colour alone
+  const card = (v, label, cls='') => `<div class="tcard ${cls}"><b>${v}</b><span>${label}</span>${
+    cls === 'pass' ? '<em class="st ok">✔ ผ่านเกณฑ์</em>' : cls === 'fail' ? '<em class="st no">✖ ยังไม่ถึงเกณฑ์</em>' : ''}</div>`;
   const ok = v => v >= 80 ? 'pass' : 'fail';
   $('teacher-summary').innerHTML =
     card(R.n, 'จำนวนนักเรียน') +
@@ -6073,8 +6136,75 @@ function renderTeacher(){
     `แบบสอบถามเปิดหลังผ่าน <b>${SURVEY_AFTER_ZONES}</b> ด่าน ` +
     `<span style="opacity:.7">(แก้ค่าเหล่านี้ได้ที่ค่าคงที่ TEST_ITEMS / VOCAB_ITEMS / PASS_PCT / SURVEY_AFTER_ZONES ในไฟล์เกม)</span>`;
   renderItemAnalysis(rows);
+  renderZoneChart(profiles);
   $('teacher-csv').value = buildCSV(rows);
 }
+// Mean pre- and post-test percentage per land, over the students who sat both,
+// as paired bars with the pass line drawn across. Post is the FIRST post-test,
+// the same attempt E2 is computed from.
+const CHART_PRE = '#2f6fb5', CHART_POST = '#b5730f';   // validated pair: CVD ΔE 23, ≥3:1 on the report surface
+function zoneMeans(profiles){
+  return ZONES.map((z, i) => {
+    const pairs = [];
+    for(const p of profiles){
+      const s = p.s; if(!s || !s.pre || !s.post) continue;
+      const a = s.pre[i], b = s.post[i];
+      if(a && b && a.total && b.total) pairs.push([pct(a.score, a.total), pct(b.score, b.total)]);
+    }
+    const mean = k => pairs.length ? pairs.reduce((t, p) => t + p[k], 0)/pairs.length : null;
+    return {z, n: pairs.length, pre: mean(0), post: mean(1)};
+  });
+}
+function renderZoneChart(profiles){
+  const D = zoneMeans(profiles), box = $('teacher-chart');
+  if(!D.some(d => d.n)){ box.innerHTML = '<p class="tnote">ยังไม่มีนักเรียนที่ทำครบทั้งก่อนและหลังเรียน</p>'; return; }
+  const W = 760, H = 270, L = 34, R = 8, T = 14, B = 46, pw = W - L - R, ph = H - T - B;
+  const band = pw/ZONES.length, bw = Math.min(26, band*.32), y = v => T + ph*(1 - v/100);
+  // a bar with only its data end rounded, anchored square on the baseline
+  const bar = (x, v, col) => {
+    const top = y(v), h = T + ph - top, r = Math.min(4, h);
+    return `<path d="M${x},${T+ph} V${top+r} Q${x},${top} ${x+r},${top} H${x+bw-r} Q${x+bw},${top} ${x+bw},${top+r} V${T+ph} Z" fill="${col}"/>`;
+  };
+  let g = '';
+  for(let v = 0; v <= 100; v += 20)
+    g += `<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${L-6}" y="${y(v)+3}" class="ax" text-anchor="end">${v}</text>`;
+  g += `<line x1="${L}" x2="${W-R}" y1="${y(PASS_PCT)}" y2="${y(PASS_PCT)}" class="pass"/>` +
+       `<text x="${W-R}" y="${y(PASS_PCT)-4}" class="ax" text-anchor="end">เกณฑ์ ${PASS_PCT}%</text>`;
+  D.forEach((d, i) => {
+    const cx = L + band*i + band/2, x0 = cx - bw - 1;
+    if(d.n){ g += bar(x0, d.pre, CHART_PRE) + bar(cx + 1, d.post, CHART_POST); }
+    else g += `<text x="${cx}" y="${T+ph-6}" class="ax" text-anchor="middle">—</text>`;
+    const sp = d.z.topic.indexOf(' ');
+    const words = sp < 0 ? [d.z.topic] : [d.z.topic.slice(0, sp), d.z.topic.slice(sp + 1)];
+    g += `<text x="${cx}" y="${T+ph+14}" class="ax num" text-anchor="middle">${d.z.no}</text>` +
+         words.map((w, k) => `<text x="${cx}" y="${T+ph+26+k*10}" class="ax small" text-anchor="middle">${w}</text>`).join('') +
+         `<rect x="${L+band*i}" y="${T}" width="${band}" height="${ph}" class="hit" data-i="${i}"/>`;
+  });
+  box.innerHTML =
+    `<div class="chart-legend"><span><i style="background:${CHART_PRE}"></i>ก่อนเรียน</span><span><i style="background:${CHART_POST}"></i>หลังเรียน (ครั้งแรก)</span></div>
+     <div class="chart-wrap"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="คะแนนเฉลี่ยก่อนและหลังเรียนรายดินแดน">${g}</svg><div class="chart-tip" hidden></div></div>
+     <details class="chart-table"><summary>ดูเป็นตาราง</summary><table><thead><tr><th>ดินแดน</th><th>เรื่อง</th><th>n</th><th>ก่อนเรียน %</th><th>หลังเรียน %</th><th>เพิ่มขึ้น</th></tr></thead><tbody>${
+       D.map(d => `<tr><td>${d.z.no}</td><td style="text-align:left">${d.z.topic}</td><td>${d.n}</td><td>${d.n ? d.pre.toFixed(1) : '—'}</td><td>${d.n ? d.post.toFixed(1) : '—'}</td><td>${d.n ? (d.post - d.pre >= 0 ? '+' : '') + (d.post - d.pre).toFixed(1) : '—'}</td></tr>`).join('')
+     }</tbody></table></details>`;
+  const tip = box.querySelector('.chart-tip'), wrap = box.querySelector('.chart-wrap');
+  for(const h of box.querySelectorAll('.hit')){
+    h.onpointerenter = h.onpointermove = e => {
+      const d = D[+h.dataset.i];
+      tip.innerHTML = `<b>${d.z.no}. ${d.z.topic}</b>${d.n
+        ? `<span><i style="background:${CHART_PRE}"></i>ก่อนเรียน ${d.pre.toFixed(1)}%</span><span><i style="background:${CHART_POST}"></i>หลังเรียน ${d.post.toFixed(1)}%</span><span>เพิ่มขึ้น ${(d.post-d.pre).toFixed(1)} จุด · n = ${d.n} คน</span>`
+        : '<span>ยังไม่มีข้อมูล</span>'}`;
+      tip.hidden = false;
+      const r = wrap.getBoundingClientRect();
+      tip.style.left = clamp(e.clientX - r.left + 14, 0, r.width - 190) + 'px';
+      tip.style.top = (e.clientY - r.top - 10) + 'px';
+      h.classList.add('on');
+    };
+    h.onpointerleave = () => { tip.hidden = true; h.classList.remove('on'); };
+  }
+}
+$('btn-print').onclick = () => { try{ window.print(); }catch(e){} };
+// a closed <details> prints as its summary only; the per-land numbers belong on paper
+addEventListener('beforeprint', () => document.querySelectorAll('.chart-table').forEach(d => d.open = true));
 $('btn-csv-copy').onclick = async () => {
   const ta = $('teacher-csv');
   ta.select();
@@ -7204,6 +7334,7 @@ $('btn-cert-save').onclick = async () => {
 if(params.get('debug') === '1') window.__lex = {
   get S(){ return S; }, get zone(){ return zone; }, get battle(){ return battle; },
   get test(){ return test; }, get mode(){ return mode; }, music, get soundMode(){ return soundMode; },
+  get player(){ return player; }, get cam(){ return cam; }, showWordCard, questTarget,
   startBattle, enterZone, openMap, winBattle, answerBattle, save, refreshHUD, openFinale, drawCertificate, levelUp,
   openLesson, startTest, readClue, grantClue, renderTeacher, renderCodex, showOverlay,
   world: () => world,
