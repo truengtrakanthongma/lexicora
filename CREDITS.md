@@ -93,3 +93,22 @@ SIL Open Font License 1.1.
 Game code, level design, grammar lessons, worked examples, the explanation
 written for every quiz item, the per-zone pre/post-test banks and the
 satisfaction questionnaire are original work for this project.
+
+## Word-card photographs (Wikimedia Commons)
+
+The vocabulary cards can show a photograph of each picturable word. These are
+**not** LPC art and are used only on the word cards, never in the game world.
+
+- Fetched by `scripts/fetch_word_photos.py` from the lead image of the English
+  Wikipedia article for the word (or a Commons file named in its `OVERRIDE`).
+- Only Public domain, CC0, CC BY and CC BY-SA files are accepted; anything else
+  is skipped.
+- Author, licence and the Commons file page for every photo are recorded in
+  `assets/words/photos.js`, and the game prints that credit under the photo on
+  the enlarged card, as CC BY / CC BY-SA require.
+- Words that cannot be photographed (happy, believe, already …) have no photo
+  and show an emblem instead.
+
+At the time of writing the manifest is empty: the build environment could not
+reach Wikimedia. Run the script with network access, look at every image, and
+rebuild the standalone file.
