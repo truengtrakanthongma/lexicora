@@ -28,7 +28,9 @@ body{
 canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges;}
 
 /* ---------------------------------------------------------------- shell */
-#stage{position:fixed;inset:0;overflow:hidden;background:#0f1d2b;}
+/* clip, not just hidden: a hidden box can still be scrolled by script or by
+   focus moving to a button near its edge, which slid the whole game off-screen */
+#stage{position:fixed;inset:0;overflow:hidden;overflow:clip;background:#0f1d2b;}
 #world{position:absolute;inset:0;width:100%;height:100%;}
 
 /* ---------------------------------------------------- ornate frame kit */
@@ -740,13 +742,38 @@ mark.signal{
 #lesson-steps{list-style:none;margin:10px 0 0;}
 #lesson-steps li{
   display:flex;gap:9px;align-items:flex-start;
-  font-size:.92rem;line-height:1.65;color:var(--ink);
-  padding:7px 11px;margin-bottom:6px;border-radius:8px;
-  background:linear-gradient(180deg,rgba(74,47,30,.06),rgba(74,47,30,.13));
+  font-size:.95rem;line-height:1.65;color:var(--ink);
+  padding:8px 12px;margin-bottom:6px;border-radius:8px;
+  background:linear-gradient(180deg,rgba(74,47,30,.05),rgba(74,47,30,.1));
   border-left:4px solid var(--gold-dk);
-  animation:step-in .22s ease-out;
 }
-@keyframes step-in{from{opacity:0;transform:translateY(-5px);}to{opacity:1;transform:none;}}
+/* the newest step is the one to read: brighter, and it slides in */
+#lesson-steps li.new{
+  background:linear-gradient(180deg,#fff7e2,#f6e3b8);border-left-color:var(--gold);
+  box-shadow:0 4px 14px rgba(120,80,20,.18);font-weight:600;
+  animation:step-in .35s cubic-bezier(.2,.9,.3,1.2);
+}
+@keyframes step-in{from{opacity:0;transform:translateX(-14px);}to{opacity:1;transform:none;}}
+#lesson-q.solved .fill{animation:fill-pop .5s cubic-bezier(.2,1.6,.4,1);display:inline-block;}
+@keyframes fill-pop{0%{transform:scale(.4);opacity:0;}100%{transform:none;opacity:1;}}
+/* progress through the worked examples */
+.dots{display:flex;gap:6px;justify-content:center;margin:4px 0 2px;}
+.dots i{width:9px;height:9px;border-radius:50%;background:rgba(74,47,30,.2);transition:.25s;}
+.dots i.done{background:var(--gold-dk);}
+.dots i.now{background:var(--gold);width:22px;border-radius:5px;box-shadow:0 0 8px rgba(232,184,75,.7);}
+/* a close button in the corner, so the main button can mean "next" */
+.panel-x{
+  position:absolute;top:12px;right:14px;z-index:2;width:32px;height:32px;border-radius:50%;
+  border:1px solid var(--wood-3);background:rgba(255,248,230,.85);color:var(--wood);
+  font-size:.95rem;font-weight:700;cursor:pointer;line-height:1;
+}
+.panel-x:hover{background:#fff;transform:scale(1.06);}
+/* the rules to remember, as cards rather than a ruled list */
+#lesson-rules li{
+  background:linear-gradient(180deg,rgba(255,250,236,.9),rgba(240,224,190,.8));
+  border:1px solid rgba(120,88,50,.25);border-radius:8px;margin-bottom:6px;padding:8px 10px 8px 34px;
+}
+#lesson-rules li::before{top:9px;left:12px;}
 #lesson-steps .stepno{
   flex:0 0 auto;width:20px;height:20px;border-radius:50%;
   background:var(--gold);color:#3a2408;font-weight:800;font-size:.76rem;
@@ -761,6 +788,36 @@ mark.signal{
   color:var(--ink-2);margin-bottom:4px;
 }
 #test-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+#test-live.q-in #test-question,#test-live.q-in #test-options{animation:q-in .3s cubic-bezier(.2,.9,.3,1);}
+@keyframes q-in{from{opacity:0;transform:translateX(18px);}to{opacity:1;transform:none;}}
+/* the result: a ring that fills, a growth bar, a badge */
+.score-ring{position:relative;width:170px;height:170px;margin:4px auto 6px;}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+.score-ring circle{fill:none;stroke-width:11;}
+.score-ring .track{stroke:rgba(74,47,30,.14);}
+.score-ring .fill{stroke:var(--c);stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(.3,.8,.3,1);}
+.score-ring .mark{stroke:var(--wood);stroke-width:3;}
+.ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;}
+.ring-num b{font-family:'Cinzel',serif;font-size:2.7rem;font-weight:900;color:var(--wood);}
+.ring-num span{font-size:.9rem;color:var(--ink-2);margin-top:2px;}
+.ring-num i{font-style:normal;font-weight:800;color:var(--gold-dk);margin-top:4px;}
+.pass-badge{
+  width:max-content;margin:2px auto 8px;padding:5px 14px;border-radius:999px;font-weight:800;color:#1f4d1c;
+  background:linear-gradient(180deg,#d6f0c8,#9ed38a);border:1px solid #3f7a35;
+  animation:combo-pop .8s cubic-bezier(.2,1.6,.4,1) both;animation-delay:.9s;
+}
+.split{display:flex;gap:16px;justify-content:center;font-size:.92rem;color:var(--ink-2);margin-bottom:6px;}
+.split b{color:var(--wood);}
+.growth{max-width:420px;margin:8px auto 4px;}
+.gbar{display:grid;grid-template-columns:70px 1fr 44px;align-items:center;gap:8px;margin:5px 0;font-size:.86rem;}
+.gbar i{height:12px;border-radius:6px;background:rgba(74,47,30,.12);position:relative;overflow:hidden;}
+.gbar i::after{content:'';position:absolute;inset:0 auto 0 0;width:var(--w);border-radius:6px;
+  background:linear-gradient(180deg,#d9c39a,#b39465);animation:grow 1s .3s cubic-bezier(.3,.8,.3,1) both;}
+.gbar.post i::after{background:linear-gradient(180deg,var(--gold-hi),var(--gold-dk));animation-delay:.6s;}
+@keyframes grow{from{width:0;}}
+.gbar b{text-align:right;color:var(--wood);}
+.gnote{text-align:center;font-weight:800;color:#2f6b28;margin-top:4px;}
+@media (prefers-reduced-motion:reduce){ #test-live.q-in #test-question,#test-live.q-in #test-options{animation:none;} }
 @media (max-width:520px){#test-options{grid-template-columns:1fr;}}
 .big-score{font-family:'Cinzel',serif;font-size:3rem;font-weight:900;color:var(--wood);text-align:center;line-height:1;}
 #test-score .pct{text-align:center;font-size:1.1rem;font-weight:700;color:var(--gold-dk);}
@@ -791,10 +848,39 @@ mark.signal{
   background:rgba(74,47,30,.07);border-left:4px solid var(--wood-3);
   border-radius:0 8px 8px 0;padding:9px 12px;
 }
+/* The clue stone reads as carved stone: grey, chiselled, a little worn. */
 #drill-rule{
-  text-align:center;font-weight:600;font-size:1.02rem;line-height:1.55;
-  background:rgba(232,184,75,.16);border:2px solid var(--gold-dk);
-  border-radius:9px;padding:10px 14px;
+  text-align:center;font-weight:700;font-size:1.04rem;line-height:1.6;color:#2f2a26;
+  background:
+    radial-gradient(ellipse at 30% 20%,rgba(255,255,255,.35),transparent 55%),
+    repeating-linear-gradient(115deg,rgba(0,0,0,.025) 0 3px,transparent 3px 9px),
+    linear-gradient(180deg,#d9d4cb,#b9b2a6 70%,#a49c8f);
+  border:2px solid #6f675c;border-radius:12px 12px 6px 6px;padding:12px 16px;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.5),inset 0 -6px 10px rgba(0,0,0,.18),0 6px 14px rgba(0,0,0,.2);
+  text-shadow:0 1px 0 rgba(255,255,255,.55);
+}
+#drill-rule::before{content:'🗿 ';}
+.teach-sentence{
+  background:linear-gradient(180deg,#fffaf0,#f3e6c8);border:1px solid rgba(120,88,50,.3);
+  border-radius:10px;padding:10px 12px;box-shadow:0 3px 10px rgba(120,80,20,.12);
+}
+/* the moment a stone is passed: a seal stamped onto the screen */
+#stamp{
+  position:absolute;left:50%;top:40%;z-index:57;pointer-events:none;opacity:0;
+  transform:translate(-50%,-50%);max-width:min(460px,88vw);text-align:center;
+  padding:14px 22px 16px;border-radius:14px;color:#2f2a26;
+  background:linear-gradient(180deg,#e4dfd6,#bdb5a8);border:2px solid #6f675c;
+  box-shadow:0 0 0 4px rgba(232,184,75,.55),0 18px 40px rgba(0,0,0,.45);
+}
+#stamp b{display:block;font-family:'Cinzel','Kanit',serif;font-size:1.25rem;color:#6b4526;margin-bottom:4px;}
+#stamp span{font-weight:700;line-height:1.5;}
+#stamp.go{animation:stamp 2.6s cubic-bezier(.2,.9,.3,1) forwards;}
+@keyframes stamp{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(1.9) rotate(-8deg);}
+  12%{opacity:1;transform:translate(-50%,-50%) scale(.96) rotate(1deg);}
+  18%{transform:translate(-50%,-50%) scale(1);}
+  80%{opacity:1;}
+  100%{opacity:0;transform:translate(-50%,-60%);}
 }
 #drill-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 #drill-options.wordy{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;}
@@ -957,6 +1043,7 @@ mark.signal{
   <button type="button" id="btn-sound" aria-label="เสียง">🔊</button>
   <div id="levelup" aria-live="polite"></div>
   <div id="iris"></div>
+  <div id="stamp" aria-live="polite"></div>
   <div id="zone-card" aria-live="polite"><small id="zc-no"></small><b id="zc-name"></b><span id="zc-thai"></span></div>
 
   <!-- ======================================================== LANDING -->
@@ -1131,10 +1218,12 @@ mark.signal{
 
   <div class="overlay dim" id="screen-lesson">
     <div class="scroll-panel sheet corner-bottom">
+      <button type="button" class="panel-x" id="btn-lesson-x" aria-label="ปิด">✕</button>
       <div class="label-eyebrow" style="text-align:center">ศิลาจารึกโบราณ</div>
       <h2 class="title-epic" id="lesson-title" style="font-size:2rem;text-align:center">—</h2>
       <div class="rule-gold"></div>
       <div class="label-eyebrow" style="text-align:center" id="lesson-count">—</div>
+      <div class="dots" id="lesson-dots"></div>
       <p class="q-prompt" id="lesson-q">—</p>
       <ol id="lesson-steps"></ol>
       <div style="text-align:center;margin-top:14px">
@@ -5243,6 +5332,9 @@ function grantClue(stone){
   ring(stone.x, stone.y-30, '#fff3cf', 30, .4, 2);
   floatText(stone.x, stone.y-44, '📜 เบาะแสใหม่!', '#ffda7b', 12);
   const left = cluesLeft(zone);
+  const st = $('stamp');
+  st.innerHTML = `<b>เบาะแสปลดล็อก ${cluesFound(zone)}/${Z.rules.length}</b><span>${Z.rules[stone.idx]}</span>`;
+  st.className = ''; void st.offsetWidth; st.className = 'go';
   logEvent({type:'ผ่านเสาศิลา', zone: zone+1, topic: Z.topic,
     detail: Z.rules[stone.idx], v1: cluesFound(zone), v2: Z.rules.length});
   toast('🗿', `<b>${Z.rules[stone.idx]}</b>` +
@@ -5863,6 +5955,7 @@ function renderTestQ(){
   const order = shuffle(opts.map((_,i)=>i));
   test.shown = {opts: order.map(i => opts[i]), ans: order.indexOf(ans)};
   $('test-bar').style.width = (test.qi/test.items.length*100)+'%';
+  const live = $('test-live'); live.classList.remove('q-in'); void live.offsetWidth; live.classList.add('q-in');
   $('test-question').innerHTML =
     `<span class="qno">ข้อ ${test.qi+1}/${test.items.length}</span>` +
     q.replace('___','<span class="blank">_____</span>');
@@ -5932,10 +6025,27 @@ function renderTestResult(score, total){
   const grOf = test.given.filter(g => !g.vocab).length;
   const vo = test.given.filter(g => g.vocab && g.sel === g.ans).length;
   const voOf = test.given.filter(g => g.vocab).length;
+  // A ring that fills to the score, the number counting up inside it, and for
+  // the post-test the distance travelled since the pre-test.
+  const R = 52, C = 2*Math.PI*R;
+  const pre = test.kind === 'post' && S.pre[zi] ? Math.round(pct(S.pre[zi].score, S.pre[zi].total)) : null;
+  const ringCol = test.kind === 'pre' ? '#c9962e' : passed ? '#3f8a3a' : '#c0573f';
   $('test-score').innerHTML =
-    `<div class="big-score">${score} / ${total}</div>` +
-    `<div class="pct">${p}%</div>` +
-    `<p class="note">ไวยากรณ์ ${gr}/${grOf} · คำศัพท์ ${vo}/${voOf}</p>` +
+    `<div class="score-ring" style="--c:${ringCol}">
+       <svg viewBox="0 0 120 120" aria-hidden="true">
+         <circle cx="60" cy="60" r="${R}" class="track"/>
+         <circle cx="60" cy="60" r="${R}" class="fill" style="stroke-dasharray:${C};stroke-dashoffset:${C}" data-to="${C*(1-p/100)}"/>
+         <line x1="60" y1="2" x2="60" y2="14" class="mark" transform="rotate(${PASS_PCT*3.6} 60 60)"/>
+       </svg>
+       <div class="ring-num"><b id="score-count">0</b><span>/ ${total}</span><i>${p}%</i></div>
+     </div>` +
+    (test.kind === 'post' && passed ? `<div class="pass-badge">🏅 ผ่านเกณฑ์ ${PASS_PCT}%</div>` : '') +
+    `<div class="split"><span>ไวยากรณ์ <b>${gr}/${grOf}</b></span><span>คำศัพท์ <b>${vo}/${voOf}</b></span></div>` +
+    (pre !== null ? `<div class="growth">
+       <div class="gbar"><span>ก่อนเรียน</span><i style="--w:${pre}%"></i><b>${pre}%</b></div>
+       <div class="gbar post"><span>หลังเรียน</span><i style="--w:${p}%"></i><b>${p}%</b></div>
+       <p class="gnote">${p > pre ? `⬆ เก่งขึ้น ${p - pre}%` : p === pre ? 'เท่าเดิม' : `⬇ ลดลง ${pre - p}% · ลองทบทวนอีกครั้งนะ`}</p>
+     </div>` : '') +
     (test.kind === 'pre'
       ? `<p class="note">บันทึกคะแนนก่อนเรียนแล้ว · ออกไปเรียนรู้ในดินแดนนี้ได้เลย</p>`
       : passed
@@ -5961,6 +6071,14 @@ function renderTestResult(score, total){
         <div class="rev-rule">${why}</div></div>`;
     }).join('');
   (passed || test.kind === 'pre' ? sfx.win : sfx.deny)();
+  requestAnimationFrame(() => {
+    const f = $('test-score').querySelector('.fill');
+    if(f) f.style.strokeDashoffset = f.dataset.to;
+    const el = $('score-count'), t0 = performance.now(), dur = REDUCED ? 1 : 900;
+    (function up(t){ const k = Math.min(1, (t - t0)/dur);
+      el.textContent = Math.round(score*(1 - Math.pow(1-k, 3)));
+      if(k < 1) requestAnimationFrame(up); })(t0);
+  });
 }
 $('btn-test-close').onclick = () => {
   const wasPost = test.kind === 'post', zi = test.zi;
@@ -6012,23 +6130,30 @@ function renderLesson(){
   const last = lesson.step >= w.steps.length;
   $('lesson-title').textContent = Z.topic;
   $('lesson-count').textContent = `ตัวอย่างที่ ${lesson.ex+1}/${Z.worked.length}`;
+  $('lesson-dots').innerHTML = Z.worked.map((_,i) =>
+    `<i class="${i < lesson.ex ? 'done' : i === lesson.ex ? 'now' : ''}"></i>`).join('');
   $('lesson-q').innerHTML = last
     ? w.q.replace('___', `<b class="fill">${w.a}</b>`)
     : w.q.replace('___', '<span class="blank">_____</span>');
+  // Only the step just revealed animates in. Rebuilding the list used to
+  // replay the entrance on every step, so the whole column flickered faint.
   $('lesson-steps').innerHTML = w.steps.slice(0, lesson.step)
-    .map((s,i) => `<li><span class="stepno">${i+1}</span>${s}</li>`).join('');
-  $('btn-lesson-step').textContent = last ? 'ตัวอย่างถัดไป →' : 'ขั้นต่อไป →';
-  $('btn-lesson-step').style.display =
-    (last && lesson.ex === Z.worked.length-1) ? 'none' : 'inline-block';
+    .map((s,i) => `<li class="${i === lesson.step-1 ? 'new' : ''}"><span class="stepno">${i+1}</span>${s}</li>`).join('');
+  const done = last && lesson.ex === Z.worked.length-1;
+  $('btn-lesson-step').textContent = done ? 'เข้าใจแล้ว ✓' : last ? 'ตัวอย่างถัดไป →' : 'ขั้นต่อไป →';
+  $('btn-lesson-close').style.display = done ? 'none' : '';
+  $('lesson-q').classList.toggle('solved', last);
   $('lesson-rules').innerHTML = Z.rules.map(r=>`<li>${r}</li>`).join('');
 }
 $('btn-lesson-step').onclick = () => {
-  const w = ZONES[lesson.zi].worked[lesson.ex];
+  const Zl = ZONES[lesson.zi], w = Zl.worked[lesson.ex];
+  if(lesson.step >= w.steps.length && lesson.ex === Zl.worked.length-1){ sfx.pickup(); hideOverlays(); return; }
   if(lesson.step < w.steps.length){ lesson.step++; }
   else { lesson.ex++; lesson.step = 0; }
   sfx.open(); renderLesson();
 };
 $('btn-lesson-close').onclick = () => hideOverlays();
+$('btn-lesson-x').onclick = () => hideOverlays();
 $('btn-reward-close').onclick = () => {
   hideOverlays();
   // straight into the post-test; openMap only once it has been sat
@@ -6678,6 +6803,7 @@ if(params.get('debug') === '1') window.__lex = {
   get S(){ return S; }, get zone(){ return zone; }, get battle(){ return battle; },
   get test(){ return test; }, get mode(){ return mode; }, music, get soundMode(){ return soundMode; },
   startBattle, enterZone, openMap, winBattle, answerBattle, save, refreshHUD, openFinale, drawCertificate, levelUp,
+  openLesson, startTest, readClue, grantClue, renderTeacher, renderCodex, showOverlay,
   world: () => world,
 };
 
